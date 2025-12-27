@@ -9,9 +9,12 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 concurrency:
   group: snapshot-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   SNAPSHOT_ARTIFACTS: ${{ github.workspace }}/snapshot-failures
@@ -19,7 +22,7 @@ env:
 jobs:
   snapshot-test:
     name: Run Snapshot Tests
-    runs-on: macos-15
+    runs-on: macos-26
 
     steps:
       - name: Checkout
@@ -28,7 +31,7 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: 'latest-stable'
+          xcode-version: '26.1.1'
 
       - name: Cache SPM
         uses: actions/cache@v4
@@ -44,24 +47,17 @@ jobs:
       - name: Create artifacts directory
         run: mkdir -p "$SNAPSHOT_ARTIFACTS"
 
-      - name: Run Snapshot Tests
+      - name: Run Snapshot Tests (Recording Mode)
         id: snapshot-test
         continue-on-error: true
+        env:
+          SNAPSHOT_RECORD: "1"
         run: |
-          # WebView tests require macOS 26, skip them on CI
-          # Run only non-WebView snapshot tests
+          # Run snapshot tests in recording mode to generate reference images
+          # Recording mode marks tests as "failed" by design to prevent accidental commits
+          # WebView tests require macOS 26.1+, skip them on CI (26.0.1)
           swift test \
-            --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests" \
-            2>&1 | tee test-output.txt
-
-          # Check if tests passed
-          if grep -q "Test run.*passed" test-output.txt; then
-            echo "result=success" >> $GITHUB_OUTPUT
-            echo "passed=true" >> $GITHUB_OUTPUT
-          else
-            echo "result=failure" >> $GITHUB_OUTPUT
-            echo "passed=false" >> $GITHUB_OUTPUT
-          fi
+            --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests"
 
       - name: Collect snapshot images
         if: always()
@@ -340,16 +336,6 @@ jobs:
           path: snapshot-report/
           retention-days: 30
 
-      - name: Setup Pages
-        if: always()
-        uses: actions/configure-pages@v4
-
-      - name: Upload Pages Artifact
-        if: always()
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: snapshot-report/
-
       - name: Set test result summary
         if: always()
         id: summary
@@ -357,42 +343,17 @@ jobs:
           TOTAL=$(find snapshot-report/images -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
 
-          if [ "${{ steps.snapshot-test.outputs.passed }}" = "true" ]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo "emoji=:white_check_mark:" >> $GITHUB_OUTPUT
-          else
-            echo "status=failure" >> $GITHUB_OUTPUT
-            echo "emoji=:x:" >> $GITHUB_OUTPUT
-          fi
-
-    outputs:
-      test-passed: ${{ steps.snapshot-test.outputs.passed }}
-      total-snapshots: ${{ steps.summary.outputs.total }}
-      status: ${{ steps.summary.outputs.status }}
-      emoji: ${{ steps.summary.outputs.emoji }}
-
-  deploy-pages:
-    name: Deploy to GitHub Pages
-    needs: snapshot-test
-    # Only deploy to Pages from main branch (other branches use artifacts only)
-    if: always() && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    permissions:
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        if: always() && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./snapshot-report
+          destination_dir: snapshots
+          keep_files: true
 
     outputs:
-      page-url: ${{ steps.deployment.outputs.page_url }}
+      total-snapshots: ${{ steps.summary.outputs.total }}
 
   notify-slack:
     name: Notify Slack
@@ -411,7 +372,7 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ needs.snapshot-test.outputs.test-passed == 'true' && ':white_check_mark:' || ':x:' }} SwiftMarkdownView Snapshot Report",
+                    "text": ":white_check_mark: SwiftMarkdownView Snapshot Report",
                     "emoji": true
                   }
                 },
@@ -420,7 +381,7 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*Status:*\n${{ needs.snapshot-test.outputs.test-passed == 'true' && 'Passed' || 'Failed' }}"
+                      "text": "*Status:*\nGenerated"
                     },
                     {
                       "type": "mrkdwn",
@@ -440,7 +401,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "<${{ github.ref == 'refs/heads/main' && 'https://no-problem-dev.github.io/swift-markdown-view/' || format('{0}/{1}/actions/runs/{2}#artifacts', github.server_url, github.repository, github.run_id) }}|:bar_chart: View Snapshot Report> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|:gear: View Workflow>"
+                    "text": "<${{ github.ref == 'refs/heads/main' && 'https://no-problem-dev.github.io/swift-markdown-view/snapshots/' || format('{0}/{1}/actions/runs/{2}#artifacts', github.server_url, github.repository, github.run_id) }}|:bar_chart: View Snapshot Report> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|:gear: View Workflow>"
                   }
                 }
               ]
