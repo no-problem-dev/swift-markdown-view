@@ -379,7 +379,8 @@ jobs:
   deploy-pages:
     name: Deploy to GitHub Pages
     needs: snapshot-test
-    if: always()
+    # Only deploy to Pages from main branch (other branches use artifacts only)
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     permissions:
@@ -400,7 +401,7 @@ jobs:
 
   notify-slack:
     name: Notify Slack
-    needs: [snapshot-test, deploy-pages]
+    needs: [snapshot-test]
     if: always()
     runs-on: ubuntu-latest
 
@@ -444,7 +445,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "<${{ needs.deploy-pages.outputs.page-url || format('https://no-problem-dev.github.io/swift-markdown-view/') }}|:bar_chart: View Snapshot Report> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|:gear: View Workflow>"
+                    "text": "<${{ github.ref == 'refs/heads/main' && 'https://no-problem-dev.github.io/swift-markdown-view/' || format('{0}/{1}/actions/runs/{2}#artifacts', github.server_url, github.repository, github.run_id) }}|:bar_chart: View Snapshot Report> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|:gear: View Workflow>"
                   }
                 }
               ]
