@@ -37,6 +37,33 @@ struct MermaidSnapshotTests {
         await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: 5.0)
     }
 
+    @available(macOS 26.0, *)
+    @Test
+    func complexFlowchartWithScrolling() async {
+        // Test a complex diagram that would overflow the viewport
+        // This tests the scrollable container functionality
+        let view = MermaidDiagramView("""
+        graph LR
+            A[Start] --> B[Step 1]
+            B --> C[Step 2]
+            C --> D[Step 3]
+            D --> E[Step 4]
+            E --> F[Step 5]
+            F --> G[Step 6]
+            G --> H[Step 7]
+            H --> I[Step 8]
+            I --> J[Step 9]
+            J --> K[End]
+
+            B --> L[Branch 1]
+            L --> M[Sub 1]
+            M --> N[Sub 2]
+            N --> O[Sub 3]
+            O --> P[Merge]
+            P --> F
+        """)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: 5.0)
+    }
 
     // MARK: - Fallback View Tests
 

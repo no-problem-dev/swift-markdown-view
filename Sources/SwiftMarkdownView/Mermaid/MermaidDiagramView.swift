@@ -60,23 +60,41 @@ public struct MermaidDiagramView: View {
         <html>
         <head>
             <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=5.0, user-scalable=yes">
             <style>
                 * {
                     margin: 0;
                     padding: 0;
                     box-sizing: border-box;
                 }
+                html {
+                    width: 100%;
+                    height: 100%;
+                    overflow: scroll;
+                    background: transparent;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                }
+                html::-webkit-scrollbar {
+                    display: none;
+                }
                 body {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    min-height: 100vh;
+                    display: inline-block;
+                    min-width: 100%;
+                    min-height: 100%;
+                    padding: 16px;
                     background: transparent;
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 }
+                .mermaid-container {
+                    display: inline-block;
+                }
                 .mermaid {
-                    width: 100%;
+                    display: inline-block;
+                }
+                .mermaid svg {
+                    max-width: none !important;
+                    display: block;
                 }
                 .error {
                     color: #dc3545;
@@ -87,18 +105,28 @@ public struct MermaidDiagramView: View {
             \(scriptTag)
         </head>
         <body>
-            <div class="mermaid" id="diagram">
-                \(trimmedCode)
+            <div class="mermaid-container">
+                <div class="mermaid" id="diagram">
+                    \(trimmedCode)
+                </div>
             </div>
             <script>
                 mermaid.initialize({
-                    startOnLoad: true,
+                    startOnLoad: false,
                     theme: 'default',
                     securityLevel: 'loose',
-                    flowchart: {
-                        useMaxWidth: true,
-                        htmlLabels: true
-                    }
+                    flowchart: { useMaxWidth: false, htmlLabels: true },
+                    sequence: { useMaxWidth: false },
+                    gantt: { useMaxWidth: false },
+                    journey: { useMaxWidth: false },
+                    timeline: { useMaxWidth: false },
+                    mindmap: { useMaxWidth: false }
+                });
+
+                mermaid.run().then(function() {
+                    var scrollX = (document.documentElement.scrollWidth - window.innerWidth) / 2;
+                    var scrollY = (document.documentElement.scrollHeight - window.innerHeight) / 2;
+                    window.scrollTo(Math.max(0, scrollX), Math.max(0, scrollY));
                 });
             </script>
         </body>
