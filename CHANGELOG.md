@@ -9,6 +9,14 @@
 
 <!-- 次のリリースに含める変更をここに追加 -->
 
+## [1.0.2] - 2025-12-27
+
+### 修正
+
+- CI: GitHub Actionsランナーを`macos-15`に変更
+- CI: Linuxテストを削除（macOSのみでテスト）
+- Package: Swift tools versionを6.0に変更（参考リポジトリに合わせて修正）
+
 ## [1.0.1] - 2025-12-27
 
 ### 修正
@@ -37,6 +45,7 @@
 - DocCドキュメント
 - RELEASE_PROCESS.md
 
-[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.1...HEAD
+[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/no-problem-dev/swift-markdown-view/releases/tag/v1.0.0
