@@ -33,6 +33,10 @@ enum MarkdownParser {
             return .heading(level: heading.level, content: inlines)
 
         case let codeBlock as Markdown.CodeBlock:
+            // Check if this is a Mermaid diagram
+            if codeBlock.language?.lowercased() == "mermaid" {
+                return .mermaid(codeBlock.code)
+            }
             return .codeBlock(language: codeBlock.language, code: codeBlock.code)
 
         case let blockQuote as Markdown.BlockQuote:
