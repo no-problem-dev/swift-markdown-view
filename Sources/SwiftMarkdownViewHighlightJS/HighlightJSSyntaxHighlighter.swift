@@ -111,4 +111,64 @@ extension HighlightJSSyntaxHighlighter {
 
     /// A11y (Accessibility) dark theme - high contrast for dark backgrounds.
     public static let a11yDark = HighlightJSSyntaxHighlighter(theme: .a11y, colorMode: .dark)
+
+    /// Creates a highlighter that matches the given SwiftUI ColorScheme.
+    ///
+    /// - Parameters:
+    ///   - colorScheme: The SwiftUI color scheme (.light or .dark).
+    ///   - theme: The highlight.js theme to use. Defaults to `.a11y` for best contrast.
+    /// - Returns: A highlighter configured for the color scheme.
+    public static func forColorScheme(
+        _ colorScheme: ColorScheme,
+        theme: HighlightTheme = .a11y
+    ) -> HighlightJSSyntaxHighlighter {
+        let colorMode: ColorMode = colorScheme == .dark ? .dark : .light
+        return HighlightJSSyntaxHighlighter(theme: theme, colorMode: colorMode)
+    }
+}
+
+// MARK: - View Extension for Adaptive Syntax Highlighting
+
+public extension View {
+
+    /// Applies syntax highlighting that automatically adapts to the color scheme.
+    ///
+    /// This modifier reads the current `colorScheme` from the environment and
+    /// configures an appropriate `HighlightJSSyntaxHighlighter`.
+    ///
+    /// ```swift
+    /// import SwiftMarkdownViewHighlightJS
+    ///
+    /// MarkdownCatalogView()
+    ///     .theme(ThemeProvider())
+    ///     .adaptiveSyntaxHighlighting()
+    /// ```
+    ///
+    /// With a custom theme:
+    /// ```swift
+    /// MarkdownCatalogView()
+    ///     .theme(ThemeProvider())
+    ///     .adaptiveSyntaxHighlighting(theme: .github)
+    /// ```
+    ///
+    /// - Parameter theme: The highlight.js theme to use. Defaults to `.a11y` for best contrast.
+    /// - Returns: A view with adaptive syntax highlighting applied.
+    func adaptiveSyntaxHighlighting(theme: HighlightTheme = .a11y) -> some View {
+        modifier(AdaptiveSyntaxHighlightingModifier(theme: theme))
+    }
+}
+
+// MARK: - Adaptive Syntax Highlighting Modifier
+
+/// A view modifier that sets up syntax highlighting based on the current color scheme.
+private struct AdaptiveSyntaxHighlightingModifier: ViewModifier {
+
+    let theme: HighlightTheme
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        let highlighter = HighlightJSSyntaxHighlighter.forColorScheme(colorScheme, theme: theme)
+        return content.syntaxHighlighter(highlighter)
+    }
 }
