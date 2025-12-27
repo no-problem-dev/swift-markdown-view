@@ -87,11 +87,18 @@ jobs:
 
       - name: Generate HTML Report
         if: always()
+        env:
+          GITHUB_SHA_SHORT: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
           python3 << 'EOF'
           import os
           import glob
           from datetime import datetime
+
+          # Get environment variables
+          github_sha = os.environ.get('GITHUB_SHA_SHORT', 'unknown')[:7]
+          github_ref = os.environ.get('GITHUB_REF_NAME', 'unknown')
 
           # Collect images
           images_dir = "snapshot-report/images"
@@ -264,7 +271,7 @@ jobs:
                   <header>
                       <h1>SwiftMarkdownView Snapshot Report</h1>
                       <p class="meta">Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}</p>
-                      <p class="meta">Commit: ${{{{ github.sha }}}}</p>
+                      <p class="meta">Branch: {github_ref} | Commit: {github_sha}</p>
                       <div class="stats">
                           <div class="stat">
                               <div class="stat-value">{len(images)}</div>
