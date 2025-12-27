@@ -9,6 +9,12 @@
 
 <!-- 次のリリースに含める変更をここに追加 -->
 
+## [1.0.4] - 2025-12-27
+
+### 修正
+
+- CI: auto-release-on-merge.ymlのHEREDOCインデントを修正
+
 ## [1.0.3] - 2025-12-27
 
 ### 修正
@@ -51,7 +57,8 @@
 - DocCドキュメント
 - RELEASE_PROCESS.md
 
-[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.3...HEAD
+[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.0...v1.0.1
