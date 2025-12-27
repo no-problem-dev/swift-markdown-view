@@ -9,6 +9,15 @@
 
 <!-- 次のリリースに含める変更をここに追加 -->
 
+## [1.0.1] - 2025-12-27
+
+### 修正
+
+- CI: GitHub Actionsランナーを`macos-26`に変更（Swift 6.2対応）
+- CI: Xcode選択に`maxim-lobanov/setup-xcode@v1`アクションを使用（`latest-stable`）
+- CI: LinuxテストでSwift 6.2公式Dockerイメージを使用
+- CI: 自動リリースワークフローでPR作成前にコミットが存在することを保証
+
 ## [1.0.0] - 2025-12-27
 
 ### 追加
@@ -28,5 +37,6 @@
 - DocCドキュメント
 - RELEASE_PROCESS.md
 
-[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.0...HEAD
+[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/no-problem-dev/swift-markdown-view/releases/tag/v1.0.0
