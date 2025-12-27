@@ -93,7 +93,7 @@ struct ParagraphView: View {
                 title: singleImage.title
             )
         } else {
-            InlineRenderer.render(inlines)
+            InlineRenderer.render(inlines, colorPalette: colorPalette)
                 .typography(MarkdownTypographyMapping.body)
                 .foregroundStyle(MarkdownColors.bodyText(colorPalette))
                 .fixedSize(horizontal: false, vertical: true)
@@ -240,7 +240,7 @@ struct HeadingView: View {
     @Environment(\.spacingScale) private var spacing
 
     var body: some View {
-        InlineRenderer.render(content)
+        InlineRenderer.render(content, colorPalette: colorPalette)
             .typography(MarkdownTypographyMapping.typography(for: level))
             .foregroundStyle(MarkdownColors.headingText(colorPalette))
             .padding(.top, topPadding)
@@ -263,7 +263,6 @@ struct CodeBlockView: View {
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.spacingScale) private var spacing
     @Environment(\.radiusScale) private var radius
-    @Environment(\.syntaxTokenizer) private var tokenizer
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -276,8 +275,7 @@ struct CodeBlockView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HighlightedCodeView(
                     code: trimmedCode,
-                    language: language,
-                    tokenizer: tokenizer
+                    language: language
                 )
             }
             .padding(MarkdownSpacing.codeBlockPadding(spacing))
@@ -476,7 +474,7 @@ struct TableCellView: View {
     @Environment(\.spacingScale) private var spacing
 
     var body: some View {
-        InlineRenderer.render(content)
+        InlineRenderer.render(content, colorPalette: colorPalette)
             .typography(isHeader ? .labelLarge : .bodyMedium)
             .fontWeight(isHeader ? .semibold : .regular)
             .foregroundStyle(colorPalette.onSurface)

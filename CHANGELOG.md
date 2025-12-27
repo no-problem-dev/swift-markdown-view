@@ -9,6 +9,37 @@
 
 <!-- 次のリリースに含める変更をここに追加 -->
 
+## [1.0.6] - 2025-12-27
+
+### 追加
+
+- **ダークモード対応**: MarkdownViewがシステムのダーク/ライトモードに対応
+  - `ColorSchemeAwareMarkdownTheme`: カラースキーム対応テーマ
+  - 自動的な配色切り替え
+
+- **HighlightJS シンタックスハイライト**: より高品質なコードハイライト
+  - `HighlightJSView`: HighlightJS ベースのシンタックスハイライトコンポーネント
+  - 190以上の言語サポート
+  - 複数のテーマ対応
+
+- **サンプルアプリ**: ZennArticleSwiftUI サンプルアプリを追加
+  - Zenn記事形式のMarkdownレンダリング例
+  - 実装パターンのデモンストレーション
+
+### 改善
+
+- **Mermaidダイアグラム**: スクロールと初期表示を改善
+  - ダイアグラムの初期表示位置を最適化
+  - スクロール操作の安定性向上
+
+### 修正
+
+- CI: GitHub Pagesへのサブディレクトリデプロイを修正
+- CI: スナップショット録画モードのテスト失敗を適切に処理
+- CI: Xcode 26.1.1に固定（ローカル環境と一致）
+- CI: macos-26ランナーをスナップショットテストに使用
+- CI: テスト結果検出のロジックを修正
+
 ## [1.0.5] - 2025-12-27
 
 ### 追加
@@ -88,7 +119,8 @@
 - DocCドキュメント
 - RELEASE_PROCESS.md
 
-[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.5...HEAD
+[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.2...v1.0.3
@@ -97,3 +129,5 @@
 [1.0.0]: https://github.com/no-problem-dev/swift-markdown-view/releases/tag/v1.0.0
 
 <!-- Auto-generated on 2025-12-27T03:56:48Z by release workflow -->
+
+<!-- Auto-generated on 2025-12-27T05:11:31Z by release workflow -->

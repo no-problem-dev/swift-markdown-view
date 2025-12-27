@@ -117,6 +117,16 @@ public enum MarkdownColors {
     public static func listBullet(_ palette: any ColorPalette) -> Color {
         palette.onSurfaceVariant
     }
+
+    /// Background color for inline code.
+    public static func inlineCodeBackground(_ palette: any ColorPalette) -> Color {
+        palette.surfaceVariant
+    }
+
+    /// Text color for inline code.
+    public static func inlineCodeText(_ palette: any ColorPalette) -> Color {
+        palette.onSurfaceVariant
+    }
 }
 
 // MARK: - Markdown Radius

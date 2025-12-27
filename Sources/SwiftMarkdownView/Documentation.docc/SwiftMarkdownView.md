@@ -45,12 +45,13 @@ struct ContentView: View {
 - ``MarkdownView``
 - <doc:GettingStarted>
 
-### コードブロックとシンタックスハイライト
+### Code Blocks and Syntax Highlighting
 
-- ``SyntaxTokenizer``
-- ``SyntaxToken``
-- ``TokenType``
-- ``SyntaxColors``
+- ``SyntaxHighlighter``
+- ``RegexSyntaxHighlighter``
+- ``SyntaxColorScheme``
+- ``HighlightState``
+- ``HighlightedCodeView``
 - <doc:SyntaxHighlighting>
 
 ### レンダリングカスタマイズ
