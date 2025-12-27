@@ -1,0 +1,450 @@
+name: Snapshot Report
+
+on:
+  # 手動実行用
+  workflow_dispatch:
+
+  # releaseブランチからmainへのマージ時に実行
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: snapshot-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SNAPSHOT_ARTIFACTS: ${{ github.workspace }}/snapshot-failures
+
+jobs:
+  snapshot-test:
+    name: Run Snapshot Tests
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 'latest-stable'
+
+      - name: Cache SPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Build
+        run: swift build
+
+      - name: Create artifacts directory
+        run: mkdir -p "$SNAPSHOT_ARTIFACTS"
+
+      - name: Run Snapshot Tests
+        id: snapshot-test
+        continue-on-error: true
+        run: |
+          # WebView tests require macOS 26, skip them on CI
+          # Run only non-WebView snapshot tests
+          swift test \
+            --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests" \
+            2>&1 | tee test-output.txt
+
+          # Check if tests passed
+          if grep -q "Test run.*passed" test-output.txt; then
+            echo "result=success" >> $GITHUB_OUTPUT
+            echo "passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "result=failure" >> $GITHUB_OUTPUT
+            echo "passed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Collect snapshot images
+        if: always()
+        run: |
+          mkdir -p snapshot-report/images
+
+          # Copy all snapshot images
+          find Tests -name "*.png" -path "*__Snapshots__*" -exec cp {} snapshot-report/images/ \;
+
+          # Copy any failure artifacts
+          if [ -d "$SNAPSHOT_ARTIFACTS" ] && [ "$(ls -A $SNAPSHOT_ARTIFACTS 2>/dev/null)" ]; then
+            cp -r "$SNAPSHOT_ARTIFACTS"/* snapshot-report/images/ 2>/dev/null || true
+          fi
+
+          # List collected images
+          echo "Collected snapshots:"
+          ls -la snapshot-report/images/ || echo "No images found"
+
+      - name: Generate HTML Report
+        if: always()
+        env:
+          GITHUB_SHA_SHORT: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          python3 << 'EOF'
+          import os
+          import glob
+          from datetime import datetime
+
+          # Get environment variables
+          github_sha = os.environ.get('GITHUB_SHA_SHORT', 'unknown')[:7]
+          github_ref = os.environ.get('GITHUB_REF_NAME', 'unknown')
+
+          # Collect images
+          images_dir = "snapshot-report/images"
+          images = sorted(glob.glob(f"{images_dir}/*.png"))
+
+          # Group by test suite
+          suites = {}
+          for img in images:
+              name = os.path.basename(img)
+              # Extract suite name from filename pattern
+              if "BlockElement" in name or name.startswith(("paragraph", "headings", "blockquote", "orderedList", "unorderedList", "table", "taskList", "thematicBreak")):
+                  suite = "Block Elements"
+              elif "CodeBlock" in name or name in ["go.1.png", "json.1.png", "plain.1.png", "python.1.png", "ruby.1.png", "rust.1.png", "shell.1.png", "sql.1.png", "swift.1.png", "typescript.1.png", "yaml.1.png"]:
+                  suite = "Code Blocks"
+              elif "InlineElement" in name or name.startswith(("emphasisAndStrong", "inlineCode", "links", "strikethrough", "mixedInline")):
+                  suite = "Inline Elements"
+              elif "Media" in name or name.startswith(("image", "localBundle")):
+                  suite = "Media"
+              elif "ComplexDocument" in name or name.startswith(("aiResponse", "readmeStyle", "technicalDoc")):
+                  suite = "Complex Documents"
+              elif "Mermaid" in name or name.startswith(("flowchart", "sequenceDiagram", "fallback", "fullDocument")):
+                  suite = "Mermaid Diagrams"
+              else:
+                  suite = "Other"
+
+              if suite not in suites:
+                  suites[suite] = []
+              suites[suite].append(name)
+
+          # Generate HTML
+          html = f'''<!DOCTYPE html>
+          <html lang="ja">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>SwiftMarkdownView Snapshot Report</title>
+              <style>
+                  :root {{
+                      --bg: #0d1117;
+                      --card-bg: #161b22;
+                      --border: #30363d;
+                      --text: #c9d1d9;
+                      --text-muted: #8b949e;
+                      --accent: #58a6ff;
+                      --success: #3fb950;
+                      --warning: #d29922;
+                  }}
+                  * {{ box-sizing: border-box; }}
+                  body {{
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      background: var(--bg);
+                      color: var(--text);
+                      margin: 0;
+                      padding: 20px;
+                      line-height: 1.6;
+                  }}
+                  .container {{ max-width: 1400px; margin: 0 auto; }}
+                  header {{
+                      text-align: center;
+                      padding: 40px 20px;
+                      border-bottom: 1px solid var(--border);
+                      margin-bottom: 40px;
+                  }}
+                  h1 {{
+                      font-size: 2.5rem;
+                      margin: 0 0 10px 0;
+                      background: linear-gradient(135deg, var(--accent), #a855f7);
+                      -webkit-background-clip: text;
+                      -webkit-text-fill-color: transparent;
+                  }}
+                  .meta {{ color: var(--text-muted); font-size: 0.9rem; }}
+                  .stats {{
+                      display: flex;
+                      justify-content: center;
+                      gap: 30px;
+                      margin-top: 20px;
+                  }}
+                  .stat {{
+                      background: var(--card-bg);
+                      padding: 15px 25px;
+                      border-radius: 10px;
+                      border: 1px solid var(--border);
+                  }}
+                  .stat-value {{ font-size: 2rem; font-weight: bold; color: var(--success); }}
+                  .stat-label {{ font-size: 0.8rem; color: var(--text-muted); }}
+                  .suite {{
+                      margin-bottom: 40px;
+                  }}
+                  .suite-header {{
+                      display: flex;
+                      align-items: center;
+                      gap: 10px;
+                      margin-bottom: 20px;
+                      padding-bottom: 10px;
+                      border-bottom: 1px solid var(--border);
+                  }}
+                  .suite-header h2 {{ margin: 0; font-size: 1.5rem; }}
+                  .suite-count {{
+                      background: var(--accent);
+                      color: var(--bg);
+                      padding: 2px 10px;
+                      border-radius: 20px;
+                      font-size: 0.8rem;
+                      font-weight: bold;
+                  }}
+                  .grid {{
+                      display: grid;
+                      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                      gap: 20px;
+                  }}
+                  .card {{
+                      background: var(--card-bg);
+                      border: 1px solid var(--border);
+                      border-radius: 12px;
+                      overflow: hidden;
+                      transition: transform 0.2s, box-shadow 0.2s;
+                  }}
+                  .card:hover {{
+                      transform: translateY(-4px);
+                      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                  }}
+                  .card img {{
+                      width: 100%;
+                      height: 200px;
+                      object-fit: contain;
+                      background: white;
+                      cursor: pointer;
+                  }}
+                  .card-body {{
+                      padding: 15px;
+                  }}
+                  .card-title {{
+                      font-weight: 600;
+                      margin: 0;
+                      font-size: 0.9rem;
+                      word-break: break-all;
+                  }}
+                  .modal {{
+                      display: none;
+                      position: fixed;
+                      top: 0;
+                      left: 0;
+                      width: 100%;
+                      height: 100%;
+                      background: rgba(0,0,0,0.9);
+                      z-index: 1000;
+                      cursor: pointer;
+                  }}
+                  .modal img {{
+                      max-width: 90%;
+                      max-height: 90%;
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      border-radius: 8px;
+                  }}
+                  .modal-close {{
+                      position: absolute;
+                      top: 20px;
+                      right: 30px;
+                      font-size: 40px;
+                      color: white;
+                      cursor: pointer;
+                  }}
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <header>
+                      <h1>SwiftMarkdownView Snapshot Report</h1>
+                      <p class="meta">Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}</p>
+                      <p class="meta">Branch: {github_ref} | Commit: {github_sha}</p>
+                      <div class="stats">
+                          <div class="stat">
+                              <div class="stat-value">{len(images)}</div>
+                              <div class="stat-label">Total Snapshots</div>
+                          </div>
+                          <div class="stat">
+                              <div class="stat-value">{len(suites)}</div>
+                              <div class="stat-label">Test Suites</div>
+                          </div>
+                      </div>
+                  </header>
+          '''
+
+          for suite_name, suite_images in sorted(suites.items()):
+              html += f'''
+                  <section class="suite">
+                      <div class="suite-header">
+                          <h2>{suite_name}</h2>
+                          <span class="suite-count">{len(suite_images)} snapshots</span>
+                      </div>
+                      <div class="grid">
+              '''
+              for img in sorted(suite_images):
+                  display_name = img.replace('.1.png', '').replace('.png', '')
+                  html += f'''
+                          <div class="card">
+                              <img src="images/{img}" alt="{display_name}" onclick="openModal(this.src)">
+                              <div class="card-body">
+                                  <p class="card-title">{display_name}</p>
+                              </div>
+                          </div>
+                  '''
+              html += '''
+                      </div>
+                  </section>
+              '''
+
+          html += '''
+                  <div class="modal" id="modal" onclick="closeModal()">
+                      <span class="modal-close">&times;</span>
+                      <img id="modal-img" src="" alt="Full size">
+                  </div>
+              </div>
+              <script>
+                  function openModal(src) {
+                      document.getElementById('modal-img').src = src;
+                      document.getElementById('modal').style.display = 'block';
+                  }
+                  function closeModal() {
+                      document.getElementById('modal').style.display = 'none';
+                  }
+                  document.addEventListener('keydown', (e) => {
+                      if (e.key === 'Escape') closeModal();
+                  });
+              </script>
+          </body>
+          </html>
+          '''
+
+          with open('snapshot-report/index.html', 'w') as f:
+              f.write(html)
+
+          print(f"Generated report with {len(images)} snapshots in {len(suites)} suites")
+          EOF
+
+      - name: Upload Snapshot Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-report
+          path: snapshot-report/
+          retention-days: 30
+
+      - name: Setup Pages
+        if: always()
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages Artifact
+        if: always()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: snapshot-report/
+
+      - name: Set test result summary
+        if: always()
+        id: summary
+        run: |
+          TOTAL=$(find snapshot-report/images -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+
+          if [ "${{ steps.snapshot-test.outputs.passed }}" = "true" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "emoji=:white_check_mark:" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "emoji=:x:" >> $GITHUB_OUTPUT
+          fi
+
+    outputs:
+      test-passed: ${{ steps.snapshot-test.outputs.passed }}
+      total-snapshots: ${{ steps.summary.outputs.total }}
+      status: ${{ steps.summary.outputs.status }}
+      emoji: ${{ steps.summary.outputs.emoji }}
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    needs: snapshot-test
+    # Only deploy to Pages from main branch (other branches use artifacts only)
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+    outputs:
+      page-url: ${{ steps.deployment.outputs.page_url }}
+
+  notify-slack:
+    name: Notify Slack
+    needs: [snapshot-test]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ needs.snapshot-test.outputs.test-passed == 'true' && ':white_check_mark:' || ':x:' }} SwiftMarkdownView Snapshot Report",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n${{ needs.snapshot-test.outputs.test-passed == 'true' && 'Passed' || 'Failed' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Snapshots:*\n${{ needs.snapshot-test.outputs.total-snapshots }} images"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:*\n${{ github.ref_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n`${{ github.sha }}`"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${{ github.ref == 'refs/heads/main' && 'https://no-problem-dev.github.io/swift-markdown-view/' || format('{0}/{1}/actions/runs/{2}#artifacts', github.server_url, github.repository, github.run_id) }}|:bar_chart: View Snapshot Report> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|:gear: View Workflow>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
