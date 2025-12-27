@@ -50,22 +50,8 @@ jobs:
         run: |
           # WebView tests require macOS 26, skip them on CI
           # Run only non-WebView snapshot tests
-          set -o pipefail
-          set +e
           swift test \
-            --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests" \
-            2>&1 | tee test-output.txt
-          TEST_EXIT_CODE=${PIPESTATUS[0]}
-          set -e
-
-          # Check if tests passed using exit code
-          if [ $TEST_EXIT_CODE -eq 0 ]; then
-            echo "result=success" >> $GITHUB_OUTPUT
-            echo "passed=true" >> $GITHUB_OUTPUT
-          else
-            echo "result=failure" >> $GITHUB_OUTPUT
-            echo "passed=false" >> $GITHUB_OUTPUT
-          fi
+            --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests"
 
       - name: Collect snapshot images
         if: always()
@@ -361,19 +347,9 @@ jobs:
           TOTAL=$(find snapshot-report/images -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
 
-          if [ "${{ steps.snapshot-test.outputs.passed }}" = "true" ]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo "emoji=:white_check_mark:" >> $GITHUB_OUTPUT
-          else
-            echo "status=failure" >> $GITHUB_OUTPUT
-            echo "emoji=:x:" >> $GITHUB_OUTPUT
-          fi
-
     outputs:
-      test-passed: ${{ steps.snapshot-test.outputs.passed }}
+      test-outcome: ${{ steps.snapshot-test.outcome }}
       total-snapshots: ${{ steps.summary.outputs.total }}
-      status: ${{ steps.summary.outputs.status }}
-      emoji: ${{ steps.summary.outputs.emoji }}
 
   deploy-pages:
     name: Deploy to GitHub Pages
@@ -415,7 +391,7 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ needs.snapshot-test.outputs.test-passed == 'true' && ':white_check_mark:' || ':x:' }} SwiftMarkdownView Snapshot Report",
+                    "text": "${{ needs.snapshot-test.outputs.test-outcome == 'success' && ':white_check_mark:' || ':x:' }} SwiftMarkdownView Snapshot Report",
                     "emoji": true
                   }
                 },
@@ -424,7 +400,7 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*Status:*\n${{ needs.snapshot-test.outputs.test-passed == 'true' && 'Passed' || 'Failed' }}"
+                      "text": "*Status:*\n${{ needs.snapshot-test.outputs.test-outcome == 'success' && 'Passed' || 'Failed' }}"
                     },
                     {
                       "type": "mrkdwn",
