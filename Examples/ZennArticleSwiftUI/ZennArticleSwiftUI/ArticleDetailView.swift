@@ -1,8 +1,10 @@
 import SwiftUI
 import SwiftMarkdownView
+import SwiftMarkdownViewHighlightJS
 
 struct ArticleDetailView: View {
     let article: Article
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ScrollView {
@@ -33,7 +35,14 @@ struct ArticleDetailView: View {
                 Divider()
 
                 // Markdown content
+                // Note: Using a11y/xcode themes for best visibility
+                // a11y light has better contrast than xcode light
                 MarkdownView(article.content)
+                    .syntaxHighlighter(
+                        colorScheme == .dark
+                            ? HighlightJSSyntaxHighlighter.xcodeDark
+                            : HighlightJSSyntaxHighlighter.a11yLight
+                    )
                     .padding(.horizontal)
             }
             .padding(.vertical)

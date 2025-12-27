@@ -1,31 +1,42 @@
 import Testing
 import SwiftUI
 @testable import SwiftMarkdownView
+import SwiftMarkdownViewHighlightJS
 
 /// Snapshot tests for code blocks with syntax highlighting.
 ///
-/// Tests rendering of various programming language code blocks.
+/// Tests rendering of various programming language code blocks
+/// using HighlightJS-based syntax highlighter for accurate, multi-language support.
 @Suite("Code Block Snapshots")
 @MainActor
 struct CodeBlockSnapshotTests {
 
+    /// Light mode highlighter for white background snapshots.
+    /// Note: Using a11y theme instead of xcode because xcode light mode
+    /// doesn't set NSColor for plain text, causing visibility issues.
+    private let highlighter = HighlightJSSyntaxHighlighter(theme: .a11y, colorMode: .light)
+
+    /// Delay for async syntax highlighting to complete.
+    private let highlightDelay: TimeInterval = 1.0
+
     // MARK: - Plain Code
 
     @Test
-    func plain() {
+    func plain() async {
         let view = MarkdownView("""
         ```
         Some plain code
         without syntax highlighting
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - Swift
 
     @Test
-    func swift() {
+    func swift() async {
         let view = MarkdownView("""
         ```swift
         struct Person {
@@ -38,13 +49,14 @@ struct CodeBlockSnapshotTests {
         }
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - TypeScript
 
     @Test
-    func typescript() {
+    func typescript() async {
         let view = MarkdownView("""
         ```typescript
         interface User {
@@ -57,13 +69,14 @@ struct CodeBlockSnapshotTests {
         };
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - Python
 
     @Test
-    func python() {
+    func python() async {
         let view = MarkdownView("""
         ```python
         def greet(name: str) -> str:
@@ -77,13 +90,14 @@ struct CodeBlockSnapshotTests {
                 self.age = age
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - Go
 
     @Test
-    func go() {
+    func go() async {
         let view = MarkdownView("""
         ```go
         package main
@@ -97,13 +111,14 @@ struct CodeBlockSnapshotTests {
         }
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - Rust
 
     @Test
-    func rust() {
+    func rust() async {
         let view = MarkdownView("""
         ```rust
         fn main() {
@@ -118,13 +133,14 @@ struct CodeBlockSnapshotTests {
         }
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - Ruby
 
     @Test
-    func ruby() {
+    func ruby() async {
         let view = MarkdownView("""
         ```ruby
         class Person
@@ -142,13 +158,14 @@ struct CodeBlockSnapshotTests {
         end
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - SQL
 
     @Test
-    func sql() {
+    func sql() async {
         let view = MarkdownView("""
         ```sql
         -- Get active users
@@ -162,13 +179,14 @@ struct CodeBlockSnapshotTests {
         VALUES (1, 'login');
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - JSON
 
     @Test
-    func json() {
+    func json() async {
         let view = MarkdownView("""
         ```json
         {
@@ -180,13 +198,14 @@ struct CodeBlockSnapshotTests {
         }
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - YAML
 
     @Test
-    func yaml() {
+    func yaml() async {
         let view = MarkdownView("""
         ```yaml
         # Application config
@@ -200,13 +219,14 @@ struct CodeBlockSnapshotTests {
           name: myapp_db
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - Shell
 
     @Test
-    func shell() {
+    func shell() async {
         let view = MarkdownView("""
         ```bash
         #!/bin/bash
@@ -222,6 +242,7 @@ struct CodeBlockSnapshotTests {
         echo "Deployment complete!"
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 }

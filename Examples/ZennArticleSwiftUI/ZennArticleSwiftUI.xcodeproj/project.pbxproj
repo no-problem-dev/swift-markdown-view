@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1903DA2D2EFFADD400BF0AED /* SwiftMarkdownView in Frameworks */ = {isa = PBXBuildFile; productRef = 1903DA2C2EFFADD400BF0AED /* SwiftMarkdownView */; };
+		1903DA2E2EFFADD400BF0AED /* SwiftMarkdownViewHighlightJS in Frameworks */ = {isa = PBXBuildFile; productRef = 1903DA2F2EFFADD400BF0AED /* SwiftMarkdownViewHighlightJS */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1903DA2D2EFFADD400BF0AED /* SwiftMarkdownView in Frameworks */,
+				1903DA2E2EFFADD400BF0AED /* SwiftMarkdownViewHighlightJS in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +73,7 @@
 			name = ZennArticleSwiftUI;
 			packageProductDependencies = (
 				1903DA2C2EFFADD400BF0AED /* SwiftMarkdownView */,
+				1903DA2F2EFFADD400BF0AED /* SwiftMarkdownViewHighlightJS */,
 			);
 			productName = ZennArticleSwiftUI;
 			productReference = 1903DA162EFFAD0400BF0AED /* ZennArticleSwiftUI.app */;
@@ -355,6 +358,10 @@
 		1903DA2C2EFFADD400BF0AED /* SwiftMarkdownView */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SwiftMarkdownView;
+		};
+		1903DA2F2EFFADD400BF0AED /* SwiftMarkdownViewHighlightJS */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SwiftMarkdownViewHighlightJS;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

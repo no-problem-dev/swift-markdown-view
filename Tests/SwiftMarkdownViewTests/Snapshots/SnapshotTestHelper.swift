@@ -8,6 +8,21 @@ enum SnapshotTestHelper {
     /// Standard size for snapshot testing.
     static let defaultSize = CGSize(width: 400, height: 600)
 
+    /// Color scheme options for snapshot testing.
+    enum ColorSchemeMode {
+        case light
+        case dark
+
+        var backgroundColor: Color {
+            switch self {
+            case .light:
+                return Color.white
+            case .dark:
+                return Color(red: 0.11, green: 0.11, blue: 0.12) // Dark gray similar to Xcode dark
+            }
+        }
+    }
+
     /// Whether to record new reference snapshots.
     /// Set `SNAPSHOT_RECORD=1` environment variable to enable recording mode.
     static let isRecording: Bool = {
@@ -62,6 +77,7 @@ enum SnapshotTestHelper {
     /// - Parameters:
     ///   - view: The SwiftUI view to snapshot.
     ///   - delay: Time to wait for content to load (in seconds).
+    ///   - colorScheme: The color scheme mode for background. Defaults to `.light`.
     ///   - size: The size of the snapshot frame. Defaults to `defaultSize`.
     ///   - file: The source file (auto-populated).
     ///   - testName: The test function name (auto-populated).
@@ -70,6 +86,7 @@ enum SnapshotTestHelper {
     static func assertSnapshotAsync<V: View>(
         of view: V,
         delay: TimeInterval = 3.0,
+        colorScheme: ColorSchemeMode = .light,
         size: CGSize = defaultSize,
         file: StaticString = #filePath,
         testName: String = #function,
@@ -79,7 +96,7 @@ enum SnapshotTestHelper {
             rootView: view
                 .frame(width: size.width)
                 .padding()
-                .background(Color.white)
+                .background(colorScheme.backgroundColor)
         )
 
         hostingController.view.frame = CGRect(
