@@ -4,15 +4,10 @@ on:
   # 手動実行用
   workflow_dispatch:
 
-  # テスト用: このブランチへのプッシュで実行
+  # releaseブランチからmainへのマージ時に実行
   push:
     branches:
-      - 'feature/mermaid-diagram-support'
-
-  # 本番用（後で有効化）: releaseブランチからmainへのマージ時
-  # push:
-  #   branches:
-  #     - main
+      - main
 
 concurrency:
   group: snapshot-${{ github.workflow }}-${{ github.ref }}
