@@ -9,6 +9,37 @@
 
 <!-- 次のリリースに含める変更をここに追加 -->
 
+## [1.0.5] - 2025-12-27
+
+### 追加
+
+- **Mermaidダイアグラム対応**: macOS 26+ SwiftUI WebViewを使用したMermaid.jsレンダリング
+  - `MermaidDiagramView`: ネイティブWebViewによるダイアグラム表示
+  - `MermaidFallbackView`: 古いOS向けのフォールバック表示
+  - `AdaptiveMermaidView`: OSバージョンに応じた自動切り替え
+  - `MermaidScriptProvider`: CDN/インライン/ローカルファイルからのスクリプト読み込み
+  - フローチャート、シーケンス図、クラス図、状態図などをサポート
+
+- **CI: スナップショットレポートワークフロー**
+  - mainブランチへのマージ時に自動実行
+  - HTMLギャラリーレポート生成
+  - GitHub Pagesへのデプロイ
+  - Slack通知（結果サマリー + レポートURL）
+
+### 変更
+
+- **スナップショットテストのリファクタリング**
+  - 責務ごとに6ファイルに分割（BlockElement, CodeBlock, InlineElement, Media, ComplexDocument, Mermaid）
+  - ファイル名の改善（`snapshotView-_-named.*.png` → `*.1.png`）
+  - 非同期スナップショットサポート追加（WebViewコンテンツ用）
+
+### テスト
+
+- 136テスト（+30テスト追加）
+- Mermaidパーシングテスト
+- MermaidScriptProviderテスト
+- Mermaidスナップショットテスト
+
 ## [1.0.4] - 2025-12-27
 
 ### 修正
@@ -57,7 +88,8 @@
 - DocCドキュメント
 - RELEASE_PROCESS.md
 
-[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.4...HEAD
+[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.1...v1.0.2
