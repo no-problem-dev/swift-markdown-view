@@ -22,6 +22,7 @@ public struct MermaidDiagramView: View {
     public let code: String
 
     @Environment(\.colorPalette) private var colorPalette
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.mermaidScriptProvider) private var scriptProvider
 
     @State private var page = WebPage()
@@ -42,6 +43,9 @@ public struct MermaidDiagramView: View {
             .onChange(of: code) { _, _ in
                 loadContent()
             }
+            .onChange(of: colorScheme) { _, _ in
+                loadContent()
+            }
     }
 
     private func loadContent() {
@@ -50,6 +54,22 @@ public struct MermaidDiagramView: View {
     }
 
     // MARK: - HTML Generation
+
+    /// Mermaid theme based on current color scheme.
+    private var mermaidTheme: String {
+        colorScheme == .dark ? "dark" : "default"
+    }
+
+    /// Background color based on current color scheme.
+    private var backgroundColor: String {
+        colorScheme == .dark ? "#1c1c1e" : "#ffffff"
+    }
+
+    /// Error text color based on current color scheme.
+    private var errorColor: String {
+        // Using semantic error colors that work well in both themes
+        colorScheme == .dark ? "#ff6b6b" : "#dc3545"
+    }
 
     private func generateHTML() -> String {
         let scriptTag = generateScriptTag()
@@ -71,7 +91,7 @@ public struct MermaidDiagramView: View {
                     width: 100%;
                     height: 100%;
                     overflow: scroll;
-                    background: transparent;
+                    background: \(backgroundColor);
                     scrollbar-width: none;
                     -ms-overflow-style: none;
                 }
@@ -83,7 +103,7 @@ public struct MermaidDiagramView: View {
                     min-width: 100%;
                     min-height: 100%;
                     padding: 16px;
-                    background: transparent;
+                    background: \(backgroundColor);
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 }
                 .mermaid-container {
@@ -97,7 +117,7 @@ public struct MermaidDiagramView: View {
                     display: block;
                 }
                 .error {
-                    color: #dc3545;
+                    color: \(errorColor);
                     padding: 16px;
                     text-align: center;
                 }
@@ -113,7 +133,7 @@ public struct MermaidDiagramView: View {
             <script>
                 mermaid.initialize({
                     startOnLoad: false,
-                    theme: 'default',
+                    theme: '\(mermaidTheme)',
                     securityLevel: 'loose',
                     flowchart: { useMaxWidth: false, htmlLabels: true },
                     sequence: { useMaxWidth: false },
