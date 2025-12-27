@@ -46,10 +46,12 @@ jobs:
 
       - name: Run Snapshot Tests (Recording Mode)
         id: snapshot-test
+        continue-on-error: true
         env:
           SNAPSHOT_RECORD: "1"
         run: |
           # Run snapshot tests in recording mode to generate reference images
+          # Recording mode marks tests as "failed" by design to prevent accidental commits
           # WebView tests require macOS 26.1+, skip them on CI (26.0.1)
           swift test \
             --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests"
@@ -349,7 +351,6 @@ jobs:
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
 
     outputs:
-      test-outcome: ${{ steps.snapshot-test.outcome }}
       total-snapshots: ${{ steps.summary.outputs.total }}
 
   deploy-pages:
@@ -392,7 +393,7 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ needs.snapshot-test.outputs.test-outcome == 'success' && ':white_check_mark:' || ':x:' }} SwiftMarkdownView Snapshot Report",
+                    "text": ":white_check_mark: SwiftMarkdownView Snapshot Report",
                     "emoji": true
                   }
                 },
@@ -401,7 +402,7 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*Status:*\n${{ needs.snapshot-test.outputs.test-outcome == 'success' && 'Passed' || 'Failed' }}"
+                      "text": "*Status:*\nGenerated"
                     },
                     {
                       "type": "mrkdwn",
