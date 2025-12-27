@@ -29,6 +29,12 @@ public enum MarkdownBlock: Sendable, Equatable {
 
     /// A table (GFM extension).
     case table(TableData)
+
+    /// A Mermaid diagram block.
+    ///
+    /// Mermaid diagrams are fenced code blocks with `mermaid` as the language.
+    /// They are rendered using Mermaid.js for visualization.
+    case mermaid(String)
 }
 
 // MARK: - Table Types

@@ -69,6 +69,9 @@ struct BlockView: View {
 
         case .table(let tableData):
             TableView(data: tableData)
+
+        case .mermaid(let code):
+            AdaptiveMermaidView(code)
         }
     }
 }
