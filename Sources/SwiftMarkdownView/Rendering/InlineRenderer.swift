@@ -10,10 +10,12 @@ enum InlineRenderer {
 
     /// Renders an array of inline elements as a single concatenated Text.
     ///
-    /// - Parameter inlines: The inline elements to render.
+    /// - Parameters:
+    ///   - inlines: The inline elements to render.
+    ///   - colorPalette: The color palette for theming inline elements.
     /// - Returns: A `Text` view with all formatting applied.
-    static func render(_ inlines: [MarkdownInline]) -> Text {
-        let attributed = buildAttributedString(inlines, style: .default)
+    static func render(_ inlines: [MarkdownInline], colorPalette: any ColorPalette) -> Text {
+        let attributed = buildAttributedString(inlines, style: .default, colorPalette: colorPalette)
         return Text(attributed)
     }
 
@@ -22,14 +24,16 @@ enum InlineRenderer {
     /// - Parameters:
     ///   - inlines: The inline elements to render.
     ///   - style: The inherited style context.
+    ///   - colorPalette: The color palette for theming.
     /// - Returns: An AttributedString with all formatting applied.
     private static func buildAttributedString(
         _ inlines: [MarkdownInline],
-        style: InlineStyle
+        style: InlineStyle,
+        colorPalette: any ColorPalette
     ) -> AttributedString {
         var result = AttributedString()
         for inline in inlines {
-            result.append(buildSingle(inline, style: style))
+            result.append(buildSingle(inline, style: style, colorPalette: colorPalette))
         }
         return result
     }
@@ -37,7 +41,8 @@ enum InlineRenderer {
     /// Builds an AttributedString for a single inline element.
     private static func buildSingle(
         _ inline: MarkdownInline,
-        style: InlineStyle
+        style: InlineStyle,
+        colorPalette: any ColorPalette
     ) -> AttributedString {
         switch inline {
         case .text(let string):
@@ -46,19 +51,20 @@ enum InlineRenderer {
             return attributed
 
         case .emphasis(let children):
-            return buildAttributedString(children, style: style.withEmphasis())
+            return buildAttributedString(children, style: style.withEmphasis(), colorPalette: colorPalette)
 
         case .strong(let children):
-            return buildAttributedString(children, style: style.withStrong())
+            return buildAttributedString(children, style: style.withStrong(), colorPalette: colorPalette)
 
         case .code(let code):
             var attributed = AttributedString(code)
             attributed.font = .system(.body, design: .monospaced)
-            attributed.backgroundColor = .gray.opacity(0.15)
+            attributed.backgroundColor = MarkdownColors.inlineCodeBackground(colorPalette)
+            attributed.foregroundColor = MarkdownColors.inlineCodeText(colorPalette)
             return attributed
 
         case .link(let destination, _, let content):
-            var attributed = buildAttributedString(content, style: style.withLink())
+            var attributed = buildAttributedString(content, style: style.withLink(), colorPalette: colorPalette)
             if let url = URL(string: destination) {
                 attributed.link = url
             }
@@ -76,7 +82,7 @@ enum InlineRenderer {
             return AttributedString("\n")
 
         case .strikethrough(let children):
-            return buildAttributedString(children, style: style.withStrikethrough())
+            return buildAttributedString(children, style: style.withStrikethrough(), colorPalette: colorPalette)
         }
     }
 
