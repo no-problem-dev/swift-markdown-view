@@ -63,3 +63,5 @@
 [1.0.2]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/no-problem-dev/swift-markdown-view/releases/tag/v1.0.0
+
+<!-- Auto-generated on 2025-12-27T03:56:48Z by release workflow -->
