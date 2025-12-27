@@ -50,12 +50,16 @@ jobs:
         run: |
           # WebView tests require macOS 26, skip them on CI
           # Run only non-WebView snapshot tests
+          set -o pipefail
+          set +e
           swift test \
             --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests" \
             2>&1 | tee test-output.txt
+          TEST_EXIT_CODE=${PIPESTATUS[0]}
+          set -e
 
-          # Check if tests passed
-          if grep -q "Test run.*passed" test-output.txt; then
+          # Check if tests passed using exit code
+          if [ $TEST_EXIT_CODE -eq 0 ]; then
             echo "result=success" >> $GITHUB_OUTPUT
             echo "passed=true" >> $GITHUB_OUTPUT
           else
