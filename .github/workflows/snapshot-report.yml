@@ -9,9 +9,12 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 concurrency:
   group: snapshot-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   SNAPSHOT_ARTIFACTS: ${{ github.workspace }}/snapshot-failures
@@ -333,16 +336,6 @@ jobs:
           path: snapshot-report/
           retention-days: 30
 
-      - name: Setup Pages
-        if: always()
-        uses: actions/configure-pages@v4
-
-      - name: Upload Pages Artifact
-        if: always()
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: snapshot-report/
-
       - name: Set test result summary
         if: always()
         id: summary
@@ -350,31 +343,17 @@ jobs:
           TOTAL=$(find snapshot-report/images -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
 
+      - name: Deploy to GitHub Pages
+        if: always() && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./snapshot-report
+          destination_dir: snapshots
+          keep_files: true
+
     outputs:
       total-snapshots: ${{ steps.summary.outputs.total }}
-
-  deploy-pages:
-    name: Deploy to GitHub Pages
-    needs: snapshot-test
-    # Only deploy to Pages from main branch (other branches use artifacts only)
-    if: always() && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    permissions:
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-    outputs:
-      page-url: ${{ steps.deployment.outputs.page_url }}
 
   notify-slack:
     name: Notify Slack
@@ -422,7 +401,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "<${{ github.ref == 'refs/heads/main' && 'https://no-problem-dev.github.io/swift-markdown-view/' || format('{0}/{1}/actions/runs/{2}#artifacts', github.server_url, github.repository, github.run_id) }}|:bar_chart: View Snapshot Report> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|:gear: View Workflow>"
+                    "text": "<${{ github.ref == 'refs/heads/main' && 'https://no-problem-dev.github.io/swift-markdown-view/snapshots/' || format('{0}/{1}/actions/runs/{2}#artifacts', github.server_url, github.repository, github.run_id) }}|:bar_chart: View Snapshot Report> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|:gear: View Workflow>"
                   }
                 }
               ]
