@@ -263,7 +263,6 @@ struct CodeBlockView: View {
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.spacingScale) private var spacing
     @Environment(\.radiusScale) private var radius
-    @Environment(\.syntaxTokenizer) private var tokenizer
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -276,8 +275,7 @@ struct CodeBlockView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HighlightedCodeView(
                     code: trimmedCode,
-                    language: language,
-                    tokenizer: tokenizer
+                    language: language
                 )
             }
             .padding(MarkdownSpacing.codeBlockPadding(spacing))

@@ -1,99 +1,125 @@
 import SwiftUI
 import DesignSystem
 
-/// A SwiftUI view that renders syntax-highlighted code.
+/// A SwiftUI view that renders syntax-highlighted code asynchronously.
 ///
-/// This view takes an array of syntax tokens and renders them as
-/// concatenated `Text` views with appropriate colors from the
-/// DesignSystem's ColorPalette.
+/// This view uses the injected `SyntaxHighlighter` from the environment
+/// to highlight code and display the result. It handles loading and
+/// error states gracefully.
 ///
 /// Example:
 /// ```swift
-/// let tokens = tokenizer.tokenize(code, language: "swift")
-/// HighlightedCodeView(tokens: tokens)
+/// HighlightedCodeView(code: swiftCode, language: "swift")
+/// ```
+///
+/// To use a custom highlighter:
+/// ```swift
+/// HighlightedCodeView(code: swiftCode, language: "swift")
+///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
 /// ```
 public struct HighlightedCodeView: View {
 
-    /// The tokens to render.
-    private let tokens: [SyntaxToken]
+    /// The source code to highlight.
+    public let code: String
 
-    /// Optional custom syntax colors.
-    private let customColors: SyntaxColors?
+    /// The programming language for syntax rules.
+    public let language: String?
 
-    @Environment(\.colorPalette) private var palette
+    @Environment(\.syntaxHighlighter) private var highlighter
+    @Environment(\.colorPalette) private var colorPalette
 
-    /// Creates a highlighted code view from tokens.
+    @State private var state: HighlightState = .idle
+
+    /// Creates a highlighted code view.
     ///
     /// - Parameters:
-    ///   - tokens: The syntax tokens to render.
-    ///   - colors: Optional custom syntax colors. If nil, derives from ColorPalette.
-    public init(tokens: [SyntaxToken], colors: SyntaxColors? = nil) {
-        self.tokens = tokens
-        self.customColors = colors
+    ///   - code: The source code to highlight.
+    ///   - language: The programming language (e.g., "swift", "python").
+    public init(code: String, language: String?) {
+        self.code = code
+        self.language = language
     }
 
     public var body: some View {
-        highlightedText
+        content
             .font(.system(.body, design: .monospaced))
             .textSelection(.enabled)
+            .task(id: TaskIdentifier(code: code, language: language)) {
+                await performHighlighting()
+            }
     }
 
-    /// The concatenated text with syntax highlighting applied.
-    private var highlightedText: Text {
-        let colors = customColors ?? SyntaxColors(from: palette)
+    // MARK: - Private
 
-        return tokens.reduce(Text("")) { result, token in
-            result + Text(token.text)
-                .foregroundColor(colors.color(for: token.kind))
+    @ViewBuilder
+    private var content: some View {
+        switch state {
+        case .idle, .loading:
+            // Show plain text during loading for smooth transition
+            Text(code)
+                .foregroundStyle(colorPalette.onSurface)
+
+        case .success(let attributed):
+            Text(attributed)
+
+        case .failure:
+            // Fallback to plain text on error
+            Text(code)
+                .foregroundStyle(colorPalette.onSurface)
+        }
+    }
+
+    private func performHighlighting() async {
+        state = .loading
+
+        do {
+            let result = try await highlighter.highlight(code, language: language)
+            state = .success(result)
+        } catch {
+            state = .failure(error)
         }
     }
 }
 
-// MARK: - Convenience Initializer
+// MARK: - Task Identifier
 
 extension HighlightedCodeView {
-
-    /// Creates a highlighted code view by tokenizing the given code.
-    ///
-    /// - Parameters:
-    ///   - code: The source code to highlight.
-    ///   - language: The programming language for syntax rules.
-    ///   - tokenizer: The tokenizer to use. Defaults to RegexSyntaxTokenizer.
-    ///   - colors: Optional custom syntax colors.
-    public init(
-        code: String,
-        language: String?,
-        tokenizer: some SyntaxTokenizer = RegexSyntaxTokenizer(),
-        colors: SyntaxColors? = nil
-    ) {
-        self.tokens = tokenizer.tokenize(code, language: language)
-        self.customColors = colors
+    /// Hashable identifier for task invalidation.
+    private struct TaskIdentifier: Hashable {
+        let code: String
+        let language: String?
     }
 }
 
-// MARK: - Environment Key for Tokenizer
+// MARK: - Preview
 
-/// Environment key for injecting a custom syntax tokenizer.
-private struct SyntaxTokenizerKey: EnvironmentKey {
-    static let defaultValue: any SyntaxTokenizer = RegexSyntaxTokenizer()
+#if DEBUG
+#Preview("Swift Code") {
+    HighlightedCodeView(
+        code: """
+        func greet(_ name: String) -> String {
+            return "Hello, \\(name)!"
+        }
+
+        let message = greet("World")
+        print(message)
+        """,
+        language: "swift"
+    )
+    .padding()
 }
 
-extension EnvironmentValues {
-    /// The syntax tokenizer used for code highlighting.
-    public var syntaxTokenizer: any SyntaxTokenizer {
-        get { self[SyntaxTokenizerKey.self] }
-        set { self[SyntaxTokenizerKey.self] = newValue }
-    }
-}
+#Preview("Python Code") {
+    HighlightedCodeView(
+        code: """
+        def greet(name: str) -> str:
+            return f"Hello, {name}!"
 
-// MARK: - View Modifier
-
-public extension View {
-    /// Sets a custom syntax tokenizer for code highlighting.
-    ///
-    /// - Parameter tokenizer: The tokenizer to use.
-    /// - Returns: A view with the custom tokenizer applied.
-    func syntaxTokenizer(_ tokenizer: some SyntaxTokenizer) -> some View {
-        environment(\.syntaxTokenizer, tokenizer)
-    }
+        message = greet("World")
+        print(message)
+        """,
+        language: "python"
+    )
+    .padding()
 }
+#endif

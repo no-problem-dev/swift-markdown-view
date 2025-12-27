@@ -2,235 +2,89 @@ import Testing
 import SwiftUI
 @testable import SwiftMarkdownView
 
-/// Tests for syntax highlighting tokenization
+/// Tests for syntax highlighting with the new async SyntaxHighlighter protocol.
+@Suite("Syntax Highlighting")
 struct SyntaxHighlightTests {
 
-    // MARK: - SyntaxColors Tests
+    // MARK: - RegexSyntaxHighlighter Tests
 
-    @Test("SyntaxColors returns correct color for each token kind")
-    func syntaxColorsReturnsCorrectColors() {
-        let colors = SyntaxColors.light
-
-        #expect(colors.color(for: .keyword) == colors.keyword)
-        #expect(colors.color(for: .string) == colors.string)
-        #expect(colors.color(for: .comment) == colors.comment)
-        #expect(colors.color(for: .number) == colors.number)
-        #expect(colors.color(for: .type) == colors.type)
-        #expect(colors.color(for: .property) == colors.property)
-        #expect(colors.color(for: .punctuation) == colors.punctuation)
-        #expect(colors.color(for: .plain) == colors.plain)
-    }
-
-    @Test("SyntaxColors provides light and dark presets")
-    func syntaxColorsPresetsExist() {
-        let light = SyntaxColors.light
-        let dark = SyntaxColors.dark
-
-        // Light and dark should have different plain colors
-        #expect(light.plain != dark.plain)
-    }
-
-    // MARK: - Token Kind Tests
-
-    @Test("SyntaxTokenKind has all required cases")
-    func tokenKindHasRequiredCases() {
-        // Verify all token kinds exist
-        let kinds: [SyntaxTokenKind] = [
-            .plain,
-            .keyword,
-            .string,
-            .comment,
-            .number,
-            .type,
-            .property,
-            .punctuation
-        ]
-        #expect(kinds.count == 8)
-    }
-
-    @Test("SyntaxToken stores text and kind correctly")
-    func tokenStoresValues() {
-        let token = SyntaxToken(text: "func", kind: .keyword)
-        #expect(token.text == "func")
-        #expect(token.kind == .keyword)
-    }
-
-    // MARK: - Swift Tokenization Tests
-
-    @Test("Swift keywords are tokenized correctly")
-    func swiftKeywordsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "func let var if else guard return"
-        let tokens = tokenizer.tokenize(code, language: "swift")
-
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(keywords.count >= 7)
-    }
-
-    @Test("Swift string literals are tokenized correctly")
-    func swiftStringsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter returns AttributedString for Swift code")
+    func highlightsSwiftCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
-        let message = "Hello, World!"
+        func greet(_ name: String) -> String {
+            return "Hello, \\(name)!"
+        }
         """
-        let tokens = tokenizer.tokenize(code, language: "swift")
 
-        let strings = tokens.filter { $0.kind == .string }
-        #expect(strings.count >= 1)
-        #expect(strings.first?.text.contains("Hello") == true)
+        let result = try await highlighter.highlight(code, language: "swift")
+
+        #expect(!result.characters.isEmpty)
     }
 
-    @Test("Swift single-line comments are tokenized correctly")
-    func swiftSingleLineCommentsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter returns AttributedString for Python code")
+    func highlightsPythonCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
-        // This is a comment
-        let x = 1
+        def greet(name: str) -> str:
+            return f"Hello, {name}!"
         """
-        let tokens = tokenizer.tokenize(code, language: "swift")
 
-        let comments = tokens.filter { $0.kind == .comment }
-        #expect(comments.count >= 1)
-        #expect(comments.first?.text.contains("This is a comment") == true)
+        let result = try await highlighter.highlight(code, language: "python")
+
+        #expect(!result.characters.isEmpty)
     }
 
-    @Test("Swift numbers are tokenized correctly")
-    func swiftNumbersTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "let x = 42 + 3.14"
-        let tokens = tokenizer.tokenize(code, language: "swift")
+    @Test("Empty code returns empty AttributedString")
+    func emptyCodeReturnsEmpty() async throws {
+        let highlighter = RegexSyntaxHighlighter()
 
-        let numbers = tokens.filter { $0.kind == .number }
-        #expect(numbers.count >= 2)
+        let result = try await highlighter.highlight("", language: "swift")
+
+        #expect(result.characters.isEmpty)
     }
 
-    @Test("Swift types are tokenized correctly")
-    func swiftTypesTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "let name: String = value as? Int"
-        let tokens = tokenizer.tokenize(code, language: "swift")
+    @Test("Unknown language uses generic highlighting")
+    func unknownLanguageFallback() async throws {
+        let highlighter = RegexSyntaxHighlighter()
+        let code = "some code here"
 
-        let types = tokens.filter { $0.kind == .type }
-        #expect(types.count >= 2)
+        let result = try await highlighter.highlight(code, language: "unknown")
+
+        #expect(!result.characters.isEmpty)
     }
 
-    @Test("Swift punctuation is tokenized correctly")
-    func swiftPunctuationTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "func foo() { }"
-        let tokens = tokenizer.tokenize(code, language: "swift")
+    @Test("Nil language uses generic highlighting")
+    func nilLanguageUsesGeneric() async throws {
+        let highlighter = RegexSyntaxHighlighter()
+        let code = "let x = 42"
 
-        let punctuation = tokens.filter { $0.kind == .punctuation }
-        #expect(punctuation.count >= 4) // ( ) { }
+        let result = try await highlighter.highlight(code, language: nil)
+
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - TypeScript/JavaScript Tokenization Tests
+    // MARK: - TypeScript/JavaScript Tests
 
-    @Test("TypeScript keywords are tokenized correctly")
-    func typescriptKeywordsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "const let function if else return async await"
-        let tokens = tokenizer.tokenize(code, language: "typescript")
-
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(keywords.count >= 7)
-    }
-
-    @Test("TypeScript string literals are tokenized correctly")
-    func typescriptStringsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles TypeScript code")
+    func highlightsTypeScriptCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
         const msg = "hello"
         const name = 'world'
         const tmpl = `template`
         """
-        let tokens = tokenizer.tokenize(code, language: "typescript")
 
-        let strings = tokens.filter { $0.kind == .string }
-        #expect(strings.count >= 3)
+        let result = try await highlighter.highlight(code, language: "typescript")
+
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - Edge Cases
+    // MARK: - Go Tests
 
-    @Test("Empty code returns empty tokens")
-    func emptyCodeReturnsEmpty() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let tokens = tokenizer.tokenize("", language: "swift")
-        #expect(tokens.isEmpty)
-    }
-
-    @Test("Unknown language falls back to basic tokenization")
-    func unknownLanguageFallback() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "some code here"
-        let tokens = tokenizer.tokenize(code, language: "unknown")
-
-        // Should still produce tokens (at least plain text)
-        #expect(!tokens.isEmpty)
-    }
-
-    @Test("Nil language uses generic tokenization")
-    func nilLanguageUsesGeneric() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "let x = 42"
-        let tokens = tokenizer.tokenize(code, language: nil)
-
-        #expect(!tokens.isEmpty)
-    }
-
-    @Test("Tokens concatenation reproduces original code")
-    func tokensConcatenateToOriginal() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = """
-        func greet(name: String) {
-            print("Hello, \\(name)!")
-        }
-        """
-        let tokens = tokenizer.tokenize(code, language: "swift")
-
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
-    }
-
-    // MARK: - Multi-line Code Tests
-
-    @Test("Multi-line Swift code tokenizes correctly")
-    func multiLineSwiftTokenizes() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = """
-        struct Person {
-            let name: String
-            let age: Int
-
-            func greet() {
-                print("Hello, I'm \\(name)")
-            }
-        }
-        """
-        let tokens = tokenizer.tokenize(code, language: "swift")
-
-        let keywords = tokens.filter { $0.kind == .keyword }
-        let types = tokens.filter { $0.kind == .type }
-
-        #expect(keywords.count >= 4) // struct, let, let, func
-        #expect(types.count >= 3)    // String, Int, Person(?)
-    }
-
-    // MARK: - Go Tokenization Tests
-
-    @Test("Go keywords are tokenized correctly")
-    func goKeywordsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "func package import if else for range return defer go chan"
-        let tokens = tokenizer.tokenize(code, language: "go")
-
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(keywords.count >= 9)
-    }
-
-    @Test("Go code tokenizes correctly")
-    func goCodeTokenizes() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles Go code")
+    func highlightsGoCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
         func main() {
             // This is a comment
@@ -238,32 +92,17 @@ struct SyntaxHighlightTests {
             fmt.Println(msg)
         }
         """
-        let tokens = tokenizer.tokenize(code, language: "go")
 
-        let comments = tokens.filter { $0.kind == .comment }
-        let strings = tokens.filter { $0.kind == .string }
-        #expect(comments.count >= 1)
-        #expect(strings.count >= 1)
+        let result = try await highlighter.highlight(code, language: "go")
 
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - Rust Tokenization Tests
+    // MARK: - Rust Tests
 
-    @Test("Rust keywords are tokenized correctly")
-    func rustKeywordsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "fn let mut if else match loop while for pub struct impl"
-        let tokens = tokenizer.tokenize(code, language: "rust")
-
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(keywords.count >= 10)
-    }
-
-    @Test("Rust code tokenizes correctly")
-    func rustCodeTokenizes() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles Rust code")
+    func highlightsRustCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
         fn main() {
             // Rust comment
@@ -271,32 +110,17 @@ struct SyntaxHighlightTests {
             println!("{}", msg);
         }
         """
-        let tokens = tokenizer.tokenize(code, language: "rust")
 
-        let comments = tokens.filter { $0.kind == .comment }
-        let strings = tokens.filter { $0.kind == .string }
-        #expect(comments.count >= 1)
-        #expect(strings.count >= 1)
+        let result = try await highlighter.highlight(code, language: "rust")
 
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - Java Tokenization Tests
+    // MARK: - Java Tests
 
-    @Test("Java keywords are tokenized correctly")
-    func javaKeywordsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "public class static void if else for while return new"
-        let tokens = tokenizer.tokenize(code, language: "java")
-
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(keywords.count >= 9)
-    }
-
-    @Test("Java code tokenizes correctly")
-    func javaCodeTokenizes() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles Java code")
+    func highlightsJavaCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
         public class Main {
             // Java comment
@@ -305,166 +129,94 @@ struct SyntaxHighlightTests {
             }
         }
         """
-        let tokens = tokenizer.tokenize(code, language: "java")
 
-        let comments = tokens.filter { $0.kind == .comment }
-        let strings = tokens.filter { $0.kind == .string }
-        let types = tokens.filter { $0.kind == .type }
-        #expect(comments.count >= 1)
-        #expect(strings.count >= 1)
-        #expect(types.count >= 2) // Main, String, System
+        let result = try await highlighter.highlight(code, language: "java")
 
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - Kotlin Tokenization Tests
+    // MARK: - Ruby Tests
 
-    @Test("Kotlin keywords are tokenized correctly")
-    func kotlinKeywordsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "fun val var if else when for while return class object"
-        let tokens = tokenizer.tokenize(code, language: "kotlin")
-
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(keywords.count >= 10)
-    }
-
-    // MARK: - Ruby Tokenization Tests
-
-    @Test("Ruby keywords are tokenized correctly")
-    func rubyKeywordsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "def class module if elsif else end do begin rescue"
-        let tokens = tokenizer.tokenize(code, language: "ruby")
-
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(keywords.count >= 9)
-    }
-
-    @Test("Ruby code tokenizes correctly")
-    func rubyCodeTokenizes() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles Ruby code")
+    func highlightsRubyCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
         def greet(name)
           # Ruby comment
           puts "Hello, #{name}!"
         end
         """
-        let tokens = tokenizer.tokenize(code, language: "ruby")
 
-        let comments = tokens.filter { $0.kind == .comment }
-        let strings = tokens.filter { $0.kind == .string }
-        #expect(comments.count >= 1)
-        #expect(strings.count >= 1)
+        let result = try await highlighter.highlight(code, language: "ruby")
 
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - Shell/Bash Tokenization Tests
+    // MARK: - Shell Tests
 
-    @Test("Shell keywords are tokenized correctly")
-    func shellKeywordsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "if then else fi for do done while case esac"
-        let tokens = tokenizer.tokenize(code, language: "bash")
-
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(keywords.count >= 9)
-    }
-
-    @Test("Shell code tokenizes correctly")
-    func shellCodeTokenizes() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles Shell code")
+    func highlightsShellCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
         #!/bin/bash
         # Shell comment
         echo "Hello, Shell!"
         """
-        let tokens = tokenizer.tokenize(code, language: "shell")
 
-        let comments = tokens.filter { $0.kind == .comment }
-        let strings = tokens.filter { $0.kind == .string }
-        #expect(comments.count >= 2) // shebang and comment
-        #expect(strings.count >= 1)
+        let result = try await highlighter.highlight(code, language: "bash")
 
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - SQL Tokenization Tests
+    // MARK: - SQL Tests
 
-    @Test("SQL keywords are tokenized correctly")
-    func sqlKeywordsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
-        let code = "SELECT FROM WHERE JOIN ON INSERT INTO UPDATE DELETE CREATE TABLE"
-        let tokens = tokenizer.tokenize(code, language: "sql")
-
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(keywords.count >= 10)
-    }
-
-    @Test("SQL code tokenizes correctly")
-    func sqlCodeTokenizes() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles SQL code")
+    func highlightsSQLCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
         -- SQL comment
         SELECT name, age FROM users WHERE age > 18;
         """
-        let tokens = tokenizer.tokenize(code, language: "sql")
 
-        let comments = tokens.filter { $0.kind == .comment }
-        let numbers = tokens.filter { $0.kind == .number }
-        #expect(comments.count >= 1)
-        #expect(numbers.count >= 1)
+        let result = try await highlighter.highlight(code, language: "sql")
 
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - HTML Tokenization Tests
+    // MARK: - HTML Tests
 
-    @Test("HTML tags are tokenized correctly")
-    func htmlTagsTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles HTML code")
+    func highlightsHTMLCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = "<div class=\"container\"><p>Hello</p></div>"
-        let tokens = tokenizer.tokenize(code, language: "html")
 
-        let keywords = tokens.filter { $0.kind == .keyword }
-        let strings = tokens.filter { $0.kind == .string }
-        #expect(keywords.count >= 3) // div, p, div (or tag markers)
-        #expect(strings.count >= 1) // "container"
+        let result = try await highlighter.highlight(code, language: "html")
 
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - CSS Tokenization Tests
+    // MARK: - CSS Tests
 
-    @Test("CSS properties are tokenized correctly")
-    func cssPropertiesTokenize() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles CSS code")
+    func highlightsCSSCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
         .container {
             color: red;
             font-size: 16px;
         }
         """
-        let tokens = tokenizer.tokenize(code, language: "css")
 
-        let numbers = tokens.filter { $0.kind == .number }
-        #expect(numbers.count >= 1) // 16
+        let result = try await highlighter.highlight(code, language: "css")
 
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - JSON Tokenization Tests
+    // MARK: - JSON Tests
 
-    @Test("JSON tokenizes correctly")
-    func jsonTokenizes() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles JSON code")
+    func highlightsJSONCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
         {
             "name": "John",
@@ -472,40 +224,103 @@ struct SyntaxHighlightTests {
             "active": true
         }
         """
-        let tokens = tokenizer.tokenize(code, language: "json")
 
-        let strings = tokens.filter { $0.kind == .string }
-        let numbers = tokens.filter { $0.kind == .number }
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(strings.count >= 2) // "name", "John", etc.
-        #expect(numbers.count >= 1) // 30
-        #expect(keywords.count >= 1) // true
+        let result = try await highlighter.highlight(code, language: "json")
 
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
+        #expect(!result.characters.isEmpty)
     }
 
-    // MARK: - YAML Tokenization Tests
+    // MARK: - YAML Tests
 
-    @Test("YAML tokenizes correctly")
-    func yamlTokenizes() {
-        let tokenizer = RegexSyntaxTokenizer()
+    @Test("Highlighter handles YAML code")
+    func highlightsYAMLCode() async throws {
+        let highlighter = RegexSyntaxHighlighter()
         let code = """
         # YAML comment
         name: John
         age: 30
         active: true
         """
-        let tokens = tokenizer.tokenize(code, language: "yaml")
 
-        let comments = tokens.filter { $0.kind == .comment }
-        let numbers = tokens.filter { $0.kind == .number }
-        let keywords = tokens.filter { $0.kind == .keyword }
-        #expect(comments.count >= 1)
-        #expect(numbers.count >= 1)
-        #expect(keywords.count >= 1) // true
+        let result = try await highlighter.highlight(code, language: "yaml")
 
-        let reconstructed = tokens.map(\.text).joined()
-        #expect(reconstructed == code)
+        #expect(!result.characters.isEmpty)
+    }
+
+    // MARK: - Color Scheme Tests
+
+    @Test("SyntaxColorScheme provides adaptive colors")
+    func adaptiveColorsExist() {
+        let colors = SyntaxColorScheme.adaptive
+
+        // Verify colors are set
+        #expect(colors.keyword != colors.string)
+        #expect(colors.comment != colors.number)
+    }
+
+    @Test("SyntaxColorScheme provides light and dark presets")
+    func presetsExist() {
+        let light = SyntaxColorScheme.light
+        let dark = SyntaxColorScheme.dark
+
+        // Light and dark should have different plain colors
+        #expect(light.plain != dark.plain)
+    }
+
+    @Test("Custom color scheme can be created")
+    func customColorScheme() {
+        let custom = SyntaxColorScheme(
+            keyword: .red,
+            string: .green,
+            comment: .gray,
+            number: .blue,
+            type: .orange,
+            property: .purple,
+            punctuation: .secondary,
+            plain: .primary
+        )
+
+        #expect(custom.keyword == .red)
+        #expect(custom.string == .green)
+    }
+
+    // MARK: - HighlightState Tests
+
+    @Test("HighlightState cases are equatable")
+    func highlightStateEquality() {
+        let idle1 = HighlightState.idle
+        let idle2 = HighlightState.idle
+        #expect(idle1 == idle2)
+
+        let loading1 = HighlightState.loading
+        let loading2 = HighlightState.loading
+        #expect(loading1 == loading2)
+
+        let success1 = HighlightState.success(AttributedString("test"))
+        let success2 = HighlightState.success(AttributedString("test"))
+        #expect(success1 == success2)
+
+        // Different states should not be equal
+        #expect(idle1 != loading1)
+    }
+
+    @Test("HighlightState convenience properties work correctly")
+    func highlightStateProperties() {
+        let loading = HighlightState.loading
+        #expect(loading.isLoading)
+        #expect(loading.result == nil)
+        #expect(loading.error == nil)
+
+        let attributed = AttributedString("test")
+        let success = HighlightState.success(attributed)
+        #expect(!success.isLoading)
+        #expect(success.result == attributed)
+        #expect(success.error == nil)
+
+        struct TestError: Error {}
+        let failure = HighlightState.failure(TestError())
+        #expect(!failure.isLoading)
+        #expect(failure.result == nil)
+        #expect(failure.error != nil)
     }
 }

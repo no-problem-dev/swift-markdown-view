@@ -1,18 +1,28 @@
 import Testing
 import SwiftUI
 @testable import SwiftMarkdownView
+import SwiftMarkdownViewHighlightJS
 
 /// Snapshot tests for complex multi-element Markdown documents.
 ///
-/// Tests rendering of AI-style responses and mixed content documents.
+/// Tests rendering of AI-style responses and mixed content documents
+/// using HighlightJS-based syntax highlighter for accurate code highlighting.
 @Suite("Complex Document Snapshots")
 @MainActor
 struct ComplexDocumentSnapshotTests {
 
+    /// Light mode highlighter for white background snapshots.
+    /// Note: Using a11y theme instead of xcode because xcode light mode
+    /// doesn't set NSColor for plain text, causing visibility issues.
+    private let highlighter = HighlightJSSyntaxHighlighter(theme: .a11y, colorMode: .light)
+
+    /// Delay for async syntax highlighting to complete.
+    private let highlightDelay: TimeInterval = 1.0
+
     // MARK: - AI Response Style
 
     @Test
-    func aiResponse() {
+    func aiResponse() async {
         let view = MarkdownView("""
         # API Response
 
@@ -39,13 +49,14 @@ struct ComplexDocumentSnapshotTests {
 
         For more details, see the [documentation](https://example.com).
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - README Style
 
     @Test
-    func readmeStyle() {
+    func readmeStyle() async {
         let view = MarkdownView("""
         # SwiftMarkdownView
 
@@ -84,13 +95,14 @@ struct ComplexDocumentSnapshotTests {
 
         MIT License
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 
     // MARK: - Technical Documentation
 
     @Test
-    func technicalDoc() {
+    func technicalDoc() async {
         let view = MarkdownView("""
         ## API Reference
 
@@ -110,6 +122,7 @@ struct ComplexDocumentSnapshotTests {
         MarkdownView(content)
         ```
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .syntaxHighlighter(highlighter)
+        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
     }
 }
