@@ -44,3 +44,6 @@ docs/
 
 # Claude Code
 .claude/
+
+# Snapshot Tests (generated on CI)
+**/__Snapshots__/

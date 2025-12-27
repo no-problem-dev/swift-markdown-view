@@ -9,8 +9,10 @@ enum SnapshotTestHelper {
     static let defaultSize = CGSize(width: 400, height: 600)
 
     /// Whether to record new reference snapshots.
-    /// Set to `true` to generate new reference images.
-    static let isRecording = false
+    /// Set `SNAPSHOT_RECORD=1` environment variable to enable recording mode.
+    static let isRecording: Bool = {
+        ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1"
+    }()
 
     /// Takes a snapshot of a SwiftUI view and compares against reference.
     ///

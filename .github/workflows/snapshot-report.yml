@@ -44,12 +44,13 @@ jobs:
       - name: Create artifacts directory
         run: mkdir -p "$SNAPSHOT_ARTIFACTS"
 
-      - name: Run Snapshot Tests
+      - name: Run Snapshot Tests (Recording Mode)
         id: snapshot-test
-        continue-on-error: true
+        env:
+          SNAPSHOT_RECORD: "1"
         run: |
-          # WebView tests require macOS 26, skip them on CI
-          # Run only non-WebView snapshot tests
+          # Run snapshot tests in recording mode to generate reference images
+          # WebView tests require macOS 26.1+, skip them on CI (26.0.1)
           swift test \
             --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests"
 
