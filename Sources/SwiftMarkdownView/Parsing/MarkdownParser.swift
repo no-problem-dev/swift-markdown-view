@@ -40,8 +40,7 @@ enum MarkdownParser {
             return .codeBlock(language: codeBlock.language, code: codeBlock.code)
 
         case let blockQuote as Markdown.BlockQuote:
-            let blocks = blockQuote.children.compactMap { convertBlock($0) }
-            return .blockquote(blocks)
+            return convertBlockQuoteToAside(blockQuote)
 
         case let unorderedList as Markdown.UnorderedList:
             let items = unorderedList.children.compactMap { convertListItem($0) }
@@ -166,6 +165,30 @@ enum MarkdownParser {
             // Unsupported inline types are skipped
             return nil
         }
+    }
+
+    // MARK: - Aside Conversion
+
+    /// Converts a BlockQuote to an Aside using swift-markdown's Aside interpretation.
+    ///
+    /// This uses swift-markdown's `Aside` struct to detect aside tags like
+    /// `> Note:`, `> Warning:`, etc. and extract the kind and content.
+    ///
+    /// - Parameter blockQuote: The blockquote to convert.
+    /// - Returns: An aside block with the detected kind and content.
+    private static func convertBlockQuoteToAside(_ blockQuote: Markdown.BlockQuote) -> MarkdownBlock {
+        // Use swift-markdown's Aside to interpret the blockquote
+        let aside = Aside(blockQuote)
+
+        // Convert the Aside.Kind to our AsideKind
+        let asideKind = AsideKind(rawValue: aside.kind.rawValue)
+
+        // Convert the content blocks
+        let contentBlocks = aside.content.compactMap { blockMarkup -> MarkdownBlock? in
+            convertBlock(blockMarkup)
+        }
+
+        return .aside(kind: asideKind, content: contentBlocks)
     }
 
     // MARK: - Helpers
