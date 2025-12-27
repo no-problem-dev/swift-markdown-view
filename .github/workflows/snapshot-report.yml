@@ -415,7 +415,7 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ needs.snapshot-test.outputs.emoji }} SwiftMarkdownView Snapshot Report",
+                    "text": "${{ needs.snapshot-test.outputs.test-passed == 'true' && ':white_check_mark:' || ':x:' }} SwiftMarkdownView Snapshot Report",
                     "emoji": true
                   }
                 },
@@ -441,28 +441,11 @@ jobs:
                   ]
                 },
                 {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "View Report",
-                        "emoji": true
-                      },
-                      "url": "${{ needs.deploy-pages.outputs.page-url }}",
-                      "style": "primary"
-                    },
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "View Workflow",
-                        "emoji": true
-                      },
-                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                    }
-                  ]
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${{ needs.deploy-pages.outputs.page-url || format('https://no-problem-dev.github.io/swift-markdown-view/') }}|:bar_chart: View Snapshot Report> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|:gear: View Workflow>"
+                  }
                 }
               ]
             }
