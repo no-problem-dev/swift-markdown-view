@@ -55,8 +55,8 @@ struct BlockView: View {
         case .codeBlock(let language, let code):
             CodeBlockView(language: language, code: code)
 
-        case .blockquote(let blocks):
-            BlockquoteView(blocks: blocks)
+        case .aside(let kind, let content):
+            AsideView(kind: kind, content: content)
 
         case .unorderedList(let items):
             UnorderedListView(items: items)
@@ -290,27 +290,53 @@ struct CodeBlockView: View {
     }
 }
 
-/// Renders a blockquote.
-struct BlockquoteView: View {
-    let blocks: [MarkdownBlock]
+/// Renders an aside (callout/admonition) block.
+///
+/// Asides are rendered with an icon, title, and content.
+/// The visual styling is controlled by the ``AsideStyle`` protocol,
+/// which can be customized using the ``SwiftUICore/View/asideStyle(_:)`` modifier.
+struct AsideView: View {
+    let kind: AsideKind
+    let content: [MarkdownBlock]
 
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.spacingScale) private var spacing
+    @Environment(\.radiusScale) private var radius
+    @Environment(\.asideStyle) private var asideStyle
 
     var body: some View {
-        HStack(spacing: 0) {
-            Rectangle()
-                .fill(MarkdownColors.blockquoteBorder(colorPalette))
-                .frame(width: 4)
+        VStack(alignment: .leading, spacing: spacing.sm) {
+            // Header with icon and title
+            HStack(spacing: spacing.sm) {
+                Image(systemName: asideStyle.icon(for: kind))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(asideStyle.accentColor(for: kind, colorPalette: colorPalette))
 
-            VStack(alignment: .leading, spacing: spacing.sm) {
-                ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
-                    BlockView(block: block)
-                }
+                Text(kind.displayName)
+                    .typography(.labelLarge)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(asideStyle.titleColor(for: kind, colorPalette: colorPalette))
             }
-            .padding(.leading, MarkdownSpacing.blockquoteLeftPadding(spacing))
+
+            // Content blocks
+            if !content.isEmpty {
+                VStack(alignment: .leading, spacing: spacing.sm) {
+                    ForEach(Array(content.enumerated()), id: \.offset) { _, block in
+                        BlockView(block: block)
+                    }
+                }
+                .foregroundStyle(colorPalette.onSurface)
+            }
         }
-        .foregroundStyle(MarkdownColors.blockquoteText(colorPalette))
+        .padding(spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(asideStyle.backgroundColor(for: kind, colorPalette: colorPalette))
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .fill(asideStyle.accentColor(for: kind, colorPalette: colorPalette))
+                .frame(width: 4)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: radius.md))
     }
 }
 

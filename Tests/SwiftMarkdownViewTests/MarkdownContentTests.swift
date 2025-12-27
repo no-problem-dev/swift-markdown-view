@@ -219,28 +219,30 @@ struct MarkdownContentTests {
         #expect(items.count == 3)
     }
 
-    // MARK: - Blockquote Parsing
+    // MARK: - Aside Parsing
 
-    @Test("Blockquote parses correctly")
-    func blockquoteParses() {
+    @Test("Blockquote parses as aside correctly")
+    func asideParses() {
         let content = MarkdownContent(parsing: "> This is a quote")
 
         #expect(content.blocks.count == 1)
 
-        guard case .blockquote(let blocks) = content.blocks.first else {
-            Issue.record("Expected blockquote block")
+        guard case .aside(let kind, let blocks) = content.blocks.first else {
+            Issue.record("Expected aside block")
             return
         }
 
+        // Default kind for untagged blockquotes is .note
+        #expect(kind == .note)
         #expect(blocks.count == 1)
 
         guard case .paragraph(let inlines) = blocks.first else {
-            Issue.record("Expected paragraph inside blockquote")
+            Issue.record("Expected paragraph inside aside")
             return
         }
 
         guard case .text(let text) = inlines.first else {
-            Issue.record("Expected text inside blockquote paragraph")
+            Issue.record("Expected text inside aside paragraph")
             return
         }
 

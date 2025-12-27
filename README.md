@@ -74,7 +74,8 @@ dependencies: [
 | 見出し | `# H1` ~ `###### H6` | ✅ |
 | 段落 | テキスト | ✅ |
 | コードブロック | ` ```swift ``` ` | ✅ |
-| 引用 | `> quote` | ✅ |
+| Aside（コールアウト） | `> Note: text` | ✅ |
+| Mermaidダイアグラム | ` ```mermaid ``` ` | ✅ |
 | 順序なしリスト | `- item` | ✅ |
 | 順序付きリスト | `1. item` | ✅ |
 | タスクリスト | `- [x] done` | ✅ |
@@ -113,6 +114,53 @@ dependencies: [
 | YAML | `yaml`, `yml` |
 
 ## 高度な使用法
+
+### Aside（コールアウト）
+
+Asideはブロッククォートを解釈し、Note、Warning、Tipなどのコールアウトとして表示します。
+
+```swift
+MarkdownView("""
+> Note: これは補足情報です。
+
+> Warning: 注意が必要な内容です。
+
+> Tip: 便利なヒントです。
+""")
+```
+
+**対応Aside種類**: `Note`, `Tip`, `Important`, `Warning`, `Experiment`, `Attention`, `Bug`, `ToDo`, `SeeAlso`, `Throws` など24種類 + カスタム
+
+#### カスタムAsideスタイル
+
+```swift
+struct MyAsideStyle: AsideStyle {
+    func icon(for kind: AsideKind) -> String {
+        switch kind {
+        case .warning: return "flame.fill"
+        default: return DefaultAsideStyle().icon(for: kind)
+        }
+    }
+
+    func accentColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color {
+        switch kind {
+        case .tip: return .mint
+        default: return DefaultAsideStyle().accentColor(for: kind, colorPalette: colorPalette)
+        }
+    }
+
+    func backgroundColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color {
+        accentColor(for: kind, colorPalette: colorPalette).opacity(0.15)
+    }
+
+    func titleColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color {
+        accentColor(for: kind, colorPalette: colorPalette)
+    }
+}
+
+MarkdownView(source)
+    .asideStyle(MyAsideStyle())
+```
 
 ### カスタムシンタックストークナイザー
 

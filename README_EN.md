@@ -74,7 +74,8 @@ Add to your target:
 | Headings | `# H1` ~ `###### H6` | ✅ |
 | Paragraphs | text | ✅ |
 | Code Blocks | ` ```swift ``` ` | ✅ |
-| Blockquotes | `> quote` | ✅ |
+| Asides (Callouts) | `> Note: text` | ✅ |
+| Mermaid Diagrams | ` ```mermaid ``` ` | ✅ |
 | Unordered Lists | `- item` | ✅ |
 | Ordered Lists | `1. item` | ✅ |
 | Task Lists | `- [x] done` | ✅ |
@@ -113,6 +114,53 @@ Add to your target:
 | YAML | `yaml`, `yml` |
 
 ## Advanced Usage
+
+### Asides (Callouts)
+
+Asides interpret blockquotes as callouts such as Note, Warning, and Tip.
+
+```swift
+MarkdownView("""
+> Note: This is supplementary information.
+
+> Warning: This requires attention.
+
+> Tip: Here's a helpful tip.
+""")
+```
+
+**Supported Aside Kinds**: `Note`, `Tip`, `Important`, `Warning`, `Experiment`, `Attention`, `Bug`, `ToDo`, `SeeAlso`, `Throws`, and 24 more + custom
+
+#### Custom Aside Style
+
+```swift
+struct MyAsideStyle: AsideStyle {
+    func icon(for kind: AsideKind) -> String {
+        switch kind {
+        case .warning: return "flame.fill"
+        default: return DefaultAsideStyle().icon(for: kind)
+        }
+    }
+
+    func accentColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color {
+        switch kind {
+        case .tip: return .mint
+        default: return DefaultAsideStyle().accentColor(for: kind, colorPalette: colorPalette)
+        }
+    }
+
+    func backgroundColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color {
+        accentColor(for: kind, colorPalette: colorPalette).opacity(0.15)
+    }
+
+    func titleColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color {
+        accentColor(for: kind, colorPalette: colorPalette)
+    }
+}
+
+MarkdownView(source)
+    .asideStyle(MyAsideStyle())
+```
 
 ### Custom Syntax Tokenizer
 
