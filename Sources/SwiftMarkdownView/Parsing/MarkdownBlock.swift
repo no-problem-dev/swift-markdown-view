@@ -15,8 +15,13 @@ public enum MarkdownBlock: Sendable, Equatable {
     /// A fenced or indented code block.
     case codeBlock(language: String?, code: String)
 
-    /// A block quote containing nested blocks.
-    case blockquote([MarkdownBlock])
+    /// An aside (callout/admonition) containing nested blocks.
+    ///
+    /// Asides are interpreted from blockquotes with optional kind tags:
+    /// - `> Note: This is a note` → `.aside(kind: .note, content: ...)`
+    /// - `> Warning: Be careful` → `.aside(kind: .warning, content: ...)`
+    /// - `> Regular quote` → `.aside(kind: .note, content: ...)` (default)
+    case aside(kind: AsideKind, content: [MarkdownBlock])
 
     /// An unordered (bulleted) list.
     case unorderedList([ListItem])
@@ -35,6 +40,114 @@ public enum MarkdownBlock: Sendable, Equatable {
     /// Mermaid diagrams are fenced code blocks with `mermaid` as the language.
     /// They are rendered using Mermaid.js for visualization.
     case mermaid(String)
+}
+
+// MARK: - Aside Types
+
+/// The kind of aside (callout/admonition).
+///
+/// Asides are interpreted from blockquotes with a kind tag at the beginning.
+/// For example, `> Note: This is important` creates a `.note` aside.
+///
+/// The kinds are based on swift-markdown's `Aside.Kind` and include
+/// common documentation callout types.
+public enum AsideKind: Sendable, Equatable, Hashable {
+    // Common callouts
+    case note
+    case tip
+    case important
+    case warning
+    case experiment
+
+    // Additional callouts
+    case attention
+    case author
+    case authors
+    case bug
+    case complexity
+    case copyright
+    case date
+    case invariant
+    case mutatingVariant
+    case nonMutatingVariant
+    case postcondition
+    case precondition
+    case remark
+    case requires
+    case since
+    case todo
+    case version
+    case `throws`
+    case seeAlso
+
+    /// A custom aside kind for user-defined callouts.
+    case custom(String)
+
+    /// Human-readable display name for the aside kind.
+    public var displayName: String {
+        switch self {
+        case .note: return "Note"
+        case .tip: return "Tip"
+        case .important: return "Important"
+        case .warning: return "Warning"
+        case .experiment: return "Experiment"
+        case .attention: return "Attention"
+        case .author: return "Author"
+        case .authors: return "Authors"
+        case .bug: return "Bug"
+        case .complexity: return "Complexity"
+        case .copyright: return "Copyright"
+        case .date: return "Date"
+        case .invariant: return "Invariant"
+        case .mutatingVariant: return "Mutating Variant"
+        case .nonMutatingVariant: return "Non-Mutating Variant"
+        case .postcondition: return "Postcondition"
+        case .precondition: return "Precondition"
+        case .remark: return "Remark"
+        case .requires: return "Requires"
+        case .since: return "Since"
+        case .todo: return "To Do"
+        case .version: return "Version"
+        case .throws: return "Throws"
+        case .seeAlso: return "See Also"
+        case .custom(let name): return name
+        }
+    }
+
+    /// Creates an aside kind from a raw string value.
+    ///
+    /// The matching is case-insensitive.
+    ///
+    /// - Parameter rawValue: The string tag from the blockquote.
+    public init(rawValue: String) {
+        switch rawValue.lowercased() {
+        case "note": self = .note
+        case "tip": self = .tip
+        case "important": self = .important
+        case "warning": self = .warning
+        case "experiment": self = .experiment
+        case "attention": self = .attention
+        case "author": self = .author
+        case "authors": self = .authors
+        case "bug": self = .bug
+        case "complexity": self = .complexity
+        case "copyright": self = .copyright
+        case "date": self = .date
+        case "invariant": self = .invariant
+        case "mutatingvariant": self = .mutatingVariant
+        case "nonmutatingvariant": self = .nonMutatingVariant
+        case "postcondition": self = .postcondition
+        case "precondition": self = .precondition
+        case "remark": self = .remark
+        case "requires": self = .requires
+        case "since": self = .since
+        case "todo": self = .todo
+        case "version": self = .version
+        case "throws": self = .throws
+        case "seealso": self = .seeAlso
+        default: self = .custom(rawValue)
+        }
+    }
 }
 
 // MARK: - Table Types

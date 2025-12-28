@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Snapshot tests for block-level Markdown elements.
 ///
-/// Tests rendering of paragraphs, headings, lists, blockquotes, and tables.
+/// Tests rendering of paragraphs, headings, lists, asides (callouts), and tables.
 @Suite("Block Element Snapshots")
 @MainActor
 struct BlockElementSnapshotTests {
@@ -65,13 +65,17 @@ struct BlockElementSnapshotTests {
         SnapshotTestHelper.assertSnapshot(of: view)
     }
 
-    // MARK: - Blockquote
+    // MARK: - Aside (Blockquote)
 
     @Test
-    func blockquote() {
+    func aside() {
         let view = MarkdownView("""
-        > This is a blockquote.
+        > Note: This is a note aside.
         > It can span multiple lines.
+
+        > Warning: This is a warning.
+
+        > Tip: This is a helpful tip.
         """)
         SnapshotTestHelper.assertSnapshot(of: view)
     }

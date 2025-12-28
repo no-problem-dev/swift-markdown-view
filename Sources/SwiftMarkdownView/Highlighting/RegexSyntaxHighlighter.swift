@@ -1,5 +1,4 @@
 import SwiftUI
-import DesignSystem
 
 /// A regex-based syntax highlighter for basic highlighting without external dependencies.
 ///
