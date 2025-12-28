@@ -9,6 +9,39 @@
 
 <!-- 次のリリースに含める変更をここに追加 -->
 
+## [1.0.7] - 2025-12-28
+
+### 追加
+
+- **Aside (callout/admonition) サポート**: 注意書きやヒントなどのコールアウト表示
+  - `AsideKind`: 24種類の定義済みタイプ（note, warning, tip, important など）+ カスタムタイプ
+  - `AsideStyle` プロトコル: カスタマイズ可能なレンダリング
+  - `DefaultAsideStyle`: セマンティックなアイコンと色を持つデフォルトスタイル
+  - `AsideView`: アイコン、タイトル、コンテンツ、左ボーダーを持つビュー
+
+- **適応型シンタックスハイライト**: ダーク/ライトモード自動対応
+  - `adaptiveSyntaxHighlighting()` ビューモディファイア
+  - `HighlightJSSyntaxHighlighter.forColorScheme()` ファクトリメソッド
+
+### 変更
+
+- カタログビューの改善
+  - `CodeSnippetView` と `MarkdownPreviewCard` で `HighlightedCodeView` を使用
+  - `SyntaxHighlighterCatalogView` でハードコードされた色の代わりに `colorPalette` を使用
+  - プレビューモディファイアを簡素化（ルートレベルのテーマ適用に依存）
+
+- DesignSystem カタログビューを削除（DesignSystem パッケージに移動）
+- `RegexSyntaxHighlighter.fromPalette` メソッドを削除（HighlightJS が主要）
+
+### 破壊的変更
+
+- `MarkdownBlock.blockquote` が `MarkdownBlock.aside(kind:content:)` に置き換え
+
+### テスト
+
+- Asideユニットテスト（20+ケース）
+- Asideスナップショットテスト（29ケース）
+
 ## [1.0.6] - 2025-12-27
 
 ### 追加
@@ -119,7 +152,8 @@
 - DocCドキュメント
 - RELEASE_PROCESS.md
 
-[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.6...HEAD
+[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.3...v1.0.4
