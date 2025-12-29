@@ -247,7 +247,7 @@ extension EnvironmentValues {
 
     /// The style used for rendering tables.
     ///
-    /// Use the ``SwiftUICore/View/tableStyle(_:)-swift.method`` modifier to set this value.
+    /// Use the ``SwiftUICore/View/markdownTableStyle(_:)`` modifier to set this value.
     public var markdownTableStyle: any TableStyle {
         get { self[TableStyleKey.self] }
         set { self[TableStyleKey.self] = newValue }

@@ -1,16 +1,15 @@
-# Syntax Highlighting
+# シンタックスハイライト
 
-Learn how to customize syntax highlighting for code blocks.
+コードブロックのシンタックスハイライトをカスタマイズする方法を学びます。
 
 ## Overview
 
-SwiftMarkdownView uses ``PlainTextHighlighter`` by default, which applies no coloring.
-For full syntax highlighting with 50+ languages, use the optional
-`SwiftMarkdownViewHighlightJS` module.
+SwiftMarkdownViewはデフォルトで``PlainTextHighlighter``を使用し、コードブロックに色付けは行いません。
+50+言語に対応したシンタックスハイライトを有効にするには、オプションの`SwiftMarkdownViewHighlightJS`モジュールを使用します。
 
-## Quick Start
+## クイックスタート
 
-To enable syntax highlighting:
+シンタックスハイライトを有効にするには：
 
 ```swift
 import SwiftMarkdownViewHighlightJS
@@ -19,42 +18,42 @@ MarkdownView(source)
     .adaptiveSyntaxHighlighting()
 ```
 
-This automatically adapts to light/dark mode with the a11y theme for accessibility.
+これにより、ライト/ダークモードに自動対応し、アクセシビリティに配慮したa11yテーマが適用されます。
 
-## Using HighlightJS
+## HighlightJSの使用
 
-The `SwiftMarkdownViewHighlightJS` module provides accurate highlighting for 50+ languages:
+`SwiftMarkdownViewHighlightJS`モジュールは50+言語に対応した正確なハイライトを提供します：
 
 ```swift
 import SwiftMarkdownViewHighlightJS
 
-// Adaptive highlighting (recommended)
+// アダプティブハイライト（推奨）
 MarkdownView(source)
     .adaptiveSyntaxHighlighting()
 
-// With specific theme
+// テーマ指定
 MarkdownView(source)
     .adaptiveSyntaxHighlighting(theme: .github)
 
-// Manual configuration
+// 手動設定
 MarkdownView(source)
     .syntaxHighlighter(
         HighlightJSSyntaxHighlighter(theme: .atomOne, colorMode: .dark)
     )
 ```
 
-### Available Themes
+### 利用可能なテーマ
 
-| Theme | Description |
-|-------|-------------|
-| `.a11y` | Accessibility-optimized (recommended) |
-| `.xcode` | Xcode default style |
-| `.github` | GitHub style |
-| `.atomOne` | Atom One style |
-| `.solarized` | Solarized style |
-| `.tokyoNight` | Tokyo Night style |
+| テーマ | 説明 |
+|--------|------|
+| `.a11y` | アクセシビリティ最適化（推奨） |
+| `.xcode` | Xcodeデフォルトスタイル |
+| `.github` | GitHubスタイル |
+| `.atomOne` | Atom Oneスタイル |
+| `.solarized` | Solarizedスタイル |
+| `.tokyoNight` | Tokyo Nightスタイル |
 
-### Theme Presets
+### テーマプリセット
 
 ```swift
 HighlightJSSyntaxHighlighter.xcodeLight
@@ -67,16 +66,15 @@ HighlightJSSyntaxHighlighter.a11yLight
 HighlightJSSyntaxHighlighter.a11yDark
 ```
 
-## Custom Highlighter
+## カスタムハイライター
 
-To implement custom syntax highlighting, create a highlighter conforming to
-the ``SyntaxHighlighter`` protocol:
+独自のシンタックスハイライトを実装するには、``SyntaxHighlighter``プロトコルに準拠したハイライターを作成します：
 
 ```swift
 struct MyCustomHighlighter: SyntaxHighlighter {
     func highlight(_ code: String, language: String?) async throws -> AttributedString {
         var result = AttributedString(code)
-        // Apply custom highlighting
+        // カスタムハイライト処理を実装
         return result
     }
 }
@@ -85,22 +83,22 @@ MarkdownView(source)
     .syntaxHighlighter(MyCustomHighlighter())
 ```
 
-## Disabling Syntax Highlighting
+## シンタックスハイライトの無効化
 
-By default, no syntax highlighting is applied. To explicitly use plain text:
+デフォルトではシンタックスハイライトは適用されません。明示的にプレーンテキストを使用するには：
 
 ```swift
-// Default behavior - no highlighting
+// デフォルト動作 - ハイライトなし
 MarkdownView(source)
 
-// Explicit plain text highlighter
+// 明示的にPlainTextHighlighterを使用
 MarkdownView(source)
     .syntaxHighlighter(PlainTextHighlighter())
 ```
 
-## App-Wide Configuration
+## アプリ全体への設定
 
-Apply syntax highlighting to your entire app:
+アプリ全体にシンタックスハイライトを適用するには：
 
 ```swift
 import SwiftMarkdownViewHighlightJS
@@ -117,9 +115,9 @@ struct MyApp: App {
 }
 ```
 
-## Catalog Usage
+## カタログでの使用
 
-To enable syntax highlighting in the Markdown catalog:
+Markdownカタログでシンタックスハイライトを有効にするには：
 
 ```swift
 import SwiftMarkdownViewHighlightJS

@@ -2,7 +2,7 @@
 
 English | [日本語](README.md)
 
-A SwiftUI-native Markdown rendering library. Integrates with DesignSystem and provides beautiful Markdown display with syntax highlighting.
+A SwiftUI-native Markdown rendering library. Integrates with DesignSystem for beautiful Markdown display.
 
 ![Swift 6.0+](https://img.shields.io/badge/Swift-6.0+-orange.svg)
 ![iOS 17+](https://img.shields.io/badge/iOS-17+-blue.svg)
@@ -13,8 +13,8 @@ A SwiftUI-native Markdown rendering library. Integrates with DesignSystem and pr
 
 - **SwiftUI Native**: High-performance rendering using `AttributedString` and `Text` concatenation
 - **DesignSystem Integration**: Seamless integration with ColorPalette, Typography, and Spacing
-- **Syntax Highlighting**: 15 languages supported (Swift, TypeScript, Python, Go, Rust, etc.)
-- **Rich Element Support**: Tables, task lists, images, code blocks, and more
+- **Optional Syntax Highlighting**: 50+ languages via separate HighlightJS module
+- **Rich Element Support**: Tables, task lists, images, Mermaid diagrams, and more
 - **Customizable**: Style configuration through environment values
 
 ## Quick Start
@@ -60,7 +60,9 @@ Add to your target:
 .target(
     name: "YourTarget",
     dependencies: [
-        .product(name: "SwiftMarkdownView", package: "swift-markdown-view")
+        .product(name: "SwiftMarkdownView", package: "swift-markdown-view"),
+        // For syntax highlighting (optional)
+        .product(name: "SwiftMarkdownViewHighlightJS", package: "swift-markdown-view")
     ]
 )
 ```
@@ -69,55 +71,81 @@ Add to your target:
 
 ### Block Elements
 
-| Element | Markdown | Support |
-|---------|----------|---------|
-| Headings | `# H1` ~ `###### H6` | ✅ |
-| Paragraphs | text | ✅ |
-| Code Blocks | ` ```swift ``` ` | ✅ |
-| Asides (Callouts) | `> Note: text` | ✅ |
-| Mermaid Diagrams | ` ```mermaid ``` ` | ✅ |
-| Unordered Lists | `- item` | ✅ |
-| Ordered Lists | `1. item` | ✅ |
-| Task Lists | `- [x] done` | ✅ |
-| Tables | `\| col \|` | ✅ |
-| Thematic Breaks | `---` | ✅ |
+| Element | Markdown | Notes |
+|---------|----------|-------|
+| Headings | `# H1` ~ `###### H6` | Typography integration |
+| Paragraphs | text | |
+| Code Blocks | ` ```swift ``` ` | Optional highlighting |
+| Asides | `> Note: text` | 24 kinds + custom |
+| Mermaid | ` ```mermaid ``` ` | iOS 26+ recommended |
+| Unordered Lists | `- item` | Nested supported |
+| Ordered Lists | `1. item` | Nested supported |
+| Task Lists | `- [x] done` | |
+| Tables | `\| col \|` | Alignment supported |
+| Thematic Breaks | `---` | |
 
 ### Inline Elements
 
-| Element | Markdown | Support |
-|---------|----------|---------|
-| Emphasis (italic) | `*text*` | ✅ |
-| Strong (bold) | `**text**` | ✅ |
-| Inline Code | `` `code` `` | ✅ |
-| Links | `[text](url)` | ✅ |
-| Images | `![alt](url)` | ✅ |
-| Strikethrough | `~~text~~` | ✅ |
+| Element | Markdown |
+|---------|----------|
+| Emphasis (italic) | `*text*` |
+| Strong (bold) | `**text**` |
+| Inline Code | `` `code` `` |
+| Links | `[text](url)` |
+| Images | `![alt](url)` |
+| Strikethrough | `~~text~~` |
 
-### Supported Languages for Syntax Highlighting
+## Syntax Highlighting
 
-| Language | Aliases |
-|----------|---------|
-| Swift | `swift` |
-| TypeScript | `typescript`, `ts`, `tsx` |
-| JavaScript | `javascript`, `js`, `jsx` |
-| Python | `python`, `py` |
-| Go | `go`, `golang` |
-| Rust | `rust`, `rs` |
-| Java | `java` |
-| Kotlin | `kotlin`, `kt` |
-| Ruby | `ruby`, `rb` |
-| Shell | `shell`, `bash`, `sh`, `zsh` |
-| SQL | `sql` |
-| HTML | `html`, `htm`, `xml` |
-| CSS | `css`, `scss`, `sass`, `less` |
-| JSON | `json` |
-| YAML | `yaml`, `yml` |
+### Default Behavior
 
-## Advanced Usage
+By default, `PlainTextHighlighter` is used and code blocks are displayed without highlighting.
 
-### Asides (Callouts)
+### HighlightJS Highlighting
 
-Asides interpret blockquotes as callouts such as Note, Warning, and Tip.
+To enable syntax highlighting with 50+ languages, use the optional module:
+
+```swift
+import SwiftMarkdownView
+import SwiftMarkdownViewHighlightJS
+
+// Recommended: Adaptive highlighting (auto light/dark mode)
+MarkdownView(source)
+    .adaptiveSyntaxHighlighting()
+
+// With specific theme
+MarkdownView(source)
+    .adaptiveSyntaxHighlighting(theme: .github)
+
+// Manual configuration
+MarkdownView(source)
+    .syntaxHighlighter(
+        HighlightJSSyntaxHighlighter(theme: .atomOne, colorMode: .dark)
+    )
+```
+
+**Available Themes**: `.a11y` (accessibility recommended), `.xcode`, `.github`, `.atomOne`, `.solarized`, `.tokyoNight`
+
+### Custom Highlighter
+
+Implement your own highlighting logic:
+
+```swift
+struct MyHighlighter: SyntaxHighlighter {
+    func highlight(_ code: String, language: String?) async throws -> AttributedString {
+        var result = AttributedString(code)
+        // Custom implementation
+        return result
+    }
+}
+
+MarkdownView(source)
+    .syntaxHighlighter(MyHighlighter())
+```
+
+## Asides (Callouts)
+
+Blockquotes are interpreted as callouts such as Note, Warning, and Tip.
 
 ```swift
 MarkdownView("""
@@ -129,9 +157,9 @@ MarkdownView("""
 """)
 ```
 
-**Supported Aside Kinds**: `Note`, `Tip`, `Important`, `Warning`, `Experiment`, `Attention`, `Bug`, `ToDo`, `SeeAlso`, `Throws`, and 24 more + custom
+**Supported Kinds**: `Note`, `Tip`, `Important`, `Warning`, `Experiment`, `Attention`, `Bug`, `ToDo`, `SeeAlso`, `Throws`, and 24 more + custom
 
-#### Custom Aside Style
+### Custom Aside Style
 
 ```swift
 struct MyAsideStyle: AsideStyle {
@@ -162,20 +190,28 @@ MarkdownView(source)
     .asideStyle(MyAsideStyle())
 ```
 
-### Custom Syntax Tokenizer
+## Mermaid Diagrams
+
+Code blocks with `mermaid` language are rendered as diagrams.
 
 ```swift
-struct MyTokenizer: SyntaxTokenizer {
-    func tokenize(_ code: String, language: String?) -> [SyntaxToken] {
-        // Custom implementation
-    }
-}
-
-MarkdownView("```swift\ncode\n```")
-    .syntaxTokenizer(MyTokenizer())
+MarkdownView("""
+```mermaid
+graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[OK]
+    B -->|No| D[Cancel]
+```
+""")
 ```
 
-### Apply DesignSystem Theme
+**Supported Diagrams**: flowchart, sequence, class, state, gantt, journey, timeline, mindmap
+
+**Requirements**:
+- iOS 26+, macOS 26+: Native WebKit rendering
+- Earlier versions: Fallback display (shown as code block)
+
+## DesignSystem Theme
 
 ```swift
 MarkdownView("# Themed Markdown")
@@ -185,8 +221,11 @@ MarkdownView("# Themed Markdown")
 
 ## Dependencies
 
-- [swift-markdown](https://github.com/swiftlang/swift-markdown) - Markdown parsing
-- [swift-design-system](https://github.com/no-problem-dev/swift-design-system) - Design tokens
+| Package | Purpose | Required |
+|---------|---------|----------|
+| [swift-markdown](https://github.com/swiftlang/swift-markdown) | Markdown parsing | Yes |
+| [swift-design-system](https://github.com/no-problem-dev/swift-design-system) | Design tokens | Yes |
+| [HighlightSwift](https://github.com/nicklockwood/HighlightSwift) | Syntax highlighting | Optional |
 
 ## Documentation
 
