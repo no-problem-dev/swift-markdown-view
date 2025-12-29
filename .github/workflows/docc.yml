@@ -27,11 +27,13 @@ jobs:
       - name: Create docs directory
         run: mkdir -p ./docs
 
-      - name: Build Documentation
+      - name: Build Combined Documentation
         run: |
           swift package --allow-writing-to-directory ./docs \
             generate-documentation \
+            --enable-experimental-combined-documentation \
             --target SwiftMarkdownView \
+            --target SwiftMarkdownViewHighlightJS \
             --disable-indexing \
             --transform-for-static-hosting \
             --hosting-base-path swift-markdown-view \
