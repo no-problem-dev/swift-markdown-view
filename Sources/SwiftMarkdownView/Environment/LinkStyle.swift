@@ -179,7 +179,7 @@ extension EnvironmentValues {
 
     /// The style used for rendering links.
     ///
-    /// Use the ``SwiftUICore/View/linkStyle(_:)-swift.method`` modifier to set this value.
+    /// Use the ``SwiftUICore/View/markdownLinkStyle(_:)`` modifier to set this value.
     public var markdownLinkStyle: any LinkStyle {
         get { self[LinkStyleKey.self] }
         set { self[LinkStyleKey.self] = newValue }

@@ -2,15 +2,15 @@ import Testing
 import SwiftUI
 @testable import SwiftMarkdownView
 
-/// Tests for syntax highlighting with the new async SyntaxHighlighter protocol.
+/// Tests for syntax highlighting with the SyntaxHighlighter protocol.
 @Suite("Syntax Highlighting")
 struct SyntaxHighlightTests {
 
-    // MARK: - RegexSyntaxHighlighter Tests
+    // MARK: - PlainTextHighlighter Tests
 
-    @Test("Highlighter returns AttributedString for Swift code")
-    func highlightsSwiftCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
+    @Test("PlainTextHighlighter returns plain AttributedString")
+    func plainHighlighterReturnsPlainText() async throws {
+        let highlighter = PlainTextHighlighter()
         let code = """
         func greet(_ name: String) -> String {
             return "Hello, \\(name)!"
@@ -20,268 +20,42 @@ struct SyntaxHighlightTests {
         let result = try await highlighter.highlight(code, language: "swift")
 
         #expect(!result.characters.isEmpty)
+        #expect(String(result.characters) == code)
     }
 
-    @Test("Highlighter returns AttributedString for Python code")
-    func highlightsPythonCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        def greet(name: str) -> str:
-            return f"Hello, {name}!"
-        """
-
-        let result = try await highlighter.highlight(code, language: "python")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    @Test("Empty code returns empty AttributedString")
+    @Test("PlainTextHighlighter returns empty for empty code")
     func emptyCodeReturnsEmpty() async throws {
-        let highlighter = RegexSyntaxHighlighter()
+        let highlighter = PlainTextHighlighter()
 
         let result = try await highlighter.highlight("", language: "swift")
 
         #expect(result.characters.isEmpty)
     }
 
-    @Test("Unknown language uses generic highlighting")
-    func unknownLanguageFallback() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = "some code here"
-
-        let result = try await highlighter.highlight(code, language: "unknown")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    @Test("Nil language uses generic highlighting")
-    func nilLanguageUsesGeneric() async throws {
-        let highlighter = RegexSyntaxHighlighter()
+    @Test("PlainTextHighlighter handles nil language")
+    func nilLanguageWorks() async throws {
+        let highlighter = PlainTextHighlighter()
         let code = "let x = 42"
 
         let result = try await highlighter.highlight(code, language: nil)
 
         #expect(!result.characters.isEmpty)
+        #expect(String(result.characters) == code)
     }
 
-    // MARK: - TypeScript/JavaScript Tests
+    @Test("PlainTextHighlighter handles any language identifier")
+    func anyLanguageWorks() async throws {
+        let highlighter = PlainTextHighlighter()
+        let code = "print('hello')"
 
-    @Test("Highlighter handles TypeScript code")
-    func highlightsTypeScriptCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        const msg = "hello"
-        const name = 'world'
-        const tmpl = `template`
-        """
+        let swiftResult = try await highlighter.highlight(code, language: "swift")
+        let pythonResult = try await highlighter.highlight(code, language: "python")
+        let unknownResult = try await highlighter.highlight(code, language: "unknown")
 
-        let result = try await highlighter.highlight(code, language: "typescript")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - Go Tests
-
-    @Test("Highlighter handles Go code")
-    func highlightsGoCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        func main() {
-            // This is a comment
-            msg := "Hello, Go!"
-            fmt.Println(msg)
-        }
-        """
-
-        let result = try await highlighter.highlight(code, language: "go")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - Rust Tests
-
-    @Test("Highlighter handles Rust code")
-    func highlightsRustCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        fn main() {
-            // Rust comment
-            let msg = "Hello, Rust!";
-            println!("{}", msg);
-        }
-        """
-
-        let result = try await highlighter.highlight(code, language: "rust")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - Java Tests
-
-    @Test("Highlighter handles Java code")
-    func highlightsJavaCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        public class Main {
-            // Java comment
-            public static void main(String[] args) {
-                System.out.println("Hello, Java!");
-            }
-        }
-        """
-
-        let result = try await highlighter.highlight(code, language: "java")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - Ruby Tests
-
-    @Test("Highlighter handles Ruby code")
-    func highlightsRubyCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        def greet(name)
-          # Ruby comment
-          puts "Hello, #{name}!"
-        end
-        """
-
-        let result = try await highlighter.highlight(code, language: "ruby")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - Shell Tests
-
-    @Test("Highlighter handles Shell code")
-    func highlightsShellCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        #!/bin/bash
-        # Shell comment
-        echo "Hello, Shell!"
-        """
-
-        let result = try await highlighter.highlight(code, language: "bash")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - SQL Tests
-
-    @Test("Highlighter handles SQL code")
-    func highlightsSQLCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        -- SQL comment
-        SELECT name, age FROM users WHERE age > 18;
-        """
-
-        let result = try await highlighter.highlight(code, language: "sql")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - HTML Tests
-
-    @Test("Highlighter handles HTML code")
-    func highlightsHTMLCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = "<div class=\"container\"><p>Hello</p></div>"
-
-        let result = try await highlighter.highlight(code, language: "html")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - CSS Tests
-
-    @Test("Highlighter handles CSS code")
-    func highlightsCSSCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        .container {
-            color: red;
-            font-size: 16px;
-        }
-        """
-
-        let result = try await highlighter.highlight(code, language: "css")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - JSON Tests
-
-    @Test("Highlighter handles JSON code")
-    func highlightsJSONCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        {
-            "name": "John",
-            "age": 30,
-            "active": true
-        }
-        """
-
-        let result = try await highlighter.highlight(code, language: "json")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - YAML Tests
-
-    @Test("Highlighter handles YAML code")
-    func highlightsYAMLCode() async throws {
-        let highlighter = RegexSyntaxHighlighter()
-        let code = """
-        # YAML comment
-        name: John
-        age: 30
-        active: true
-        """
-
-        let result = try await highlighter.highlight(code, language: "yaml")
-
-        #expect(!result.characters.isEmpty)
-    }
-
-    // MARK: - Color Scheme Tests
-
-    @Test("SyntaxColorScheme provides adaptive colors")
-    func adaptiveColorsExist() {
-        let colors = SyntaxColorScheme.adaptive
-
-        // Verify colors are set
-        #expect(colors.keyword != colors.string)
-        #expect(colors.comment != colors.number)
-    }
-
-    @Test("SyntaxColorScheme provides light and dark presets")
-    func presetsExist() {
-        let light = SyntaxColorScheme.light
-        let dark = SyntaxColorScheme.dark
-
-        // Light and dark should have different plain colors
-        #expect(light.plain != dark.plain)
-    }
-
-    @Test("Custom color scheme can be created")
-    func customColorScheme() {
-        let custom = SyntaxColorScheme(
-            keyword: .red,
-            string: .green,
-            comment: .gray,
-            number: .blue,
-            type: .orange,
-            property: .purple,
-            punctuation: .secondary,
-            plain: .primary
-        )
-
-        #expect(custom.keyword == .red)
-        #expect(custom.string == .green)
+        // All should return the same plain text
+        #expect(String(swiftResult.characters) == code)
+        #expect(String(pythonResult.characters) == code)
+        #expect(String(unknownResult.characters) == code)
     }
 
     // MARK: - HighlightState Tests

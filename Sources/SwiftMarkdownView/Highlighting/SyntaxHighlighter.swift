@@ -5,10 +5,19 @@ import SwiftUI
 /// Implementations of this protocol take source code and produce
 /// an `AttributedString` with syntax highlighting applied.
 ///
-/// Example:
+/// The default implementation is ``PlainTextHighlighter`` which applies
+/// no coloring. To enable syntax highlighting, use the
+/// `SwiftMarkdownViewHighlightJS` module:
+///
 /// ```swift
-/// let highlighter = RegexSyntaxHighlighter()
-/// let highlighted = try await highlighter.highlight(code, language: "swift")
+/// import SwiftMarkdownViewHighlightJS
+///
+/// MarkdownView(source)
+///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
+///
+/// // Or use adaptive highlighting
+/// MarkdownView(source)
+///     .adaptiveSyntaxHighlighting()
 /// ```
 public protocol SyntaxHighlighter: Sendable {
     /// Highlights the given source code.
@@ -26,7 +35,7 @@ public protocol SyntaxHighlighter: Sendable {
 
 /// Environment key for injecting a custom syntax highlighter.
 private struct SyntaxHighlighterKey: EnvironmentKey {
-    static let defaultValue: any SyntaxHighlighter = RegexSyntaxHighlighter()
+    static let defaultValue: any SyntaxHighlighter = PlainTextHighlighter()
 }
 
 extension EnvironmentValues {
@@ -49,14 +58,18 @@ extension EnvironmentValues {
 extension View {
     /// Sets a custom syntax highlighter for code highlighting.
     ///
-    /// - Parameter highlighter: The highlighter to use.
-    /// - Returns: A view with the custom highlighter applied.
+    /// By default, ``PlainTextHighlighter`` is used which applies no coloring.
+    /// Use this modifier to enable syntax highlighting:
     ///
-    /// Example:
     /// ```swift
+    /// import SwiftMarkdownViewHighlightJS
+    ///
     /// MarkdownView(source)
     ///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
     /// ```
+    ///
+    /// - Parameter highlighter: The highlighter to use.
+    /// - Returns: A view with the custom highlighter applied.
     public func syntaxHighlighter(_ highlighter: some SyntaxHighlighter) -> some View {
         environment(\.syntaxHighlighter, highlighter)
     }
