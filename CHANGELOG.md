@@ -9,6 +9,40 @@
 
 <!-- 次のリリースに含める変更をここに追加 -->
 
+## [1.0.8] - 2025-12-29
+
+### 変更
+
+- **シンタックスハイライトの簡素化**
+  - `RegexSyntaxHighlighter` を削除し、`PlainTextHighlighter` をデフォルトに変更
+  - シンタックスハイライトを使用する場合は `SwiftMarkdownViewHighlightJS` モジュールを使用
+  - API の複雑さを低減し、依存関係を明確化
+
+### ドキュメント
+
+- **README の正確化**
+  - 削除済みの機能（RegexSyntaxHighlighter、SyntaxTokenizer）への参照を削除
+  - シンタックスハイライトの説明を現在の実装に合わせて更新
+  - Mermaid ダイアグラムの動作環境（iOS 26+ 要件）を明記
+  - 依存関係に HighlightSwift（オプション）を追記
+  - 日本語/英語両方の README を同期更新
+
+- **Documentation.docc の包括的整備**
+  - `SyntaxHighlighting.md` を日本語化
+  - `MermaidDiagrams.md` を新規作成（日本語）
+  - `Asides.md` を新規作成（日本語）
+  - `SwiftMarkdownViewHighlightJS` モジュールのドキュメントを新規作成
+  - `theme-settings.json` を追加（統一テーマ設定）
+  - メインドキュメントにパッケージ構成とモジュール相互参照を追加
+
+- **ワークフロー更新**
+  - `docc.yml` に `--enable-experimental-combined-documentation` を追加
+  - `SwiftMarkdownViewHighlightJS` ターゲットを追加（複数モジュール統合ドキュメント対応）
+
+### 修正
+
+- `LinkStyle.swift` / `TableStyle.swift` のドキュメントコメント参照を修正
+
 ## [1.0.7] - 2025-12-28
 
 ### 追加
@@ -152,7 +186,8 @@
 - DocCドキュメント
 - RELEASE_PROCESS.md
 
-[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.7...HEAD
+[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.8...HEAD
+[1.0.8]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.4...v1.0.5
