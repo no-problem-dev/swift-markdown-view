@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftMarkdownView
+import SwiftMarkdownViewHighlightJS
 import DesignSystem
 
 @main
@@ -17,6 +18,7 @@ struct MarkdownPlaygroundApp: App {
         WindowGroup {
             MarkdownCatalogView()
                 .theme(themeProvider)
+                .adaptiveSyntaxHighlighting()
         }
     }
 }
