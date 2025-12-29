@@ -10,7 +10,7 @@ import DesignSystem
 /// - Regular horizontal size class: Three-column NavigationSplitView
 /// - Compact horizontal size class: NavigationStack-based list
 ///
-/// ## Example
+/// ## Basic Usage
 ///
 /// ```swift
 /// struct ContentView: View {
@@ -20,6 +20,26 @@ import DesignSystem
 ///     }
 /// }
 /// ```
+///
+/// ## With Syntax Highlighting
+///
+/// To enable syntax highlighting for all code examples in the catalog,
+/// use the `SwiftMarkdownViewHighlightJS` module:
+///
+/// ```swift
+/// import SwiftMarkdownViewHighlightJS
+///
+/// struct ContentView: View {
+///     var body: some View {
+///         MarkdownCatalogView()
+///             .theme(ThemeProvider())
+///             .adaptiveSyntaxHighlighting()
+///     }
+/// }
+/// ```
+///
+/// This applies syntax highlighting to all code snippets throughout
+/// the catalog with automatic light/dark mode support.
 public struct MarkdownCatalogView: View {
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass

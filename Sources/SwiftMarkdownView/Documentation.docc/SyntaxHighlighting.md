@@ -4,112 +4,127 @@ Learn how to customize syntax highlighting for code blocks.
 
 ## Overview
 
-SwiftMarkdownView includes built-in syntax highlighting for 15 programming languages
-using a lightweight regex-based highlighter. You can also use the optional
-`SwiftMarkdownViewHighlightJS` module for more accurate highlighting with 50+ languages.
+SwiftMarkdownView uses ``PlainTextHighlighter`` by default, which applies no coloring.
+For full syntax highlighting with 50+ languages, use the optional
+`SwiftMarkdownViewHighlightJS` module.
 
-## Supported Languages
+## Quick Start
 
-| Language | Aliases |
-|----------|---------|
-| Swift | `swift` |
-| TypeScript | `typescript`, `ts`, `tsx` |
-| JavaScript | `javascript`, `js`, `jsx` |
-| Python | `python`, `py` |
-| Go | `go`, `golang` |
-| Rust | `rust`, `rs` |
-| Java | `java` |
-| Kotlin | `kotlin`, `kt` |
-| Ruby | `ruby`, `rb` |
-| Shell | `shell`, `bash`, `sh`, `zsh` |
-| SQL | `sql` |
-| HTML | `html`, `htm`, `xml` |
-| CSS | `css`, `scss`, `sass`, `less` |
-| JSON | `json` |
-| YAML | `yaml`, `yml` |
-
-## Token Types
-
-Syntax highlighting categorizes code into the following token types:
-
-- `keyword`: Language keywords (`func`, `class`, `if`, etc.)
-- `string`: String literals
-- `number`: Numeric literals
-- `comment`: Comments
-- `type`: Type names
-- `property`: Property names
-- `punctuation`: Punctuation and operators
-- `plain`: Plain text
-
-## Custom Highlighter
-
-To implement custom syntax highlighting, create a highlighter conforming to
-the ``SyntaxHighlighter`` protocol.
-
-```swift
-struct MyCustomHighlighter: SyntaxHighlighter {
-    func highlight(_ code: String, language: String?) async throws -> AttributedString {
-        // Custom implementation
-        var result = AttributedString(code)
-        // Apply highlighting
-        return result
-    }
-}
-```
-
-### Applying a Custom Highlighter
-
-```swift
-MarkdownView("```swift\nlet x = 1\n```")
-    .syntaxHighlighter(MyCustomHighlighter())
-```
-
-## Using HighlightJS (Recommended for Accuracy)
-
-For more accurate syntax highlighting with 50+ language support, use the
-`SwiftMarkdownViewHighlightJS` module:
+To enable syntax highlighting:
 
 ```swift
 import SwiftMarkdownViewHighlightJS
 
 MarkdownView(source)
-    .syntaxHighlighter(HighlightJSSyntaxHighlighter(theme: .xcode, colorMode: .dark))
+    .adaptiveSyntaxHighlighting()
 ```
 
-### Available Presets
+This automatically adapts to light/dark mode with the a11y theme for accessibility.
+
+## Using HighlightJS
+
+The `SwiftMarkdownViewHighlightJS` module provides accurate highlighting for 50+ languages:
 
 ```swift
-// Xcode themes
+import SwiftMarkdownViewHighlightJS
+
+// Adaptive highlighting (recommended)
+MarkdownView(source)
+    .adaptiveSyntaxHighlighting()
+
+// With specific theme
+MarkdownView(source)
+    .adaptiveSyntaxHighlighting(theme: .github)
+
+// Manual configuration
+MarkdownView(source)
+    .syntaxHighlighter(
+        HighlightJSSyntaxHighlighter(theme: .atomOne, colorMode: .dark)
+    )
+```
+
+### Available Themes
+
+| Theme | Description |
+|-------|-------------|
+| `.a11y` | Accessibility-optimized (recommended) |
+| `.xcode` | Xcode default style |
+| `.github` | GitHub style |
+| `.atomOne` | Atom One style |
+| `.solarized` | Solarized style |
+| `.tokyoNight` | Tokyo Night style |
+
+### Theme Presets
+
+```swift
 HighlightJSSyntaxHighlighter.xcodeLight
 HighlightJSSyntaxHighlighter.xcodeDark
-
-// GitHub themes
 HighlightJSSyntaxHighlighter.githubLight
 HighlightJSSyntaxHighlighter.githubDark
-
-// Atom One themes
 HighlightJSSyntaxHighlighter.atomOneLight
 HighlightJSSyntaxHighlighter.atomOneDark
+HighlightJSSyntaxHighlighter.a11yLight
+HighlightJSSyntaxHighlighter.a11yDark
 ```
 
-## Color Customization
+## Custom Highlighter
 
-Use ``SyntaxColorScheme`` to customize the highlighting colors for the built-in
-regex highlighter:
+To implement custom syntax highlighting, create a highlighter conforming to
+the ``SyntaxHighlighter`` protocol:
 
 ```swift
-let customColors = SyntaxColorScheme(
-    keyword: .purple,
-    string: .orange,
-    comment: .gray,
-    number: .blue,
-    type: .teal,
-    property: .cyan,
-    punctuation: .secondary,
-    plain: .primary
-)
+struct MyCustomHighlighter: SyntaxHighlighter {
+    func highlight(_ code: String, language: String?) async throws -> AttributedString {
+        var result = AttributedString(code)
+        // Apply custom highlighting
+        return result
+    }
+}
 
-let highlighter = RegexSyntaxHighlighter(colors: customColors)
 MarkdownView(source)
-    .syntaxHighlighter(highlighter)
+    .syntaxHighlighter(MyCustomHighlighter())
+```
+
+## Disabling Syntax Highlighting
+
+By default, no syntax highlighting is applied. To explicitly use plain text:
+
+```swift
+// Default behavior - no highlighting
+MarkdownView(source)
+
+// Explicit plain text highlighter
+MarkdownView(source)
+    .syntaxHighlighter(PlainTextHighlighter())
+```
+
+## App-Wide Configuration
+
+Apply syntax highlighting to your entire app:
+
+```swift
+import SwiftMarkdownViewHighlightJS
+
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .theme(ThemeProvider())
+                .adaptiveSyntaxHighlighting()
+        }
+    }
+}
+```
+
+## Catalog Usage
+
+To enable syntax highlighting in the Markdown catalog:
+
+```swift
+import SwiftMarkdownViewHighlightJS
+
+MarkdownCatalogView()
+    .theme(ThemeProvider())
+    .adaptiveSyntaxHighlighting()
 ```
