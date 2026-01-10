@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 
 import PackageDescription
 
@@ -21,11 +21,11 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/no-problem-dev/swift-design-system.git", from: "1.0.0"),
-        .package(url: "https://github.com/swiftlang/swift-markdown.git", branch: "main"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.17.0"),
-        .package(url: "https://github.com/apple/swift-docc-plugin.git", from: "1.4.0"),
-        .package(url: "https://github.com/appstefan/HighlightSwift.git", from: "1.0.0")
+        .package(url: "https://github.com/no-problem-dev/swift-design-system.git", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/swiftlang/swift-markdown.git", .upToNextMajor(from: "0.7.3")),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", .upToNextMajor(from: "1.17.0")),
+        .package(url: "https://github.com/apple/swift-docc-plugin.git", .upToNextMajor(from: "1.4.0")),
+        .package(url: "https://github.com/appstefan/HighlightSwift.git", .upToNextMajor(from: "1.0.0"))
     ],
     targets: [
         .target(
