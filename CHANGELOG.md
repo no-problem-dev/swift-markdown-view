@@ -9,6 +9,16 @@
 
 <!-- 次のリリースに含める変更をここに追加 -->
 
+## [1.0.9] - 2025-01-10
+
+### 修正
+
+- **Package.swift の依存関係を安定版に更新**
+  - `swift-tools-version` を 6.0 から 6.2 にアップグレード
+  - `swift-markdown` の依存を `branch: main` から安定版 `0.7.3` に変更
+  - すべての依存関係を `.upToNextMajor(from:)` 形式で統一
+  - これにより、安定版依存を要求するプロジェクトで使用可能になりました
+
 ## [1.0.8] - 2025-12-29
 
 ### 変更
@@ -186,7 +196,8 @@
 - DocCドキュメント
 - RELEASE_PROCESS.md
 
-[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.8...HEAD
+[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.9...HEAD
+[1.0.9]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.5...v1.0.6
@@ -204,3 +215,5 @@
 <!-- Auto-generated on 2025-12-27T07:53:44Z by release workflow -->
 
 <!-- Auto-generated on 2025-12-28T02:20:39Z by release workflow -->
+
+<!-- Auto-generated on 2025-12-29T12:24:42Z by release workflow -->
