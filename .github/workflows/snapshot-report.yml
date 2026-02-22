@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: snapshot-${{ github.workflow }}-${{ github.ref }}
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
@@ -30,28 +30,30 @@ jobs:
         with:
           xcode-version: '26.1.1'
 
-      - name: Cache SPM
-        uses: actions/cache@v4
-        with:
-          path: .build
-          key: ${{ runner.os }}-spm-${{ hashFiles('Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-
+      - name: List available simulators
+        run: |
+          xcrun simctl list devices available | grep -i "iphone" | head -10
 
-      - name: Build
-        run: swift build
-
-      - name: Run Snapshot Tests (Recording Mode)
+      - name: Run Snapshot Tests on iOS Simulator (Recording Mode)
         id: snapshot-test
         continue-on-error: true
         env:
           SNAPSHOT_RECORD: "1"
         run: |
-          # Run snapshot tests in recording mode to generate reference images
-          # Recording mode marks tests as "failed" by design to prevent accidental commits
-          # WebView tests require macOS 26.1+, skip them on CI (26.0.1)
-          swift test \
-            --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests|AsideSnapshotTests"
+          # Run snapshot tests on iOS Simulator in recording mode
+          # UIKit-gated tests only compile for iOS targets
+          # Recording mode marks tests as "failed" by design
+          # WebView tests (Mermaid) are excluded on CI
+          xcodebuild test \
+            -scheme swift-markdown-view \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -only-testing SwiftMarkdownViewTests/BlockElementSnapshotTests \
+            -only-testing SwiftMarkdownViewTests/CodeBlockSnapshotTests \
+            -only-testing SwiftMarkdownViewTests/InlineElementSnapshotTests \
+            -only-testing SwiftMarkdownViewTests/MediaSnapshotTests \
+            -only-testing SwiftMarkdownViewTests/ComplexDocumentSnapshotTests \
+            -only-testing SwiftMarkdownViewTests/AsideSnapshotTests \
+            2>&1 | tail -50
 
       - name: Collect snapshot images
         if: always()
