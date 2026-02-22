@@ -229,7 +229,8 @@ MarkdownView("# Themed Markdown")
 
 ## Documentation
 
-Detailed API documentation is available on [GitHub Pages](https://no-problem-dev.github.io/swift-markdown-view/documentation/swiftmarkdownview/).
+- **API Reference**: [DocC Documentation](https://no-problem-dev.github.io/swift-markdown-view/documentation/swiftmarkdownview/)
+- **Snapshot Gallery**: [Component Gallery](https://no-problem-dev.github.io/swift-markdown-view/snapshots/) - Light/Dark mode rendering results for all components
 
 ## License
 

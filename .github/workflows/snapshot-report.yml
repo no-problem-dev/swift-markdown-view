@@ -30,386 +30,69 @@ jobs:
         with:
           xcode-version: '26.1.1'
 
-      - name: List available simulators
+      - name: List available schemes
         run: |
-          xcrun simctl list devices available | grep -i "iphone" | head -10
+          xcodebuild -list 2>&1 | head -30
 
-      - name: Run Snapshot Tests on iOS Simulator (Recording Mode)
+      - name: Run Snapshot Tests + Gallery Generation on iOS Simulator
         id: snapshot-test
         continue-on-error: true
         env:
           SNAPSHOT_RECORD: "1"
         run: |
           # Run snapshot tests on iOS Simulator in recording mode
-          # UIKit-gated tests only compile for iOS targets
-          # Recording mode marks tests as "failed" by design
+          # Then run gallery generation to produce HTML
           # WebView tests (Mermaid) are excluded on CI
           xcodebuild test \
-            -scheme swift-markdown-view \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -scheme SwiftMarkdownView \
+            -destination 'platform=iOS Simulator,name=iPhone 16e' \
             -only-testing SwiftMarkdownViewTests/BlockElementSnapshotTests \
             -only-testing SwiftMarkdownViewTests/CodeBlockSnapshotTests \
             -only-testing SwiftMarkdownViewTests/InlineElementSnapshotTests \
             -only-testing SwiftMarkdownViewTests/MediaSnapshotTests \
             -only-testing SwiftMarkdownViewTests/ComplexDocumentSnapshotTests \
             -only-testing SwiftMarkdownViewTests/AsideSnapshotTests \
-            2>&1 | tail -50
+            -only-testing SwiftMarkdownViewTests/GalleryGeneratorTests \
+            2>&1 | tail -80
 
-      - name: Collect snapshot images
+      - name: Collect gallery and snapshot images
         if: always()
         run: |
-          mkdir -p snapshot-report/images
+          mkdir -p snapshot-report
 
-          # Copy all snapshot images preserving component directory structure
-          # VisualTesting stores: __Snapshots__/{componentName}/{stateName}.{theme}.png
-          SNAPSHOTS_ROOT=$(find Tests -type d -name "__Snapshots__" | head -1)
+          SNAPSHOTS_DIR="Tests/SwiftMarkdownViewTests/Snapshots"
 
-          if [ -n "$SNAPSHOTS_ROOT" ]; then
-            for component_dir in "$SNAPSHOTS_ROOT"/*/; do
-              component=$(basename "$component_dir")
-              mkdir -p "snapshot-report/images/$component"
-              cp "$component_dir"*.png "snapshot-report/images/$component/" 2>/dev/null || true
-              cp "$component_dir"manifest.json "snapshot-report/images/$component/" 2>/dev/null || true
-            done
+          # Copy the VisualTesting-generated gallery HTML
+          if [ -f "$SNAPSHOTS_DIR/gallery.html" ]; then
+            cp "$SNAPSHOTS_DIR/gallery.html" snapshot-report/index.html
+            echo "Gallery HTML copied successfully"
+          else
+            echo "WARNING: gallery.html not found at $SNAPSHOTS_DIR/gallery.html"
+            echo "Searching for gallery.html..."
+            find . -name "gallery.html" -not -path "./.build/*" 2>/dev/null
           fi
 
-          # List collected images
-          echo "Collected snapshots:"
-          find snapshot-report/images -name "*.png" | sort
+          # Copy snapshot images (needed for the gallery to reference)
+          if [ -d "$SNAPSHOTS_DIR/__Snapshots__" ]; then
+            cp -r "$SNAPSHOTS_DIR/__Snapshots__" snapshot-report/__Snapshots__
+            echo "Snapshot images copied"
+          else
+            echo "WARNING: __Snapshots__ directory not found"
+            find Tests -name "__Snapshots__" -type d 2>/dev/null
+          fi
 
-      - name: Generate HTML Report
-        if: always()
-        env:
-          GITHUB_SHA_SHORT: ${{ github.sha }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
-        run: |
-          python3 << 'PYEOF'
-          import os
-          import glob
-          import json
-          from datetime import datetime
+          # Copy catalog JSON if present
+          if [ -f "$SNAPSHOTS_DIR/snapshot-catalog.json" ]; then
+            cp "$SNAPSHOTS_DIR/snapshot-catalog.json" snapshot-report/
+          fi
 
-          github_sha = os.environ.get('GITHUB_SHA_SHORT', 'unknown')[:7]
-          github_ref = os.environ.get('GITHUB_REF_NAME', 'unknown')
-
-          images_dir = "snapshot-report/images"
-
-          # Discover components from directory structure
-          components = {}
-          for component_dir in sorted(glob.glob(f"{images_dir}/*/")):
-              component_name = os.path.basename(component_dir.rstrip('/'))
-              pngs = sorted(glob.glob(f"{component_dir}*.png"))
-              if pngs:
-                  # Group by state: {stateName}.{theme}.png
-                  states = {}
-                  for png in pngs:
-                      filename = os.path.basename(png)
-                      # Parse: stateName.theme.png
-                      parts = filename.rsplit('.', 2)
-                      if len(parts) == 3:
-                          state_name = parts[0]
-                          theme = parts[1]
-                      else:
-                          state_name = filename.replace('.png', '')
-                          theme = 'unknown'
-                      if state_name not in states:
-                          states[state_name] = {}
-                      states[state_name][theme] = f"images/{component_name}/{filename}"
-                  components[component_name] = states
-
-          total_images = sum(
-              len(theme_map)
-              for states in components.values()
-              for theme_map in states.values()
-          )
-
-          # Generate HTML
-          html = f'''<!DOCTYPE html>
-          <html lang="ja">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>SwiftMarkdownView Snapshot Report</title>
-              <style>
-                  :root {{
-                      --bg: #0d1117;
-                      --card-bg: #161b22;
-                      --border: #30363d;
-                      --text: #c9d1d9;
-                      --text-muted: #8b949e;
-                      --accent: #58a6ff;
-                      --success: #3fb950;
-                  }}
-                  * {{ box-sizing: border-box; }}
-                  body {{
-                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                      background: var(--bg);
-                      color: var(--text);
-                      margin: 0;
-                      padding: 20px;
-                      line-height: 1.6;
-                  }}
-                  .container {{ max-width: 1400px; margin: 0 auto; }}
-                  header {{
-                      text-align: center;
-                      padding: 40px 20px;
-                      border-bottom: 1px solid var(--border);
-                      margin-bottom: 40px;
-                  }}
-                  h1 {{
-                      font-size: 2.5rem;
-                      margin: 0 0 10px 0;
-                      background: linear-gradient(135deg, var(--accent), #a855f7);
-                      -webkit-background-clip: text;
-                      -webkit-text-fill-color: transparent;
-                  }}
-                  .meta {{ color: var(--text-muted); font-size: 0.9rem; }}
-                  .stats {{
-                      display: flex;
-                      justify-content: center;
-                      gap: 30px;
-                      margin-top: 20px;
-                  }}
-                  .stat {{
-                      background: var(--card-bg);
-                      padding: 15px 25px;
-                      border-radius: 10px;
-                      border: 1px solid var(--border);
-                  }}
-                  .stat-value {{ font-size: 2rem; font-weight: bold; color: var(--success); }}
-                  .stat-label {{ font-size: 0.8rem; color: var(--text-muted); }}
-                  .filter-bar {{
-                      display: flex;
-                      justify-content: center;
-                      gap: 10px;
-                      margin-bottom: 30px;
-                      flex-wrap: wrap;
-                  }}
-                  .filter-btn {{
-                      background: var(--card-bg);
-                      color: var(--text);
-                      border: 1px solid var(--border);
-                      padding: 8px 16px;
-                      border-radius: 20px;
-                      cursor: pointer;
-                      font-size: 0.85rem;
-                      transition: all 0.2s;
-                  }}
-                  .filter-btn:hover, .filter-btn.active {{
-                      background: var(--accent);
-                      color: var(--bg);
-                      border-color: var(--accent);
-                  }}
-                  .suite {{
-                      margin-bottom: 40px;
-                  }}
-                  .suite-header {{
-                      display: flex;
-                      align-items: center;
-                      gap: 10px;
-                      margin-bottom: 20px;
-                      padding-bottom: 10px;
-                      border-bottom: 1px solid var(--border);
-                  }}
-                  .suite-header h2 {{ margin: 0; font-size: 1.5rem; }}
-                  .suite-count {{
-                      background: var(--accent);
-                      color: var(--bg);
-                      padding: 2px 10px;
-                      border-radius: 20px;
-                      font-size: 0.8rem;
-                      font-weight: bold;
-                  }}
-                  .state-row {{
-                      margin-bottom: 24px;
-                  }}
-                  .state-name {{
-                      font-size: 1rem;
-                      font-weight: 600;
-                      margin-bottom: 10px;
-                      color: var(--text-muted);
-                  }}
-                  .theme-grid {{
-                      display: flex;
-                      gap: 16px;
-                      flex-wrap: wrap;
-                  }}
-                  .card {{
-                      background: var(--card-bg);
-                      border: 1px solid var(--border);
-                      border-radius: 12px;
-                      overflow: hidden;
-                      transition: transform 0.2s, box-shadow 0.2s;
-                      width: 300px;
-                  }}
-                  .card:hover {{
-                      transform: translateY(-4px);
-                      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                  }}
-                  .card img {{
-                      width: 100%;
-                      height: 200px;
-                      object-fit: contain;
-                      background: white;
-                      cursor: pointer;
-                  }}
-                  .card.dark-theme img {{
-                      background: #1a1a1a;
-                  }}
-                  .card-body {{
-                      padding: 12px 15px;
-                      display: flex;
-                      justify-content: space-between;
-                      align-items: center;
-                  }}
-                  .card-title {{
-                      font-weight: 600;
-                      margin: 0;
-                      font-size: 0.85rem;
-                  }}
-                  .theme-badge {{
-                      font-size: 0.7rem;
-                      padding: 2px 8px;
-                      border-radius: 10px;
-                      font-weight: bold;
-                  }}
-                  .theme-badge.light {{
-                      background: #fef3c7;
-                      color: #92400e;
-                  }}
-                  .theme-badge.dark {{
-                      background: #374151;
-                      color: #d1d5db;
-                  }}
-                  .modal {{
-                      display: none;
-                      position: fixed;
-                      top: 0;
-                      left: 0;
-                      width: 100%;
-                      height: 100%;
-                      background: rgba(0,0,0,0.9);
-                      z-index: 1000;
-                      cursor: pointer;
-                  }}
-                  .modal img {{
-                      max-width: 90%;
-                      max-height: 90%;
-                      position: absolute;
-                      top: 50%;
-                      left: 50%;
-                      transform: translate(-50%, -50%);
-                      border-radius: 8px;
-                  }}
-                  .modal-close {{
-                      position: absolute;
-                      top: 20px;
-                      right: 30px;
-                      font-size: 40px;
-                      color: white;
-                      cursor: pointer;
-                  }}
-              </style>
-          </head>
-          <body>
-              <div class="container">
-                  <header>
-                      <h1>SwiftMarkdownView Snapshot Report</h1>
-                      <p class="meta">Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}</p>
-                      <p class="meta">Branch: {github_ref} | Commit: {github_sha}</p>
-                      <div class="stats">
-                          <div class="stat">
-                              <div class="stat-value">{total_images}</div>
-                              <div class="stat-label">Total Snapshots</div>
-                          </div>
-                          <div class="stat">
-                              <div class="stat-value">{len(components)}</div>
-                              <div class="stat-label">Components</div>
-                          </div>
-                      </div>
-                  </header>
-
-                  <div class="filter-bar">
-                      <button class="filter-btn active" onclick="filterTheme('all')">All</button>
-                      <button class="filter-btn" onclick="filterTheme('light')">Light</button>
-                      <button class="filter-btn" onclick="filterTheme('dark')">Dark</button>
-                  </div>
-          '''
-
-          for component_name, states in sorted(components.items()):
-              state_count = sum(len(t) for t in states.values())
-              html += f'''
-                  <section class="suite" data-component="{component_name}">
-                      <div class="suite-header">
-                          <h2>{component_name}</h2>
-                          <span class="suite-count">{state_count} snapshots</span>
-                      </div>
-              '''
-              for state_name, themes in sorted(states.items()):
-                  html += f'''
-                      <div class="state-row">
-                          <div class="state-name">{state_name}</div>
-                          <div class="theme-grid">
-                  '''
-                  for theme in ['light', 'dark']:
-                      if theme in themes:
-                          img_path = themes[theme]
-                          css_class = 'dark-theme' if theme == 'dark' else ''
-                          html += f'''
-                              <div class="card {css_class}" data-theme="{theme}">
-                                  <img src="{img_path}" alt="{state_name} ({theme})" loading="lazy" onclick="openModal(this.src)">
-                                  <div class="card-body">
-                                      <p class="card-title">{state_name}</p>
-                                      <span class="theme-badge {theme}">{theme}</span>
-                                  </div>
-                              </div>
-                          '''
-                  html += '''
-                          </div>
-                      </div>
-                  '''
-              html += '''
-                  </section>
-              '''
-
-          html += '''
-                  <div class="modal" id="modal" onclick="closeModal()">
-                      <span class="modal-close">&times;</span>
-                      <img id="modal-img" src="" alt="Full size">
-                  </div>
-              </div>
-              <script>
-                  function openModal(src) {
-                      document.getElementById('modal-img').src = src;
-                      document.getElementById('modal').style.display = 'block';
-                  }
-                  function closeModal() {
-                      document.getElementById('modal').style.display = 'none';
-                  }
-                  document.addEventListener('keydown', (e) => {
-                      if (e.key === 'Escape') closeModal();
-                  });
-                  function filterTheme(theme) {
-                      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                      event.target.classList.add('active');
-                      document.querySelectorAll('.card').forEach(card => {
-                          if (theme === 'all' || card.dataset.theme === theme) {
-                              card.style.display = '';
-                          } else {
-                              card.style.display = 'none';
-                          }
-                      });
-                  }
-              </script>
-          </body>
-          </html>
-          '''
-
-          with open('snapshot-report/index.html', 'w') as f:
-              f.write(html)
-
-          print(f"Generated report with {total_images} snapshots in {len(components)} components")
-          PYEOF
+          # List collected files
+          echo "---"
+          echo "Report contents:"
+          find snapshot-report -type f | sort
+          echo "---"
+          TOTAL=$(find snapshot-report -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
+          echo "Total snapshot images: $TOTAL"
 
       - name: Upload Snapshot Report Artifact
         if: always()
@@ -423,7 +106,7 @@ jobs:
         if: always()
         id: summary
         run: |
-          TOTAL=$(find snapshot-report/images -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
+          TOTAL=$(find snapshot-report -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
 
       - name: Deploy to GitHub Pages
@@ -433,7 +116,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./snapshot-report
           destination_dir: snapshots
-          keep_files: true
+          keep_files: false
 
     outputs:
       total-snapshots: ${{ steps.summary.outputs.total }}
