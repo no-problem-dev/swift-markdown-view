@@ -93,8 +93,9 @@ struct ParagraphView: View {
                 title: singleImage.title
             )
         } else {
-            InlineRenderer.render(inlines, colorPalette: colorPalette)
-                .typography(MarkdownTypographyMapping.body)
+            let bodyTypography = MarkdownTypographyMapping.body
+            InlineRenderer.render(inlines, colorPalette: colorPalette, bodyFont: bodyTypography.font)
+                .lineSpacing(bodyTypography.lineHeight - bodyTypography.size)
                 .foregroundStyle(MarkdownColors.bodyText(colorPalette))
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -240,8 +241,9 @@ struct HeadingView: View {
     @Environment(\.spacingScale) private var spacing
 
     var body: some View {
-        InlineRenderer.render(content, colorPalette: colorPalette)
-            .typography(MarkdownTypographyMapping.typography(for: level))
+        let headingTypography = MarkdownTypographyMapping.typography(for: level)
+        InlineRenderer.render(content, colorPalette: colorPalette, bodyFont: headingTypography.font)
+            .lineSpacing(headingTypography.lineHeight - headingTypography.size)
             .foregroundStyle(MarkdownColors.headingText(colorPalette))
             .padding(.top, topPadding)
     }
@@ -500,8 +502,9 @@ struct TableCellView: View {
     @Environment(\.spacingScale) private var spacing
 
     var body: some View {
-        InlineRenderer.render(content, colorPalette: colorPalette)
-            .typography(isHeader ? .labelLarge : .bodyMedium)
+        let cellTypography: Typography = isHeader ? .labelLarge : .bodyMedium
+        InlineRenderer.render(content, colorPalette: colorPalette, bodyFont: cellTypography.font)
+            .lineSpacing(cellTypography.lineHeight - cellTypography.size)
             .fontWeight(isHeader ? .semibold : .regular)
             .foregroundStyle(colorPalette.onSurface)
             .frame(maxWidth: .infinity, alignment: textAlignment)

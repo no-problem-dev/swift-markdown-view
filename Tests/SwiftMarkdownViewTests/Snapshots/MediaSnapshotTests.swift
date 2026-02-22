@@ -1,34 +1,39 @@
+#if canImport(UIKit)
 import Testing
 import SwiftUI
+import VisualTesting
 @testable import SwiftMarkdownView
 
 /// Snapshot tests for media elements.
 ///
 /// Tests rendering of images (local, remote, placeholders).
-@Suite("Media Snapshots")
+@SnapshotSuite("Media")
 @MainActor
 struct MediaSnapshotTests {
 
+    init() { setupVisualTesting() }
+
     // MARK: - Image Placeholder
 
-    @Test
-    func imagePlaceholder() {
+    @ComponentSnapshot(width: 400, height: 600)
+    func imagePlaceholder() -> some View {
         // Using a non-http URL to show fallback rendering
-        let view = MarkdownView("""
+        MarkdownView("""
         Here is an image:
 
         ![Sample Image](./local/image.png)
 
         This tests the fallback placeholder view.
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
     // MARK: - Local Bundle Image
 
+    // Note: Bundle.module resource access requires runtime logic,
+    // so this test uses the direct API instead of @ComponentSnapshot.
     @Test
     func localBundleImage() {
-        // Test with bundled test image
         guard let imageURL = Bundle.module.url(
             forResource: "test-profile-image",
             withExtension: "jpg",
@@ -45,16 +50,25 @@ struct MediaSnapshotTests {
 
         This is a test with a local bundled image.
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "Media",
+            stateName: "localBundleImage",
+            size: CGSize(width: 400, height: 600),
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - Image with Alt Text Only
 
-    @Test
-    func imageAltOnly() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func imageAltOnly() -> some View {
+        MarkdownView("""
         ![This is the alt text for a missing image](invalid://path)
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 }
+#endif

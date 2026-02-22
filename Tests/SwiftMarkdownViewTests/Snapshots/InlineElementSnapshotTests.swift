@@ -1,66 +1,71 @@
+#if canImport(UIKit)
 import Testing
 import SwiftUI
+import VisualTesting
 @testable import SwiftMarkdownView
 
 /// Snapshot tests for inline Markdown elements.
 ///
 /// Tests rendering of emphasis, strong, inline code, links, and strikethrough.
-@Suite("Inline Element Snapshots")
+@SnapshotSuite("InlineElements")
 @MainActor
 struct InlineElementSnapshotTests {
 
+    init() { setupVisualTesting() }
+
     // MARK: - Emphasis & Strong
 
-    @Test
-    func emphasisAndStrong() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func emphasisAndStrong() -> some View {
+        MarkdownView("""
         This text has *emphasis* and **strong** formatting.
         You can also combine ***both***.
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
     // MARK: - Inline Code
 
-    @Test
-    func inlineCode() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func inlineCode() -> some View {
+        MarkdownView("""
         Use the `let` keyword to declare a constant.
         The `func` keyword defines a function.
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
     // MARK: - Links
 
-    @Test
-    func links() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func links() -> some View {
+        MarkdownView("""
         Visit [Apple](https://apple.com) for more info.
         Check the [documentation](https://docs.example.com "API Docs").
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
     // MARK: - Strikethrough
 
-    @Test
-    func strikethrough() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func strikethrough() -> some View {
+        MarkdownView("""
         This is ~~deleted text~~ with strikethrough.
         You can combine ~~strikethrough with **strong**~~ text.
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
     // MARK: - Mixed Inline Elements
 
-    @Test
-    func mixedInline() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func mixedInline() -> some View {
+        MarkdownView("""
         Check out the **[Swift documentation](https://swift.org)** for details.
         Use `async`/`await` for *asynchronous* code.
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 }
+#endif

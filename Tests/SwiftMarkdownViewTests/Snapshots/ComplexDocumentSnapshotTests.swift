@@ -1,5 +1,7 @@
+#if canImport(UIKit)
 import Testing
 import SwiftUI
+import VisualTesting
 @testable import SwiftMarkdownView
 import SwiftMarkdownViewHighlightJS
 
@@ -7,17 +9,21 @@ import SwiftMarkdownViewHighlightJS
 ///
 /// Tests rendering of AI-style responses and mixed content documents
 /// using HighlightJS-based syntax highlighter for accurate code highlighting.
+/// Uses the direct API since async delay is needed for syntax highlighting.
 @Suite("Complex Document Snapshots")
 @MainActor
 struct ComplexDocumentSnapshotTests {
 
+    init() { setupVisualTesting() }
+
     /// Light mode highlighter for white background snapshots.
-    /// Note: Using a11y theme instead of xcode because xcode light mode
-    /// doesn't set NSColor for plain text, causing visibility issues.
     private let highlighter = HighlightJSSyntaxHighlighter(theme: .a11y, colorMode: .light)
 
     /// Delay for async syntax highlighting to complete.
     private let highlightDelay: TimeInterval = 1.0
+
+    /// Default size for complex document snapshots.
+    private let snapshotSize = CGSize(width: 400, height: 600)
 
     // MARK: - AI Response Style
 
@@ -50,7 +56,17 @@ struct ComplexDocumentSnapshotTests {
         For more details, see the [documentation](https://example.com).
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "ComplexDocument",
+            stateName: "aiResponse",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - README Style
@@ -96,7 +112,17 @@ struct ComplexDocumentSnapshotTests {
         MIT License
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "ComplexDocument",
+            stateName: "readmeStyle",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - Technical Documentation
@@ -123,6 +149,17 @@ struct ComplexDocumentSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "ComplexDocument",
+            stateName: "technicalDoc",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 }
+#endif

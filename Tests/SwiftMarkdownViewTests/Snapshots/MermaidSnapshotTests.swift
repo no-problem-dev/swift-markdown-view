@@ -1,17 +1,22 @@
+#if canImport(UIKit)
 import Testing
 import SwiftUI
+import VisualTesting
 @testable import SwiftMarkdownView
 
 /// Snapshot tests for Mermaid diagram rendering.
 ///
-/// Tests both the WebView-based rendering (macOS 26+) and the fallback view.
-@Suite("Mermaid Snapshots")
+/// Tests both the WebView-based rendering and the fallback view.
+@SnapshotSuite("Mermaid")
 @MainActor
 struct MermaidSnapshotTests {
 
-    // MARK: - WebView Rendered Diagrams (macOS 26+)
+    init() { setupVisualTesting() }
 
-    @available(macOS 26.0, *)
+    // MARK: - WebView Rendered Diagrams (async)
+
+    // Async tests use the direct API since @ComponentSnapshot generates sync methods.
+
     @Test
     func flowchart() async {
         let view = MermaidDiagramView("""
@@ -21,10 +26,19 @@ struct MermaidSnapshotTests {
             B -->|No| D[Debug]
             D --> B
         """)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: 5.0)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(5.0))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "Mermaid",
+            stateName: "flowchart",
+            size: CGSize(width: 400, height: 600),
+            file: #filePath, line: #line
+        )
     }
 
-    @available(macOS 26.0, *)
     @Test
     func sequenceDiagram() async {
         let view = MermaidDiagramView("""
@@ -34,14 +48,21 @@ struct MermaidSnapshotTests {
             A->>B: Hello Bob!
             B-->>A: Hi Alice!
         """)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: 5.0)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(5.0))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "Mermaid",
+            stateName: "sequenceDiagram",
+            size: CGSize(width: 400, height: 600),
+            file: #filePath, line: #line
+        )
     }
 
-    @available(macOS 26.0, *)
     @Test
     func complexFlowchartWithScrolling() async {
-        // Test a complex diagram that would overflow the viewport
-        // This tests the scrollable container functionality
         let view = MermaidDiagramView("""
         graph LR
             A[Start] --> B[Step 1]
@@ -62,33 +83,43 @@ struct MermaidSnapshotTests {
             O --> P[Merge]
             P --> F
         """)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: 5.0)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(5.0))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "Mermaid",
+            stateName: "complexFlowchartWithScrolling",
+            size: CGSize(width: 400, height: 600),
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - Fallback View Tests
 
-    @Test
-    func fallbackFlowchart() {
-        let view = MermaidFallbackView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func fallbackFlowchart() -> some View {
+        MermaidFallbackView("""
         graph TD
             A[Start] --> B{Is it working?}
             B -->|Yes| C[Great!]
             B -->|No| D[Debug]
             D --> B
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
-    @Test
-    func fallbackSequence() {
-        let view = MermaidFallbackView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func fallbackSequence() -> some View {
+        MermaidFallbackView("""
         sequenceDiagram
             participant A as Alice
             participant B as Bob
             A->>B: Hello Bob!
             B-->>A: Hi Alice!
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
     // MARK: - Mixed Document with Mermaid
@@ -129,7 +160,6 @@ struct MermaidSnapshotTests {
 
     // MARK: - Full Document Rendering with Mermaid
 
-    @available(macOS 26.0, *)
     @Test
     func fullDocumentWithMermaid() async {
         let view = MarkdownView("""
@@ -143,6 +173,17 @@ struct MermaidSnapshotTests {
 
         The diagram above shows the system flow.
         """)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: 5.0)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(5.0))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "Mermaid",
+            stateName: "fullDocumentWithMermaid",
+            size: CGSize(width: 400, height: 600),
+            file: #filePath, line: #line
+        )
     }
 }
+#endif
