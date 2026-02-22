@@ -46,6 +46,7 @@ jobs:
           xcodebuild test \
             -scheme SwiftMarkdownView \
             -destination 'platform=iOS Simulator,name=iPhone 16e' \
+            -skipMacroValidation \
             -only-testing SwiftMarkdownViewTests/BlockElementSnapshotTests \
             -only-testing SwiftMarkdownViewTests/CodeBlockSnapshotTests \
             -only-testing SwiftMarkdownViewTests/InlineElementSnapshotTests \
