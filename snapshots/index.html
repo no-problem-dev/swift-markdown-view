@@ -13,7 +13,6 @@
             --text-muted: #8b949e;
             --accent: #58a6ff;
             --success: #3fb950;
-            --warning: #d29922;
         }
         * { box-sizing: border-box; }
         body {
@@ -53,6 +52,28 @@
         }
         .stat-value { font-size: 2rem; font-weight: bold; color: var(--success); }
         .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+        .filter-bar {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+        }
         .suite {
             margin-bottom: 40px;
         }
@@ -73,10 +94,19 @@
             font-size: 0.8rem;
             font-weight: bold;
         }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+        .state-row {
+            margin-bottom: 24px;
+        }
+        .state-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-muted);
+        }
+        .theme-grid {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
         }
         .card {
             background: var(--card-bg);
@@ -84,6 +114,7 @@
             border-radius: 12px;
             overflow: hidden;
             transition: transform 0.2s, box-shadow 0.2s;
+            width: 300px;
         }
         .card:hover {
             transform: translateY(-4px);
@@ -96,14 +127,33 @@
             background: white;
             cursor: pointer;
         }
+        .card.dark-theme img {
+            background: #1a1a1a;
+        }
         .card-body {
-            padding: 15px;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .card-title {
             font-weight: 600;
             margin: 0;
-            font-size: 0.9rem;
-            word-break: break-all;
+            font-size: 0.85rem;
+        }
+        .theme-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .theme-badge.light {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .theme-badge.dark {
+            background: #374151;
+            color: #d1d5db;
         }
         .modal {
             display: none;
@@ -139,290 +189,26 @@
     <div class="container">
         <header>
             <h1>SwiftMarkdownView Snapshot Report</h1>
-            <p class="meta">Generated: 2026-01-10 09:34:13 UTC</p>
-            <p class="meta">Branch: main | Commit: ce1024f</p>
+            <p class="meta">Generated: 2026-02-22 23:24:45 UTC</p>
+            <p class="meta">Branch: main | Commit: 3082692</p>
             <div class="stats">
                 <div class="stat">
-                    <div class="stat-value">30</div>
+                    <div class="stat-value">0</div>
                     <div class="stat-label">Total Snapshots</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">6</div>
-                    <div class="stat-label">Test Suites</div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Components</div>
                 </div>
             </div>
         </header>
 
-        <section class="suite">
-            <div class="suite-header">
-                <h2>Block Elements</h2>
-                <span class="suite-count">7 snapshots</span>
-            </div>
-            <div class="grid">
-    
-                <div class="card">
-                    <img src="images/headings.1.png" alt="headings" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">headings</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/orderedList.1.png" alt="orderedList" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">orderedList</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/paragraph.1.png" alt="paragraph" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">paragraph</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/table.1.png" alt="table" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">table</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/taskList.1.png" alt="taskList" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">taskList</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/thematicBreak.1.png" alt="thematicBreak" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">thematicBreak</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/unorderedList.1.png" alt="unorderedList" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">unorderedList</p>
-                    </div>
-                </div>
-        
-            </div>
-        </section>
-    
-        <section class="suite">
-            <div class="suite-header">
-                <h2>Code Blocks</h2>
-                <span class="suite-count">11 snapshots</span>
-            </div>
-            <div class="grid">
-    
-                <div class="card">
-                    <img src="images/go.1.png" alt="go" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">go</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/json.1.png" alt="json" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">json</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/plain.1.png" alt="plain" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">plain</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/python.1.png" alt="python" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">python</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/ruby.1.png" alt="ruby" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">ruby</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/rust.1.png" alt="rust" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">rust</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/shell.1.png" alt="shell" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">shell</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/sql.1.png" alt="sql" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">sql</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/swift.1.png" alt="swift" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">swift</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/typescript.1.png" alt="typescript" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">typescript</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/yaml.1.png" alt="yaml" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">yaml</p>
-                    </div>
-                </div>
-        
-            </div>
-        </section>
-    
-        <section class="suite">
-            <div class="suite-header">
-                <h2>Complex Documents</h2>
-                <span class="suite-count">3 snapshots</span>
-            </div>
-            <div class="grid">
-    
-                <div class="card">
-                    <img src="images/aiResponse.1.png" alt="aiResponse" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">aiResponse</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/readmeStyle.1.png" alt="readmeStyle" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">readmeStyle</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/technicalDoc.1.png" alt="technicalDoc" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">technicalDoc</p>
-                    </div>
-                </div>
-        
-            </div>
-        </section>
-    
-        <section class="suite">
-            <div class="suite-header">
-                <h2>Inline Elements</h2>
-                <span class="suite-count">5 snapshots</span>
-            </div>
-            <div class="grid">
-    
-                <div class="card">
-                    <img src="images/emphasisAndStrong.1.png" alt="emphasisAndStrong" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">emphasisAndStrong</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/inlineCode.1.png" alt="inlineCode" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">inlineCode</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/links.1.png" alt="links" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">links</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/mixedInline.1.png" alt="mixedInline" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">mixedInline</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/strikethrough.1.png" alt="strikethrough" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">strikethrough</p>
-                    </div>
-                </div>
-        
-            </div>
-        </section>
-    
-        <section class="suite">
-            <div class="suite-header">
-                <h2>Media</h2>
-                <span class="suite-count">3 snapshots</span>
-            </div>
-            <div class="grid">
-    
-                <div class="card">
-                    <img src="images/imageAltOnly.1.png" alt="imageAltOnly" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">imageAltOnly</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/imagePlaceholder.1.png" alt="imagePlaceholder" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">imagePlaceholder</p>
-                    </div>
-                </div>
-        
-                <div class="card">
-                    <img src="images/localBundleImage.1.png" alt="localBundleImage" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">localBundleImage</p>
-                    </div>
-                </div>
-        
-            </div>
-        </section>
-    
-        <section class="suite">
-            <div class="suite-header">
-                <h2>Other</h2>
-                <span class="suite-count">1 snapshots</span>
-            </div>
-            <div class="grid">
-    
-                <div class="card">
-                    <img src="images/aside.1.png" alt="aside" onclick="openModal(this.src)">
-                    <div class="card-body">
-                        <p class="card-title">aside</p>
-                    </div>
-                </div>
-        
-            </div>
-        </section>
-    
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterTheme('all')">All</button>
+            <button class="filter-btn" onclick="filterTheme('light')">Light</button>
+            <button class="filter-btn" onclick="filterTheme('dark')">Dark</button>
+        </div>
+
         <div class="modal" id="modal" onclick="closeModal()">
             <span class="modal-close">&times;</span>
             <img id="modal-img" src="" alt="Full size">
@@ -439,6 +225,17 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeModal();
         });
+        function filterTheme(theme) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.card').forEach(card => {
+                if (theme === 'all' || card.dataset.theme === theme) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
     </script>
 </body>
 </html>
