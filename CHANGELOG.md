@@ -9,6 +9,24 @@
 
 <!-- 次のリリースに含める変更をここに追加 -->
 
+## [1.0.10] - 2026-02-23
+
+### 修正
+
+- **列挙リスト内の太字レンダリング問題を修正**
+  - `InlineRenderer` に `bodyFont` パラメータを追加し、全テキスト run に明示的な font 属性を設定
+  - SwiftUI の View レベル `.font()` が AttributedString の最初の run を上書きする問題を解消
+  - `ParagraphView`, `HeadingView`, `TableCellView` から `.typography()` を除去し、Typography トークンの font を直接渡す方式に変更
+
+### 変更
+
+- **スナップショットテストを SwiftVisualTesting に移行**
+  - `swift-snapshot-testing` 直接依存を `swift-visual-testing` に置換
+  - 全テストファイルを `@SnapshotSuite` / `@ComponentSnapshot` マクロベースに書き換え
+  - テスト設定: iPhone 16、Light/Dark テーマ、日本語のみ
+  - 非同期テスト（CodeBlock, Mermaid, Complex）は `VisualTesting.assertComponentSnapshot()` 直接 API を使用
+  - 全スナップショットテストファイルに `#if canImport(UIKit)` ガードを追加（macOS ビルド対応）
+
 ## [1.0.9] - 2025-01-10
 
 ### 修正
@@ -196,7 +214,8 @@
 - DocCドキュメント
 - RELEASE_PROCESS.md
 
-[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.9...HEAD
+[未リリース]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.10...HEAD
+[1.0.10]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.9...v1.0.10
 [1.0.9]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/no-problem-dev/swift-markdown-view/compare/v1.0.6...v1.0.7
