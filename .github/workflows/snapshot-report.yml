@@ -13,8 +13,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: "pages-snapshots"
+  cancel-in-progress: true
 
 jobs:
   snapshot-test:
