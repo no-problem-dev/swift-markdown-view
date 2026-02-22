@@ -23,7 +23,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/no-problem-dev/swift-design-system.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/swiftlang/swift-markdown.git", .upToNextMajor(from: "0.7.3")),
-        .package(path: "../swift-visual-testing"),
+        .package(url: "https://github.com/no-problem-dev/swift-visual-testing.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin.git", .upToNextMajor(from: "1.4.0")),
         .package(url: "https://github.com/appstefan/HighlightSwift.git", .upToNextMajor(from: "1.0.0"))
     ],
