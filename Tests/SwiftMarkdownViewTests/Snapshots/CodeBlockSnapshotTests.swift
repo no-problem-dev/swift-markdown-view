@@ -1,5 +1,7 @@
+#if canImport(UIKit)
 import Testing
 import SwiftUI
+import VisualTesting
 @testable import SwiftMarkdownView
 import SwiftMarkdownViewHighlightJS
 
@@ -7,17 +9,21 @@ import SwiftMarkdownViewHighlightJS
 ///
 /// Tests rendering of various programming language code blocks
 /// using HighlightJS-based syntax highlighter for accurate, multi-language support.
+/// Uses the direct API since async delay is needed for syntax highlighting.
 @Suite("Code Block Snapshots")
 @MainActor
 struct CodeBlockSnapshotTests {
 
+    init() { setupVisualTesting() }
+
     /// Light mode highlighter for white background snapshots.
-    /// Note: Using a11y theme instead of xcode because xcode light mode
-    /// doesn't set NSColor for plain text, causing visibility issues.
     private let highlighter = HighlightJSSyntaxHighlighter(theme: .a11y, colorMode: .light)
 
     /// Delay for async syntax highlighting to complete.
     private let highlightDelay: TimeInterval = 1.0
+
+    /// Default size for code block snapshots.
+    private let snapshotSize = CGSize(width: 400, height: 600)
 
     // MARK: - Plain Code
 
@@ -30,7 +36,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "plain",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - Swift
@@ -50,7 +66,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "swift",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - TypeScript
@@ -70,7 +96,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "typescript",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - Python
@@ -91,7 +127,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "python",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - Go
@@ -112,7 +158,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "go",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - Rust
@@ -134,7 +190,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "rust",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - Ruby
@@ -159,7 +225,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "ruby",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - SQL
@@ -180,7 +256,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "sql",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - JSON
@@ -199,7 +285,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "json",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - YAML
@@ -220,7 +316,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "yaml",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 
     // MARK: - Shell
@@ -243,6 +349,17 @@ struct CodeBlockSnapshotTests {
         ```
         """)
         .syntaxHighlighter(highlighter)
-        await SnapshotTestHelper.assertSnapshotAsync(of: view, delay: highlightDelay)
+        .padding()
+
+        try? await Task.sleep(for: .seconds(highlightDelay))
+
+        VisualTesting.assertComponentSnapshot(
+            of: view,
+            componentName: "CodeBlock",
+            stateName: "shell",
+            size: snapshotSize,
+            file: #filePath, line: #line
+        )
     }
 }
+#endif

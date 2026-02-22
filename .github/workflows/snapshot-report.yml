@@ -16,9 +16,6 @@ concurrency:
   group: snapshot-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  SNAPSHOT_ARTIFACTS: ${{ github.workspace }}/snapshot-failures
-
 jobs:
   snapshot-test:
     name: Run Snapshot Tests
@@ -44,9 +41,6 @@ jobs:
       - name: Build
         run: swift build
 
-      - name: Create artifacts directory
-        run: mkdir -p "$SNAPSHOT_ARTIFACTS"
-
       - name: Run Snapshot Tests (Recording Mode)
         id: snapshot-test
         continue-on-error: true
@@ -57,24 +51,29 @@ jobs:
           # Recording mode marks tests as "failed" by design to prevent accidental commits
           # WebView tests require macOS 26.1+, skip them on CI (26.0.1)
           swift test \
-            --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests"
+            --filter "BlockElementSnapshotTests|CodeBlockSnapshotTests|InlineElementSnapshotTests|MediaSnapshotTests|ComplexDocumentSnapshotTests|AsideSnapshotTests"
 
       - name: Collect snapshot images
         if: always()
         run: |
           mkdir -p snapshot-report/images
 
-          # Copy all snapshot images
-          find Tests -name "*.png" -path "*__Snapshots__*" -exec cp {} snapshot-report/images/ \;
+          # Copy all snapshot images preserving component directory structure
+          # VisualTesting stores: __Snapshots__/{componentName}/{stateName}.{theme}.png
+          SNAPSHOTS_ROOT=$(find Tests -type d -name "__Snapshots__" | head -1)
 
-          # Copy any failure artifacts
-          if [ -d "$SNAPSHOT_ARTIFACTS" ] && [ "$(ls -A $SNAPSHOT_ARTIFACTS 2>/dev/null)" ]; then
-            cp -r "$SNAPSHOT_ARTIFACTS"/* snapshot-report/images/ 2>/dev/null || true
+          if [ -n "$SNAPSHOTS_ROOT" ]; then
+            for component_dir in "$SNAPSHOTS_ROOT"/*/; do
+              component=$(basename "$component_dir")
+              mkdir -p "snapshot-report/images/$component"
+              cp "$component_dir"*.png "snapshot-report/images/$component/" 2>/dev/null || true
+              cp "$component_dir"manifest.json "snapshot-report/images/$component/" 2>/dev/null || true
+            done
           fi
 
           # List collected images
           echo "Collected snapshots:"
-          ls -la snapshot-report/images/ || echo "No images found"
+          find snapshot-report/images -name "*.png" | sort
 
       - name: Generate HTML Report
         if: always()
@@ -82,42 +81,45 @@ jobs:
           GITHUB_SHA_SHORT: ${{ github.sha }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
-          python3 << 'EOF'
+          python3 << 'PYEOF'
           import os
           import glob
+          import json
           from datetime import datetime
 
-          # Get environment variables
           github_sha = os.environ.get('GITHUB_SHA_SHORT', 'unknown')[:7]
           github_ref = os.environ.get('GITHUB_REF_NAME', 'unknown')
 
-          # Collect images
           images_dir = "snapshot-report/images"
-          images = sorted(glob.glob(f"{images_dir}/*.png"))
 
-          # Group by test suite
-          suites = {}
-          for img in images:
-              name = os.path.basename(img)
-              # Extract suite name from filename pattern
-              if "BlockElement" in name or name.startswith(("paragraph", "headings", "blockquote", "orderedList", "unorderedList", "table", "taskList", "thematicBreak")):
-                  suite = "Block Elements"
-              elif "CodeBlock" in name or name in ["go.1.png", "json.1.png", "plain.1.png", "python.1.png", "ruby.1.png", "rust.1.png", "shell.1.png", "sql.1.png", "swift.1.png", "typescript.1.png", "yaml.1.png"]:
-                  suite = "Code Blocks"
-              elif "InlineElement" in name or name.startswith(("emphasisAndStrong", "inlineCode", "links", "strikethrough", "mixedInline")):
-                  suite = "Inline Elements"
-              elif "Media" in name or name.startswith(("image", "localBundle")):
-                  suite = "Media"
-              elif "ComplexDocument" in name or name.startswith(("aiResponse", "readmeStyle", "technicalDoc")):
-                  suite = "Complex Documents"
-              elif "Mermaid" in name or name.startswith(("flowchart", "sequenceDiagram", "fallback", "fullDocument")):
-                  suite = "Mermaid Diagrams"
-              else:
-                  suite = "Other"
+          # Discover components from directory structure
+          components = {}
+          for component_dir in sorted(glob.glob(f"{images_dir}/*/")):
+              component_name = os.path.basename(component_dir.rstrip('/'))
+              pngs = sorted(glob.glob(f"{component_dir}*.png"))
+              if pngs:
+                  # Group by state: {stateName}.{theme}.png
+                  states = {}
+                  for png in pngs:
+                      filename = os.path.basename(png)
+                      # Parse: stateName.theme.png
+                      parts = filename.rsplit('.', 2)
+                      if len(parts) == 3:
+                          state_name = parts[0]
+                          theme = parts[1]
+                      else:
+                          state_name = filename.replace('.png', '')
+                          theme = 'unknown'
+                      if state_name not in states:
+                          states[state_name] = {}
+                      states[state_name][theme] = f"images/{component_name}/{filename}"
+                  components[component_name] = states
 
-              if suite not in suites:
-                  suites[suite] = []
-              suites[suite].append(name)
+          total_images = sum(
+              len(theme_map)
+              for states in components.values()
+              for theme_map in states.values()
+          )
 
           # Generate HTML
           html = f'''<!DOCTYPE html>
@@ -135,7 +137,6 @@ jobs:
                       --text-muted: #8b949e;
                       --accent: #58a6ff;
                       --success: #3fb950;
-                      --warning: #d29922;
                   }}
                   * {{ box-sizing: border-box; }}
                   body {{
@@ -175,6 +176,28 @@ jobs:
                   }}
                   .stat-value {{ font-size: 2rem; font-weight: bold; color: var(--success); }}
                   .stat-label {{ font-size: 0.8rem; color: var(--text-muted); }}
+                  .filter-bar {{
+                      display: flex;
+                      justify-content: center;
+                      gap: 10px;
+                      margin-bottom: 30px;
+                      flex-wrap: wrap;
+                  }}
+                  .filter-btn {{
+                      background: var(--card-bg);
+                      color: var(--text);
+                      border: 1px solid var(--border);
+                      padding: 8px 16px;
+                      border-radius: 20px;
+                      cursor: pointer;
+                      font-size: 0.85rem;
+                      transition: all 0.2s;
+                  }}
+                  .filter-btn:hover, .filter-btn.active {{
+                      background: var(--accent);
+                      color: var(--bg);
+                      border-color: var(--accent);
+                  }}
                   .suite {{
                       margin-bottom: 40px;
                   }}
@@ -195,10 +218,19 @@ jobs:
                       font-size: 0.8rem;
                       font-weight: bold;
                   }}
-                  .grid {{
-                      display: grid;
-                      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                      gap: 20px;
+                  .state-row {{
+                      margin-bottom: 24px;
+                  }}
+                  .state-name {{
+                      font-size: 1rem;
+                      font-weight: 600;
+                      margin-bottom: 10px;
+                      color: var(--text-muted);
+                  }}
+                  .theme-grid {{
+                      display: flex;
+                      gap: 16px;
+                      flex-wrap: wrap;
                   }}
                   .card {{
                       background: var(--card-bg);
@@ -206,6 +238,7 @@ jobs:
                       border-radius: 12px;
                       overflow: hidden;
                       transition: transform 0.2s, box-shadow 0.2s;
+                      width: 300px;
                   }}
                   .card:hover {{
                       transform: translateY(-4px);
@@ -218,14 +251,33 @@ jobs:
                       background: white;
                       cursor: pointer;
                   }}
+                  .card.dark-theme img {{
+                      background: #1a1a1a;
+                  }}
                   .card-body {{
-                      padding: 15px;
+                      padding: 12px 15px;
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
                   }}
                   .card-title {{
                       font-weight: 600;
                       margin: 0;
-                      font-size: 0.9rem;
-                      word-break: break-all;
+                      font-size: 0.85rem;
+                  }}
+                  .theme-badge {{
+                      font-size: 0.7rem;
+                      padding: 2px 8px;
+                      border-radius: 10px;
+                      font-weight: bold;
+                  }}
+                  .theme-badge.light {{
+                      background: #fef3c7;
+                      color: #92400e;
+                  }}
+                  .theme-badge.dark {{
+                      background: #374151;
+                      color: #d1d5db;
                   }}
                   .modal {{
                       display: none;
@@ -265,38 +317,56 @@ jobs:
                       <p class="meta">Branch: {github_ref} | Commit: {github_sha}</p>
                       <div class="stats">
                           <div class="stat">
-                              <div class="stat-value">{len(images)}</div>
+                              <div class="stat-value">{total_images}</div>
                               <div class="stat-label">Total Snapshots</div>
                           </div>
                           <div class="stat">
-                              <div class="stat-value">{len(suites)}</div>
-                              <div class="stat-label">Test Suites</div>
+                              <div class="stat-value">{len(components)}</div>
+                              <div class="stat-label">Components</div>
                           </div>
                       </div>
                   </header>
+
+                  <div class="filter-bar">
+                      <button class="filter-btn active" onclick="filterTheme('all')">All</button>
+                      <button class="filter-btn" onclick="filterTheme('light')">Light</button>
+                      <button class="filter-btn" onclick="filterTheme('dark')">Dark</button>
+                  </div>
           '''
 
-          for suite_name, suite_images in sorted(suites.items()):
+          for component_name, states in sorted(components.items()):
+              state_count = sum(len(t) for t in states.values())
               html += f'''
-                  <section class="suite">
+                  <section class="suite" data-component="{component_name}">
                       <div class="suite-header">
-                          <h2>{suite_name}</h2>
-                          <span class="suite-count">{len(suite_images)} snapshots</span>
+                          <h2>{component_name}</h2>
+                          <span class="suite-count">{state_count} snapshots</span>
                       </div>
-                      <div class="grid">
               '''
-              for img in sorted(suite_images):
-                  display_name = img.replace('.1.png', '').replace('.png', '')
+              for state_name, themes in sorted(states.items()):
                   html += f'''
-                          <div class="card">
-                              <img src="images/{img}" alt="{display_name}" onclick="openModal(this.src)">
-                              <div class="card-body">
-                                  <p class="card-title">{display_name}</p>
+                      <div class="state-row">
+                          <div class="state-name">{state_name}</div>
+                          <div class="theme-grid">
+                  '''
+                  for theme in ['light', 'dark']:
+                      if theme in themes:
+                          img_path = themes[theme]
+                          css_class = 'dark-theme' if theme == 'dark' else ''
+                          html += f'''
+                              <div class="card {css_class}" data-theme="{theme}">
+                                  <img src="{img_path}" alt="{state_name} ({theme})" loading="lazy" onclick="openModal(this.src)">
+                                  <div class="card-body">
+                                      <p class="card-title">{state_name}</p>
+                                      <span class="theme-badge {theme}">{theme}</span>
+                                  </div>
                               </div>
+                          '''
+                  html += '''
                           </div>
+                      </div>
                   '''
               html += '''
-                      </div>
                   </section>
               '''
 
@@ -317,6 +387,17 @@ jobs:
                   document.addEventListener('keydown', (e) => {
                       if (e.key === 'Escape') closeModal();
                   });
+                  function filterTheme(theme) {
+                      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                      event.target.classList.add('active');
+                      document.querySelectorAll('.card').forEach(card => {
+                          if (theme === 'all' || card.dataset.theme === theme) {
+                              card.style.display = '';
+                          } else {
+                              card.style.display = 'none';
+                          }
+                      });
+                  }
               </script>
           </body>
           </html>
@@ -325,8 +406,8 @@ jobs:
           with open('snapshot-report/index.html', 'w') as f:
               f.write(html)
 
-          print(f"Generated report with {len(images)} snapshots in {len(suites)} suites")
-          EOF
+          print(f"Generated report with {total_images} snapshots in {len(components)} components")
+          PYEOF
 
       - name: Upload Snapshot Report Artifact
         if: always()

@@ -1,27 +1,31 @@
+#if canImport(UIKit)
 import Testing
 import SwiftUI
+import VisualTesting
 @testable import SwiftMarkdownView
 
 /// Snapshot tests for block-level Markdown elements.
 ///
 /// Tests rendering of paragraphs, headings, lists, asides (callouts), and tables.
-@Suite("Block Element Snapshots")
+@SnapshotSuite("BlockElements")
 @MainActor
 struct BlockElementSnapshotTests {
 
+    init() { setupVisualTesting() }
+
     // MARK: - Paragraph
 
-    @Test
-    func paragraph() {
-        let view = MarkdownView("This is a simple paragraph of text.")
-        SnapshotTestHelper.assertSnapshot(of: view)
+    @ComponentSnapshot(width: 400, height: 600)
+    func paragraph() -> some View {
+        MarkdownView("This is a simple paragraph of text.")
+            .padding()
     }
 
     // MARK: - Headings
 
-    @Test
-    func headings() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func headings() -> some View {
+        MarkdownView("""
         # Heading 1
         ## Heading 2
         ### Heading 3
@@ -29,47 +33,47 @@ struct BlockElementSnapshotTests {
         ##### Heading 5
         ###### Heading 6
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
     // MARK: - Lists
 
-    @Test
-    func unorderedList() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func unorderedList() -> some View {
+        MarkdownView("""
         - First item
         - Second item
         - Third item
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
-    @Test
-    func orderedList() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func orderedList() -> some View {
+        MarkdownView("""
         1. First item
         2. Second item
         3. Third item
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
-    @Test
-    func taskList() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func taskList() -> some View {
+        MarkdownView("""
         - [x] Complete setup
         - [x] Write documentation
         - [ ] Add tests
         - [ ] Deploy to production
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
     // MARK: - Aside (Blockquote)
 
-    @Test
-    func aside() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func aside() -> some View {
+        MarkdownView("""
         > Note: This is a note aside.
         > It can span multiple lines.
 
@@ -77,34 +81,35 @@ struct BlockElementSnapshotTests {
 
         > Tip: This is a helpful tip.
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
     // MARK: - Table
 
-    @Test
-    func table() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func table() -> some View {
+        MarkdownView("""
         | Feature | Status | Priority |
         |:--------|:------:|--------:|
         | Auth    | ✅     | High    |
         | API     | 🔄     | Medium  |
         | Tests   | ❌     | Low     |
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 
     // MARK: - Thematic Break
 
-    @Test
-    func thematicBreak() {
-        let view = MarkdownView("""
+    @ComponentSnapshot(width: 400, height: 600)
+    func thematicBreak() -> some View {
+        MarkdownView("""
         First section
 
         ---
 
         Second section
         """)
-        SnapshotTestHelper.assertSnapshot(of: view)
+        .padding()
     }
 }
+#endif
