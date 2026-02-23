@@ -1,0 +1,32 @@
+{
+  "components" : [
+
+  ],
+  "configuration" : {
+    "devices" : [
+
+    ],
+    "locales" : [
+
+    ],
+    "themes" : [
+
+    ]
+  },
+  "generatedAt" : "2026-02-23T00:08:44Z",
+  "summary" : {
+    "byDevice" : {
+
+    },
+    "byTheme" : {
+
+    },
+    "totalComponents" : 0,
+    "totalImages" : 0,
+    "totalViews" : 0
+  },
+  "version" : "1.0",
+  "views" : [
+
+  ]
+}

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snapshot Gallery — 0 images</title>
+<style>
+:root {
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --text: #1d1d1f;
+  --text2: #6e6e73;
+  --border: #d2d2d7;
+  --accent: #0071e3;
+  --accent-bg: #0071e3;
+  --accent-text: #ffffff;
+  --chip-bg: #e8e8ed;
+  --chip-active: #0071e3;
+  --chip-active-text: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --radius: 10px;
+  --card-bg: #ffffff;
+}
+.dark {
+  --bg: #1d1d1f;
+  --surface: #2c2c2e;
+  --text: #f5f5f7;
+  --text2: #98989d;
+  --border: #48484a;
+  --chip-bg: #3a3a3c;
+  --chip-active: #0a84ff;
+  --chip-active-text: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.3);
+  --card-bg: #2c2c2e;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.4;
+}
+/* Stats */
+#stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  padding: 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.stat { text-align: center; }
+.stat-num { display: block; font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 13px; color: var(--text2); }
+/* Filters */
+#filters {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  align-items: center;
+}
+.filter-row { display: flex; align-items: center; gap: 6px; }
+.filter-row > label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; min-width: 50px; }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.chip {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  background: var(--chip-bg);
+  color: var(--text);
+  border: none;
+  transition: all .15s;
+  user-select: none;
+}
+.chip:hover { opacity: .8; }
+.chip.active { background: var(--chip-active); color: var(--chip-active-text); }
+.filter-row-actions { margin-left: auto; gap: 8px; }
+#search {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  width: 180px;
+  outline: none;
+}
+#search:focus { border-color: var(--accent); }
+.action-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.action-btn:hover { border-color: var(--accent); }
+.action-btn.active { background: var(--accent-bg); color: var(--accent-text); border-color: var(--accent); }
+/* Gallery */
+#gallery { padding: 20px; max-width: 1600px; margin: 0 auto; }
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 28px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.section-title .count { font-size: 14px; color: var(--text2); font-weight: 400; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.grid.compare-grid {
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+}
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+.card img {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #e5e5e5;
+}
+.dark .card img { background: #3a3a3c; }
+.card-info {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.card-info .name { font-weight: 600; color: var(--text); font-size: 12px; }
+/* Compare pair */
+.compare-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.compare-pair img { width: 100%; height: auto; display: block; cursor: pointer; }
+.compare-pair .card-info { grid-column: 1 / -1; }
+/* Lightbox */
+.lightbox { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.lightbox.hidden { display: none; }
+.lb-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.85); }
+.lb-content { position: relative; max-width: 92vw; max-height: 92vh; display: flex; flex-direction: column; align-items: center; }
+.lb-img { max-width: 90vw; max-height: 82vh; object-fit: contain; border-radius: 8px; background: #fff; }
+.dark .lb-img { background: #1d1d1f; }
+.lb-close, .lb-prev, .lb-next {
+  position: absolute;
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+.lb-close { top: -48px; right: 0; }
+.lb-prev { left: -52px; top: 50%; transform: translateY(-50%); }
+.lb-next { right: -52px; top: 50%; transform: translateY(-50%); }
+.lb-caption {
+  margin-top: 12px;
+  color: #ccc;
+  font-size: 13px;
+  text-align: center;
+  max-width: 90vw;
+  word-break: break-all;
+}
+.hidden-section { display: none; }
+</style>
+</head>
+<body>
+<!-- Stats Header -->
+<header id="stats">
+  <div class="stat"><span class="stat-num">0</span><span class="stat-label">Images</span></div>
+  <div class="stat"><span class="stat-num">0</span><span class="stat-label">Views</span></div>
+  <div class="stat"><span class="stat-num">0</span><span class="stat-label">Components</span></div>
+  <div class="stat"><span class="stat-num">0</span><span class="stat-label">Devices</span></div>
+</header>
+
+<!-- Filter Bar -->
+<nav id="filters">
+  <div class="filter-row">
+    <label>Section</label>
+    <div id="section-chips" class="chips"></div>
+  </div>
+  <div class="filter-row">
+    <label>Device</label>
+    <div id="device-chips" class="chips"></div>
+  </div>
+  <div class="filter-row">
+    <label>Theme</label>
+    <div id="theme-chips" class="chips"></div>
+  </div>
+  <div class="filter-row">
+    <label>Locale</label>
+    <div id="locale-chips" class="chips"></div>
+  </div>
+  <div class="filter-row filter-row-actions">
+    <input id="search" type="text" placeholder="Search views…" autocomplete="off">
+    <button id="compare-btn" class="action-btn" title="Compare light vs dark">Compare</button>
+    <button id="dark-mode-btn" class="action-btn" title="Toggle gallery dark mode">☀︎</button>
+  </div>
+</nav>
+
+<!-- Gallery -->
+<main id="gallery"></main>
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox hidden">
+  <div class="lb-backdrop"></div>
+  <div class="lb-content">
+    <button class="lb-close" title="Close">✕</button>
+    <button class="lb-prev" title="Previous">‹</button>
+    <img class="lb-img" src="" alt="">
+    <button class="lb-next" title="Next">›</button>
+    <div class="lb-caption"></div>
+  </div>
+</div>
+
+<script>
+const CATALOG = {"components":[],"configuration":{"devices":[],"locales":[],"themes":[]},"generatedAt":"2026-02-23T00:08:44Z","summary":{"byDevice":{},"byTheme":{},"totalComponents":0,"totalImages":0,"totalViews":0},"version":"1.0","views":[]};
+(function() {
+  'use strict';
+
+  // --- State ---
+  let activeSection = 'All';
+  let activeDevices = new Set(CATALOG.configuration.devices);
+  let activeThemes = new Set(CATALOG.configuration.themes);
+  let activeLocales = new Set(CATALOG.configuration.locales);
+  let searchQuery = '';
+  let compareMode = false;
+  let darkMode = false;
+  let lightboxImages = [];
+  let lightboxIndex = 0;
+
+  // --- Flatten images ---
+  function flattenImages() {
+    const images = [];
+    function process(manifests, section) {
+      for (const m of manifests) {
+        const bp = m.basePath || '';
+        const cat = m.category || null;
+        for (const [stateName, state] of Object.entries(m.states)) {
+          for (const snap of state.snapshots) {
+            images.push({
+              section,
+              category: cat,
+              viewName: m.name,
+              stateName,
+              device: snap.device || 'default',
+              theme: snap.theme,
+              locale: snap.locale || '',
+              file: snap.file,
+              src: bp ? bp + '/' + snap.file : snap.file,
+            });
+          }
+        }
+      }
+    }
+    process(CATALOG.components, 'DesignSystem');
+    process(CATALOG.views, 'Views');
+    return images;
+  }
+
+  const allImages = flattenImages();
+
+  // --- Build filter chips ---
+  function buildChips(containerId, values, activeSet, isToggle) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    for (const v of values) {
+      const btn = document.createElement('button');
+      btn.className = 'chip' + (activeSet.has(v) ? ' active' : '');
+      btn.textContent = v;
+      btn.onclick = () => {
+        if (isToggle) {
+          if (activeSet.has(v)) activeSet.delete(v); else activeSet.add(v);
+        } else {
+          activeSet.clear();
+          activeSet.add(v);
+        }
+        render();
+      };
+      container.appendChild(btn);
+    }
+  }
+
+  function buildSectionChips() {
+    const container = document.getElementById('section-chips');
+    container.innerHTML = '';
+    const sections = ['All', 'DesignSystem', 'Views'];
+    for (const s of sections) {
+      const btn = document.createElement('button');
+      btn.className = 'chip' + (activeSection === s ? ' active' : '');
+      btn.textContent = s;
+      btn.onclick = () => { activeSection = s; render(); };
+      container.appendChild(btn);
+    }
+  }
+
+  // --- Filter images ---
+  function filterImages() {
+    return allImages.filter(img => {
+      if (activeSection !== 'All' && img.section !== activeSection) return false;
+      if (img.device !== 'default' && !activeDevices.has(img.device)) return false;
+      if (!activeThemes.has(img.theme)) return false;
+      if (img.locale && activeLocales.size > 0 && !activeLocales.has(img.locale)) return false;
+      if (searchQuery && !img.viewName.toLowerCase().includes(searchQuery)) return false;
+      return true;
+    });
+  }
+
+  // --- Group images ---
+  function groupImages(images) {
+    const groups = {};
+    for (const img of images) {
+      const key = img.section === 'Views' && img.category
+        ? 'Views — ' + img.category
+        : img.section;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(img);
+    }
+    // Sort group keys
+    const sorted = Object.keys(groups).sort((a, b) => {
+      if (a === 'DesignSystem') return -1;
+      if (b === 'DesignSystem') return 1;
+      return a.localeCompare(b);
+    });
+    return sorted.map(k => ({ title: k, images: groups[k] }));
+  }
+
+  // --- Compare pairs ---
+  function buildComparePairs(images) {
+    const map = {};
+    for (const img of images) {
+      // Key: everything except theme
+      const k = img.viewName + '|' + img.stateName + '|' + img.device + '|' + img.locale;
+      if (!map[k]) map[k] = {};
+      map[k][img.theme] = img;
+    }
+    return Object.values(map).filter(pair => pair.light && pair.dark);
+  }
+
+  // --- Render ---
+  function render() {
+    buildSectionChips();
+    buildChips('device-chips', CATALOG.configuration.devices, activeDevices, true);
+    buildChips('theme-chips', CATALOG.configuration.themes, activeThemes, true);
+    buildChips('locale-chips', CATALOG.configuration.locales, activeLocales, true);
+
+    const filtered = filterImages();
+    const groups = groupImages(filtered);
+    const gallery = document.getElementById('gallery');
+    gallery.innerHTML = '';
+
+    // Reset lightbox list
+    lightboxImages = filtered;
+
+    for (const group of groups) {
+      const section = document.createElement('div');
+
+      const title = document.createElement('div');
+      title.className = 'section-title';
+      title.innerHTML = group.title + ' <span class="count">(' + group.images.length + ')</span>';
+      section.appendChild(title);
+
+      if (compareMode) {
+        const pairs = buildComparePairs(group.images);
+        const grid = document.createElement('div');
+        grid.className = 'grid compare-grid';
+        for (const pair of pairs) {
+          const el = document.createElement('div');
+          el.className = 'compare-pair';
+          const lightImg = document.createElement('img');
+          lightImg.src = pair.light.src;
+          lightImg.loading = 'lazy';
+          lightImg.alt = pair.light.viewName + ' light';
+          lightImg.onclick = () => openLightbox(pair.light);
+          const darkImg = document.createElement('img');
+          darkImg.src = pair.dark.src;
+          darkImg.loading = 'lazy';
+          darkImg.alt = pair.dark.viewName + ' dark';
+          darkImg.onclick = () => openLightbox(pair.dark);
+          el.appendChild(lightImg);
+          el.appendChild(darkImg);
+          const info = document.createElement('div');
+          info.className = 'card-info';
+          info.innerHTML = '<div class="name">' + esc(pair.light.viewName) + ' / ' + esc(pair.light.stateName) + '</div>'
+            + (pair.light.device !== 'default' ? pair.light.device + ' · ' : '')
+            + (pair.light.locale || '') + ' · light ↔ dark';
+          el.appendChild(info);
+          grid.appendChild(el);
+        }
+        section.appendChild(grid);
+      } else {
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        for (const img of group.images) {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.onclick = () => openLightbox(img);
+          const imgEl = document.createElement('img');
+          imgEl.src = img.src;
+          imgEl.loading = 'lazy';
+          imgEl.alt = img.viewName + ' ' + img.stateName;
+          card.appendChild(imgEl);
+          const info = document.createElement('div');
+          info.className = 'card-info';
+          info.innerHTML = '<div class="name">' + esc(img.viewName) + '</div>'
+            + esc(img.stateName)
+            + (img.device !== 'default' ? ' · ' + img.device : '')
+            + ' · ' + img.theme
+            + (img.locale ? ' · ' + img.locale : '');
+          card.appendChild(info);
+          grid.appendChild(card);
+        }
+        section.appendChild(grid);
+      }
+      gallery.appendChild(section);
+    }
+  }
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // --- Lightbox ---
+  const lb = document.getElementById('lightbox');
+  const lbImg = lb.querySelector('.lb-img');
+  const lbCaption = lb.querySelector('.lb-caption');
+
+  function openLightbox(img) {
+    lightboxIndex = lightboxImages.indexOf(img);
+    if (lightboxIndex < 0) lightboxIndex = 0;
+    showLightboxImage();
+    lb.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lb.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  function showLightboxImage() {
+    if (lightboxImages.length === 0) return;
+    const img = lightboxImages[lightboxIndex];
+    lbImg.src = img.src;
+    lbCaption.textContent = img.viewName + ' / ' + img.stateName
+      + (img.device !== 'default' ? ' · ' + img.device : '')
+      + ' · ' + img.theme
+      + (img.locale ? ' · ' + img.locale : '')
+      + '  (' + (lightboxIndex + 1) + '/' + lightboxImages.length + ')';
+  }
+
+  lb.querySelector('.lb-close').onclick = closeLightbox;
+  lb.querySelector('.lb-backdrop').onclick = closeLightbox;
+  lb.querySelector('.lb-prev').onclick = () => {
+    lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+    showLightboxImage();
+  };
+  lb.querySelector('.lb-next').onclick = () => {
+    lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+    showLightboxImage();
+  };
+
+  document.addEventListener('keydown', (e) => {
+    if (lb.classList.contains('hidden')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') { lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length; showLightboxImage(); }
+    if (e.key === 'ArrowRight') { lightboxIndex = (lightboxIndex + 1) % lightboxImages.length; showLightboxImage(); }
+  });
+
+  // --- Search ---
+  document.getElementById('search').addEventListener('input', (e) => {
+    searchQuery = e.target.value.toLowerCase().trim();
+    render();
+  });
+
+  // --- Compare ---
+  document.getElementById('compare-btn').addEventListener('click', () => {
+    compareMode = !compareMode;
+    document.getElementById('compare-btn').classList.toggle('active', compareMode);
+    render();
+  });
+
+  // --- Dark mode ---
+  document.getElementById('dark-mode-btn').addEventListener('click', () => {
+    darkMode = !darkMode;
+    document.body.classList.toggle('dark', darkMode);
+    document.getElementById('dark-mode-btn').textContent = darkMode ? '☀︎' : '☾';
+  });
+
+  // --- Init ---
+  render();
+})();
+</script>
+</body>
+</html>

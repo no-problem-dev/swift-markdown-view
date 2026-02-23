@@ -1,0 +1,49 @@
+{
+  "generatedAt" : "2026-02-23T00:08:52Z",
+  "name" : "ComplexDocument",
+  "states" : {
+    "aiResponse" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "aiResponse.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "aiResponse.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "readmeStyle" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "readmeStyle.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "readmeStyle.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "technicalDoc" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "technicalDoc.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "technicalDoc.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    }
+  },
+  "type" : "component"
+}

@@ -1,0 +1,119 @@
+{
+  "generatedAt" : "2026-02-23T00:08:49Z",
+  "name" : "BlockElements",
+  "states" : {
+    "aside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "aside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "aside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "headings" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "headings.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "headings.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "orderedList" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "orderedList.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "orderedList.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "paragraph" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "paragraph.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "paragraph.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "table" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "table.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "table.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "taskList" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "taskList.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "taskList.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "thematicBreak" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "thematicBreak.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "thematicBreak.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "unorderedList" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "unorderedList.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "unorderedList.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    }
+  },
+  "type" : "component"
+}

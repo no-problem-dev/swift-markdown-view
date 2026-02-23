@@ -1,0 +1,413 @@
+{
+  "generatedAt" : "2026-02-23T00:08:50Z",
+  "name" : "Aside",
+  "states" : {
+    "allCommonAsides" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "allCommonAsides.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "allCommonAsides.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "asideWithCodeBlock" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "asideWithCodeBlock.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "asideWithCodeBlock.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "asideWithFormattedContent" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "asideWithFormattedContent.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "asideWithFormattedContent.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "asideWithList" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "asideWithList.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "asideWithList.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "attentionAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "attentionAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "attentionAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "authorAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "authorAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "authorAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "bugAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "bugAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "bugAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "complexityAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "complexityAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "complexityAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "copyrightAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "copyrightAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "copyrightAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "customAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "customAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "customAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "dateAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "dateAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "dateAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "experimentAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "experimentAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "experimentAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "importantAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "importantAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "importantAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "invariantAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "invariantAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "invariantAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "mutatingVariantAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "mutatingVariantAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "mutatingVariantAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "nonMutatingVariantAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "nonMutatingVariantAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "nonMutatingVariantAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "noteAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "noteAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "noteAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "postconditionAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "postconditionAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "postconditionAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "preconditionAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "preconditionAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "preconditionAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "regularBlockquoteAsNote" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "regularBlockquoteAsNote.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "regularBlockquoteAsNote.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "remarkAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "remarkAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "remarkAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "requiresAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "requiresAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "requiresAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "seeAlsoAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "seeAlsoAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "seeAlsoAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "sinceAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "sinceAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "sinceAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "throwsAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "throwsAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "throwsAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "tipAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "tipAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "tipAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "todoAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "todoAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "todoAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "versionAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "versionAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "versionAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "warningAside" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "warningAside.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "warningAside.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    }
+  },
+  "type" : "component"
+}

@@ -1,0 +1,161 @@
+{
+  "generatedAt" : "2026-02-23T00:08:52Z",
+  "name" : "CodeBlock",
+  "states" : {
+    "go" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "go.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "go.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "json" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "json.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "json.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "plain" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "plain.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "plain.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "python" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "python.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "python.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "ruby" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "ruby.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "ruby.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "rust" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "rust.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "rust.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "shell" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "shell.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "shell.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "sql" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "sql.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "sql.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "swift" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "swift.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "swift.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "typescript" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "typescript.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "typescript.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "yaml" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "yaml.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "yaml.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    }
+  },
+  "type" : "component"
+}

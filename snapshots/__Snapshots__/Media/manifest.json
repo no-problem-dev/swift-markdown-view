@@ -1,0 +1,49 @@
+{
+  "generatedAt" : "2026-02-23T00:08:51Z",
+  "name" : "Media",
+  "states" : {
+    "imageAltOnly" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "imageAltOnly.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "imageAltOnly.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "imagePlaceholder" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "imagePlaceholder.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "imagePlaceholder.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "localBundleImage" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "localBundleImage.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "localBundleImage.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    }
+  },
+  "type" : "component"
+}

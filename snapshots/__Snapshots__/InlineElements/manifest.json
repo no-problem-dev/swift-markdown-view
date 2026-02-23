@@ -1,0 +1,77 @@
+{
+  "generatedAt" : "2026-02-23T00:08:51Z",
+  "name" : "InlineElements",
+  "states" : {
+    "emphasisAndStrong" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "emphasisAndStrong.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "emphasisAndStrong.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "inlineCode" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "inlineCode.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "inlineCode.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "links" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "links.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "links.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "mixedInline" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "mixedInline.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "mixedInline.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "strikethrough" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "strikethrough.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "strikethrough.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    }
+  },
+  "type" : "component"
+}
