@@ -17,6 +17,7 @@ struct MermaidSnapshotTests {
 
     // Async tests use the direct API since @ComponentSnapshot generates sync methods.
 
+    @available(iOS 26.0, macOS 26.0, *)
     @Test
     func flowchart() async {
         let view = MermaidDiagramView("""
@@ -39,6 +40,7 @@ struct MermaidSnapshotTests {
         )
     }
 
+    @available(iOS 26.0, macOS 26.0, *)
     @Test
     func sequenceDiagram() async {
         let view = MermaidDiagramView("""
@@ -61,6 +63,7 @@ struct MermaidSnapshotTests {
         )
     }
 
+    @available(iOS 26.0, macOS 26.0, *)
     @Test
     func complexFlowchartWithScrolling() async {
         let view = MermaidDiagramView("""
@@ -160,6 +163,7 @@ struct MermaidSnapshotTests {
 
     // MARK: - Full Document Rendering with Mermaid
 
+    @available(iOS 26.0, macOS 26.0, *)
     @Test
     func fullDocumentWithMermaid() async {
         let view = MarkdownView("""
