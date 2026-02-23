@@ -34,14 +34,13 @@ jobs:
         run: |
           xcodebuild -list 2>&1 | head -30
 
-      - name: Run Snapshot Tests + Gallery Generation on iOS Simulator
+      - name: Run Snapshot Tests on iOS Simulator
         id: snapshot-test
         continue-on-error: true
         env:
           SNAPSHOT_RECORD: "1"
         run: |
-          # Run snapshot tests on iOS Simulator in recording mode
-          # Then run gallery generation to produce HTML
+          # Step 1: Run snapshot tests to generate images
           # WebView tests (Mermaid) are excluded on CI
           xcodebuild test \
             -scheme SwiftMarkdownView \
@@ -54,8 +53,22 @@ jobs:
             -only-testing SwiftMarkdownViewTests/MediaSnapshotTests \
             -only-testing SwiftMarkdownViewTests/ComplexDocumentSnapshotTests \
             -only-testing SwiftMarkdownViewTests/AsideSnapshotTests \
+            2>&1 | tail -40
+
+      - name: Generate Gallery HTML
+        if: always()
+        continue-on-error: true
+        env:
+          SNAPSHOT_RECORD: "1"
+        run: |
+          # Step 2: Run gallery generator AFTER snapshots are recorded
+          xcodebuild test \
+            -scheme SwiftMarkdownView \
+            -destination 'platform=iOS Simulator,name=iPhone 16e' \
+            -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO \
             -only-testing SwiftMarkdownViewTests/GalleryGeneratorTests \
-            2>&1 | tail -80
+            2>&1 | tail -20
 
       - name: Collect gallery and snapshot images
         if: always()
