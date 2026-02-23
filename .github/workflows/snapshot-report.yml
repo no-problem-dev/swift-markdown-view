@@ -47,6 +47,7 @@ jobs:
             -scheme SwiftMarkdownView \
             -destination 'platform=iOS Simulator,name=iPhone 16e' \
             -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO \
             -only-testing SwiftMarkdownViewTests/BlockElementSnapshotTests \
             -only-testing SwiftMarkdownViewTests/CodeBlockSnapshotTests \
             -only-testing SwiftMarkdownViewTests/InlineElementSnapshotTests \
