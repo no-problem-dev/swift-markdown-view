@@ -31,6 +31,92 @@ enum InlineRenderer {
         return Text(attributed)
     }
 
+    /// Renders inline elements, delegating inline math to a math renderer.
+    ///
+    /// AttributedString cannot host arbitrary views, so the paragraph is
+    /// built as concatenated `Text` segments: attributed runs are flushed
+    /// whenever an inline math element produces its own `Text`.
+    @MainActor
+    static func render(
+        _ inlines: [MarkdownInline],
+        colorPalette: any ColorPalette,
+        bodyFont: Font?,
+        mathRenderer: (any MathRenderer)?
+    ) -> Text {
+        guard let mathRenderer, containsInlineMath(inlines) else {
+            return render(inlines, colorPalette: colorPalette, bodyFont: bodyFont)
+        }
+
+        var output = Text(verbatim: "")
+        var pending = AttributedString()
+        appendSegments(
+            inlines,
+            style: .default,
+            colorPalette: colorPalette,
+            bodyFont: bodyFont,
+            mathRenderer: mathRenderer,
+            pending: &pending,
+            output: &output
+        )
+        if !pending.characters.isEmpty {
+            output = output + Text(pending)
+        }
+        return output
+    }
+
+    @MainActor
+    private static func appendSegments(
+        _ inlines: [MarkdownInline],
+        style: InlineStyle,
+        colorPalette: any ColorPalette,
+        bodyFont: Font?,
+        mathRenderer: any MathRenderer,
+        pending: inout AttributedString,
+        output: inout Text
+    ) {
+        for inline in inlines {
+            switch inline {
+            case .inlineMath(let latex):
+                if !pending.characters.isEmpty {
+                    output = output + Text(pending)
+                    pending = AttributedString()
+                }
+                output = output + mathRenderer.inlineMath(latex, palette: colorPalette)
+
+            case .emphasis(let children):
+                appendSegments(children, style: style.withEmphasis(), colorPalette: colorPalette, bodyFont: bodyFont, mathRenderer: mathRenderer, pending: &pending, output: &output)
+
+            case .strong(let children):
+                appendSegments(children, style: style.withStrong(), colorPalette: colorPalette, bodyFont: bodyFont, mathRenderer: mathRenderer, pending: &pending, output: &output)
+
+            case .strikethrough(let children):
+                appendSegments(children, style: style.withStrikethrough(), colorPalette: colorPalette, bodyFont: bodyFont, mathRenderer: mathRenderer, pending: &pending, output: &output)
+
+            case .link(_, _, let content) where containsInlineMath(content):
+                // A link whose content holds math: descend so the math is
+                // typeset; the math segment itself loses tappability.
+                appendSegments(content, style: style.withLink(), colorPalette: colorPalette, bodyFont: bodyFont, mathRenderer: mathRenderer, pending: &pending, output: &output)
+
+            default:
+                pending.append(buildSingle(inline, style: style, colorPalette: colorPalette, bodyFont: bodyFont))
+            }
+        }
+    }
+
+    private static func containsInlineMath(_ inlines: [MarkdownInline]) -> Bool {
+        inlines.contains { inline in
+            switch inline {
+            case .inlineMath:
+                return true
+            case .emphasis(let children), .strong(let children), .strikethrough(let children),
+                 .link(_, _, let children):
+                return containsInlineMath(children)
+            default:
+                return false
+            }
+        }
+    }
+
     /// Renders inline elements with specific style context.
     ///
     /// - Parameters:
@@ -102,6 +188,14 @@ enum InlineRenderer {
 
         case .strikethrough(let children):
             return buildAttributedString(children, style: style.withStrikethrough(), colorPalette: colorPalette, bodyFont: bodyFont)
+
+        case .inlineMath(let latex):
+            // Plain fallback used wherever no math renderer participates:
+            // show the delimited source like inline code.
+            var attributed = AttributedString("$\(latex)$")
+            attributed.font = .system(.body, design: .monospaced)
+            attributed.foregroundColor = MarkdownColors.inlineCodeText(colorPalette)
+            return attributed
         }
     }
 

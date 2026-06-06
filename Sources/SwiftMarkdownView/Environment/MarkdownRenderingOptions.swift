@@ -62,6 +62,13 @@ public struct MarkdownRenderingOptions: Sendable, Equatable {
     /// Defaults to `true`.
     public var enableSyntaxHighlighting: Bool
 
+    /// Whether to render math expressions via the ``MathRenderer``.
+    ///
+    /// When `false`, display math is rendered as a `math` code block and
+    /// inline math as monospaced source text.
+    /// Defaults to `true`.
+    public var renderMath: Bool
+
     /// Creates a new rendering options configuration.
     ///
     /// - Parameters:
@@ -72,6 +79,7 @@ public struct MarkdownRenderingOptions: Sendable, Equatable {
     ///   - maxImageHeight: Maximum image height in points. Defaults to `nil`.
     ///   - maxImageWidth: Maximum image width in points. Defaults to `nil`.
     ///   - enableSyntaxHighlighting: Whether to enable syntax highlighting. Defaults to `true`.
+    ///   - renderMath: Whether to render math expressions. Defaults to `true`.
     public init(
         renderMermaid: Bool = true,
         renderImages: Bool = true,
@@ -79,7 +87,8 @@ public struct MarkdownRenderingOptions: Sendable, Equatable {
         renderAsides: Bool = true,
         maxImageHeight: CGFloat? = nil,
         maxImageWidth: CGFloat? = nil,
-        enableSyntaxHighlighting: Bool = true
+        enableSyntaxHighlighting: Bool = true,
+        renderMath: Bool = true
     ) {
         self.renderMermaid = renderMermaid
         self.renderImages = renderImages
@@ -88,6 +97,7 @@ public struct MarkdownRenderingOptions: Sendable, Equatable {
         self.maxImageHeight = maxImageHeight
         self.maxImageWidth = maxImageWidth
         self.enableSyntaxHighlighting = enableSyntaxHighlighting
+        self.renderMath = renderMath
     }
 
     /// The default rendering options with all features enabled.
@@ -109,7 +119,8 @@ public struct MarkdownRenderingOptions: Sendable, Equatable {
         renderMermaid: false,
         renderImages: false,
         renderTables: false,
-        enableSyntaxHighlighting: false
+        enableSyntaxHighlighting: false,
+        renderMath: false
     )
 }
 

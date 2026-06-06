@@ -12,8 +12,10 @@ enum MarkdownParser {
     /// - Parameter source: The Markdown string to parse.
     /// - Returns: An array of `MarkdownBlock` representing the parsed content.
     static func parse(_ source: String) -> [MarkdownBlock] {
-        let document = Document(parsing: source)
-        return document.children.compactMap { convertBlock($0) }
+        let extraction = MathPreprocessor.extract(from: source)
+        let document = Document(parsing: extraction.processed)
+        let blocks = document.children.compactMap { convertBlock($0) }
+        return MathPreprocessor.restore(blocks, captures: extraction.captures)
     }
 
     // MARK: - Block Conversion
@@ -36,6 +38,10 @@ enum MarkdownParser {
             // Check if this is a Mermaid diagram
             if codeBlock.language?.lowercased() == "mermaid" {
                 return .mermaid(codeBlock.code)
+            }
+            // GitHub-style math fence
+            if codeBlock.language?.lowercased() == "math" {
+                return .math(codeBlock.code.trimmingCharacters(in: .whitespacesAndNewlines))
             }
             return .codeBlock(language: codeBlock.language, code: codeBlock.code)
 

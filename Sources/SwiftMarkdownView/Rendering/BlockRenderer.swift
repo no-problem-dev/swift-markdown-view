@@ -72,6 +72,9 @@ struct BlockView: View {
 
         case .mermaid(let code):
             AdaptiveMermaidView(code)
+
+        case .math(let latex):
+            MathBlockView(latex: latex)
         }
     }
 }
@@ -84,6 +87,8 @@ struct ParagraphView: View {
     let inlines: [MarkdownInline]
 
     @Environment(\.colorPalette) private var colorPalette
+    @Environment(\.mathRenderer) private var mathRenderer
+    @Environment(\.markdownRenderingOptions) private var renderingOptions
 
     var body: some View {
         if let singleImage = extractSingleImage() {
@@ -94,10 +99,15 @@ struct ParagraphView: View {
             )
         } else {
             let bodyTypography = MarkdownTypographyMapping.body
-            InlineRenderer.render(inlines, colorPalette: colorPalette, bodyFont: bodyTypography.font)
-                .lineSpacing(bodyTypography.lineHeight - bodyTypography.size)
-                .foregroundStyle(MarkdownColors.bodyText(colorPalette))
-                .fixedSize(horizontal: false, vertical: true)
+            InlineRenderer.render(
+                inlines,
+                colorPalette: colorPalette,
+                bodyFont: bodyTypography.font,
+                mathRenderer: renderingOptions.renderMath ? mathRenderer : nil
+            )
+            .lineSpacing(bodyTypography.lineHeight - bodyTypography.size)
+            .foregroundStyle(MarkdownColors.bodyText(colorPalette))
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 

@@ -32,4 +32,10 @@ public enum MarkdownInline: Sendable, Equatable {
 
     /// Strikethrough text (GFM extension).
     case strikethrough([MarkdownInline])
+
+    /// Inline math containing LaTeX source (without delimiters).
+    ///
+    /// Produced by `$...$` (Pandoc rules) and `\(...\)`.
+    /// Rendering is delegated to the ``MathRenderer`` in the environment.
+    case inlineMath(String)
 }

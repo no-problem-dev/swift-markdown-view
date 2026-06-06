@@ -40,6 +40,12 @@ public enum MarkdownBlock: Sendable, Equatable {
     /// Mermaid diagrams are fenced code blocks with `mermaid` as the language.
     /// They are rendered using Mermaid.js for visualization.
     case mermaid(String)
+
+    /// A display math block containing LaTeX source (without delimiters).
+    ///
+    /// Produced by `$$...$$`, `\[...\]`, and ```` ```math ```` fences.
+    /// Rendering is delegated to the ``MathRenderer`` in the environment.
+    case math(String)
 }
 
 // MARK: - Aside Types
