@@ -111,5 +111,9 @@ struct BlockElementSnapshotTests {
         """)
         .padding()
     }
+
+    @Test func snapshots() {
+        for snapshotCase in Self.__snapshotCases { snapshotCase.run() }
+    }
 }
 #endif

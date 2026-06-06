@@ -67,5 +67,9 @@ struct InlineElementSnapshotTests {
         """)
         .padding()
     }
+
+    @Test func snapshots() {
+        for snapshotCase in Self.__snapshotCases { snapshotCase.run() }
+    }
 }
 #endif

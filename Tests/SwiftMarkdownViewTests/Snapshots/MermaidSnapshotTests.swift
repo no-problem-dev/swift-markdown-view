@@ -189,5 +189,9 @@ struct MermaidSnapshotTests {
             file: #filePath, line: #line
         )
     }
+
+    @Test func snapshots() {
+        for snapshotCase in Self.__snapshotCases { snapshotCase.run() }
+    }
 }
 #endif
