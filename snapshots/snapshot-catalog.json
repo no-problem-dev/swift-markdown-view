@@ -2,7 +2,7 @@
   "components" : [
     {
       "basePath" : "__Snapshots__\/Aside",
-      "generatedAt" : "2026-02-23T00:22:01Z",
+      "generatedAt" : "2026-06-06T05:43:36Z",
       "name" : "Aside",
       "states" : {
         "allCommonAsides" : {
@@ -416,7 +416,7 @@
     },
     {
       "basePath" : "__Snapshots__\/BlockElements",
-      "generatedAt" : "2026-02-23T00:21:19Z",
+      "generatedAt" : "2026-06-06T05:43:37Z",
       "name" : "BlockElements",
       "states" : {
         "aside" : {
@@ -536,7 +536,7 @@
     },
     {
       "basePath" : "__Snapshots__\/CodeBlock",
-      "generatedAt" : "2026-02-23T00:22:02Z",
+      "generatedAt" : "2026-06-06T05:43:39Z",
       "name" : "CodeBlock",
       "states" : {
         "go" : {
@@ -698,7 +698,7 @@
     },
     {
       "basePath" : "__Snapshots__\/ComplexDocument",
-      "generatedAt" : "2026-02-23T00:21:33Z",
+      "generatedAt" : "2026-06-06T05:43:38Z",
       "name" : "ComplexDocument",
       "states" : {
         "aiResponse" : {
@@ -748,7 +748,7 @@
     },
     {
       "basePath" : "__Snapshots__\/InlineElements",
-      "generatedAt" : "2026-02-23T00:21:32Z",
+      "generatedAt" : "2026-06-06T05:43:37Z",
       "name" : "InlineElements",
       "states" : {
         "emphasisAndStrong" : {
@@ -825,8 +825,86 @@
       "type" : "component"
     },
     {
+      "basePath" : "__Snapshots__\/MarkdownMath",
+      "generatedAt" : "2026-06-06T05:43:37Z",
+      "name" : "MarkdownMath",
+      "states" : {
+        "latex-display" : {
+          "disableAnimations" : false,
+          "inNavigation" : false,
+          "snapshots" : [
+            {
+              "file" : "latex-display.light.png",
+              "theme" : "light"
+            },
+            {
+              "file" : "latex-display.dark.png",
+              "theme" : "dark"
+            }
+          ]
+        },
+        "latex-inline" : {
+          "disableAnimations" : false,
+          "inNavigation" : false,
+          "snapshots" : [
+            {
+              "file" : "latex-inline.light.png",
+              "theme" : "light"
+            },
+            {
+              "file" : "latex-inline.dark.png",
+              "theme" : "dark"
+            }
+          ]
+        },
+        "latex-mixed" : {
+          "disableAnimations" : false,
+          "inNavigation" : false,
+          "snapshots" : [
+            {
+              "file" : "latex-mixed.light.png",
+              "theme" : "light"
+            },
+            {
+              "file" : "latex-mixed.dark.png",
+              "theme" : "dark"
+            }
+          ]
+        },
+        "math-disabled" : {
+          "disableAnimations" : false,
+          "inNavigation" : false,
+          "snapshots" : [
+            {
+              "file" : "math-disabled.light.png",
+              "theme" : "light"
+            },
+            {
+              "file" : "math-disabled.dark.png",
+              "theme" : "dark"
+            }
+          ]
+        },
+        "plain-fallback" : {
+          "disableAnimations" : false,
+          "inNavigation" : false,
+          "snapshots" : [
+            {
+              "file" : "plain-fallback.light.png",
+              "theme" : "light"
+            },
+            {
+              "file" : "plain-fallback.dark.png",
+              "theme" : "dark"
+            }
+          ]
+        }
+      },
+      "type" : "component"
+    },
+    {
       "basePath" : "__Snapshots__\/Media",
-      "generatedAt" : "2026-02-23T00:22:01Z",
+      "generatedAt" : "2026-06-06T05:43:40Z",
       "name" : "Media",
       "states" : {
         "imageAltOnly" : {
@@ -873,6 +951,42 @@
         }
       },
       "type" : "component"
+    },
+    {
+      "basePath" : "__Snapshots__\/Mermaid",
+      "generatedAt" : "2026-06-06T05:43:38Z",
+      "name" : "Mermaid",
+      "states" : {
+        "fallbackFlowchart" : {
+          "disableAnimations" : false,
+          "inNavigation" : false,
+          "snapshots" : [
+            {
+              "file" : "fallbackFlowchart.light.png",
+              "theme" : "light"
+            },
+            {
+              "file" : "fallbackFlowchart.dark.png",
+              "theme" : "dark"
+            }
+          ]
+        },
+        "fallbackSequence" : {
+          "disableAnimations" : false,
+          "inNavigation" : false,
+          "snapshots" : [
+            {
+              "file" : "fallbackSequence.light.png",
+              "theme" : "light"
+            },
+            {
+              "file" : "fallbackSequence.dark.png",
+              "theme" : "dark"
+            }
+          ]
+        }
+      },
+      "type" : "component"
     }
   ],
   "configuration" : {
@@ -887,17 +1001,17 @@
       "light"
     ]
   },
-  "generatedAt" : "2026-02-23T00:26:02Z",
+  "generatedAt" : "2026-06-06T05:45:45Z",
   "summary" : {
     "byDevice" : {
 
     },
     "byTheme" : {
-      "dark" : 59,
-      "light" : 59
+      "dark" : 66,
+      "light" : 66
     },
-    "totalComponents" : 6,
-    "totalImages" : 118,
+    "totalComponents" : 8,
+    "totalImages" : 132,
     "totalViews" : 0
   },
   "version" : "1.0",
