@@ -37,7 +37,7 @@ struct MediaSnapshotTests {
         guard let imageURL = Bundle.module.url(
             forResource: "test-profile-image",
             withExtension: "jpg",
-            subdirectory: "Resources"
+            subdirectory: "TestResources"
         ) else {
             Issue.record("Test image not found in bundle")
             return
