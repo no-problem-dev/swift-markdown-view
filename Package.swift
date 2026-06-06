@@ -27,13 +27,10 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/no-problem-dev/swift-design-system.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/swiftlang/swift-markdown.git", .upToNextMajor(from: "0.7.3")),
-        // TODO: swift-visual-testing の Xcode 26.4 対応リリース後に URL 依存へ戻す
-        .package(path: "../swift-visual-testing"),
+        .package(url: "https://github.com/no-problem-dev/swift-visual-testing.git", .upToNextMajor(from: "2.0.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin.git", .upToNextMajor(from: "1.4.0")),
         .package(url: "https://github.com/appstefan/HighlightSwift.git", .upToNextMajor(from: "1.0.0")),
-        // TODO: GitHub 公開 + タグ付け後に URL 依存へ切替
-        // .package(url: "https://github.com/no-problem-dev/swift-latex-view.git", .upToNextMajor(from: "0.1.0"))
-        .package(path: "../swift-latex-view")
+        .package(url: "https://github.com/no-problem-dev/swift-latex-view.git", .upToNextMajor(from: "0.1.0"))
     ],
     targets: [
         .target(
