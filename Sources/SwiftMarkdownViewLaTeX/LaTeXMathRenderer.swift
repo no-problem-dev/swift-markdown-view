@@ -31,10 +31,15 @@ public struct LaTeXMathRenderer: MathRenderer {
 
     @MainActor
     public func inlineMath(_ latex: String, palette: any ColorPalette) -> Text {
+        inlineMath(latex, fontSize: style.inlineFontSize, palette: palette)
+    }
+
+    @MainActor
+    public func inlineMath(_ latex: String, fontSize: CGFloat, palette: any ColorPalette) -> Text {
         LaTeXView.inlineText(
             latex,
             fontFamily: style.fontFamily,
-            fontSize: style.inlineFontSize,
+            fontSize: fontSize,
             color: style.textColor(palette)
         )
         ?? Text(latex)

@@ -29,10 +29,26 @@ public protocol MathRenderer: Sendable {
     ///   - palette: The current color palette from the environment.
     @MainActor func inlineMath(_ latex: String, palette: any ColorPalette) -> Text
 
+    /// Renders inline math at a specific font size.
+    ///
+    /// Used where math is embedded in non-body text (headings, labels —
+    /// see ``MathText``) and must match the surrounding font. The default
+    /// implementation ignores the size and falls back to
+    /// ``inlineMath(_:palette:)``.
+    @MainActor func inlineMath(_ latex: String, fontSize: CGFloat, palette: any ColorPalette) -> Text
+
     /// Renders display math as a block view.
     ///
     /// - Parameter latex: The LaTeX source without delimiters.
     @MainActor func displayMath(_ latex: String) -> AnyView
+}
+
+extension MathRenderer {
+
+    @MainActor
+    public func inlineMath(_ latex: String, fontSize: CGFloat, palette: any ColorPalette) -> Text {
+        inlineMath(latex, palette: palette)
+    }
 }
 
 // MARK: - PlainMathRenderer
