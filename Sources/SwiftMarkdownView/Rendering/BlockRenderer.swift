@@ -156,6 +156,7 @@ struct MarkdownImageView: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
+                                .mediaViewable(.image(url))
                         case .failure:
                             errorView
                         @unknown default:
@@ -183,6 +184,7 @@ struct MarkdownImageView: View {
             Image(nsImage: nsImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
+                .mediaViewable(.image(url))
         } else {
             errorView
         }
@@ -191,6 +193,7 @@ struct MarkdownImageView: View {
             Image(uiImage: uiImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
+                .mediaViewable(.image(url))
         } else {
             errorView
         }
