@@ -7,7 +7,17 @@
 
 ## [未リリース]
 
-<!-- 次のリリースに含める変更をここに追加 -->
+### 追加
+
+- **Markdown エディタ（Phase 1）** — iPhone/Mac 向けのソース編集機能を新しいレイヤー群として追加。
+  - `SwiftMarkdownEditorCore`: UI 非依存のドキュメントモデル（`EditorState` / `TextChange` / 位置写像 / undo 履歴）、Markdown ハイライト用トークナイザ、整形コマンド（純関数）。
+  - `SwiftMarkdownEditorRules`: 入力ルール（リスト自動継続・選択ラップ）。
+  - `SwiftMarkdownEditorTextKit`: TextKit 2 の `UITextView`/`NSTextView` Representable とライブ・シンタックスハイライト、ツールバー司令塔 `MarkdownEditorController`。
+  - `SwiftMarkdownEditor`: 公開 SwiftUI ビュー `MarkdownEditor(text:)`。デザインシステム由来のツールバー、編集/プレビュー/分割モード、プレビューは既存 `MarkdownView` を再利用。
+  - iPhone: テキスト下方向スクロールのドラッグでキーボードを閉じられる（`keyboardDismissMode = .interactive`）。
+  - モード切替コントロールを等幅化（全幅・最大 420pt で中央寄せ）。「編集／プレビュー」のセグメント幅が揃う。
+  - **一体化編集（Live Preview, Phase 2 着手）**: `MarkdownEditor(text:, livePreview: true)` で、インライン記法（`**`/`*`/`` ` ``/`~~`）のマーカーを隠して本文をその場でスタイルし、カーソルがある行だけ生記法を再露出する（Notion / Obsidian Live Preview 型）。生 `.md` が常に真実。実装は権威ある実コード `nodes-app/swift-markdown-engine`（TextKit2）の手法（clear色＋極小フォント＋負kern の conceal、選択変更での reveal）に準拠。属性レベルのユニットテストで検証（シミュレータ不要）。
+  - 設計の詳細は `Docs/EDITOR_STRATEGY.md` を参照。
 
 ## [1.0.10] - 2026-02-23
 

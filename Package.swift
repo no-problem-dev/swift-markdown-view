@@ -22,6 +22,10 @@ let package = Package(
         .library(
             name: "SwiftMarkdownViewLaTeX",
             targets: ["SwiftMarkdownViewLaTeX"]
+        ),
+        .library(
+            name: "SwiftMarkdownEditor",
+            targets: ["SwiftMarkdownEditor"]
         )
     ],
     dependencies: [
@@ -54,6 +58,79 @@ let package = Package(
                 .product(name: "SwiftLaTeXView", package: "swift-latex-view")
             ]
         ),
+
+        // MARK: - Editor
+
+        // UI 非依存のドキュメントモデル層。EditorState / TextChange / 位置写像 /
+        // トークナイザ。Foundation と既存パーサ(SwiftMarkdownView)のみに依存し、
+        // UIKit/SwiftUI を一切 import しない（純ロジックを単体テストで固めるため）。
+        .target(
+            name: "SwiftMarkdownEditorCore",
+            dependencies: [
+                "SwiftMarkdownView"
+            ]
+        ),
+
+        .testTarget(
+            name: "SwiftMarkdownEditorCoreTests",
+            dependencies: [
+                "SwiftMarkdownEditorCore"
+            ]
+        ),
+
+        // Markdown オートフォーマット（input rules）。Core の上の純ロジック層。
+        .target(
+            name: "SwiftMarkdownEditorRules",
+            dependencies: [
+                "SwiftMarkdownEditorCore"
+            ]
+        ),
+
+        .testTarget(
+            name: "SwiftMarkdownEditorRulesTests",
+            dependencies: [
+                "SwiftMarkdownEditorRules"
+            ]
+        ),
+
+        // TextKit 2 ブリッジ層。UITextView/NSTextView の Representable と
+        // ライブ・シンタックスハイライト。UI を含むのでここから SwiftUI/UIKit に依存。
+        .target(
+            name: "SwiftMarkdownEditorTextKit",
+            dependencies: [
+                "SwiftMarkdownEditorCore",
+                "SwiftMarkdownEditorRules"
+            ]
+        ),
+
+        .testTarget(
+            name: "SwiftMarkdownEditorTextKitTests",
+            dependencies: [
+                "SwiftMarkdownEditorTextKit"
+            ]
+        ),
+
+        // 公開 SwiftUI 層。MarkdownEditor View・ツールバー・モード切替・分割プレビュー。
+        // デザインシステムと既存 MarkdownView（プレビュー）をここで消費する。
+        .target(
+            name: "SwiftMarkdownEditor",
+            dependencies: [
+                "SwiftMarkdownView",
+                "SwiftMarkdownEditorCore",
+                "SwiftMarkdownEditorRules",
+                "SwiftMarkdownEditorTextKit",
+                .product(name: "DesignSystem", package: "swift-design-system")
+            ]
+        ),
+
+        .testTarget(
+            name: "SwiftMarkdownEditorTests",
+            dependencies: [
+                "SwiftMarkdownEditor",
+                .product(name: "VisualTesting", package: "swift-visual-testing")
+            ]
+        ),
+
         .testTarget(
             name: "SwiftMarkdownViewTests",
             dependencies: [
