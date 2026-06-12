@@ -1,5 +1,5 @@
 import Foundation
-import SwiftMarkdownView
+import MarkdownModel
 
 /// The immutable state of the editor at a point in time.
 ///

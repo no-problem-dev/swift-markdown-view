@@ -37,11 +37,50 @@ let package = Package(
         .package(url: "https://github.com/no-problem-dev/swift-latex-view.git", .upToNextMajor(from: "0.1.0"))
     ],
     targets: [
+        // UI 非依存の意味モデル層。swift-markdown AST → ドメイン型（Block/Inline/Content）と
+        // 数式プリプロセッサ。Foundation と swift-markdown のみに依存し、SwiftUI/UIKit を
+        // 一切 import しない。SwiftUI レンダラ・TextKit レンダラ・エディタが等しく依存する土台。
+        .target(
+            name: "MarkdownModel",
+            dependencies: [
+                .product(name: "Markdown", package: "swift-markdown")
+            ]
+        ),
+
+        // クロスプラットフォーム（UIKit/AppKit）だが SwiftUI 非依存。意味モデルを単一の
+        // NSAttributedString へ合成する「描画済みの読めるテキスト」ビルダーと、semantic 属性キー、
+        // 装飾記述子、ハイライト/数式の TextKit 用拡張プロトコル。連続選択・コピーの正しさは
+        // ここで決まり、ヘッドレスに単体テストできる。
+        .target(
+            name: "MarkdownAttributedKit",
+            dependencies: [
+                "MarkdownModel"
+            ]
+        ),
+
+        .testTarget(
+            name: "MarkdownAttributedKitTests",
+            dependencies: [
+                "MarkdownAttributedKit"
+            ]
+        ),
+
+        // 単一ストレージ TextKit2 ビュー。read-only な UITextView/NSTextView の Representable、
+        // layout fragment 描画、選択、コピー / Markdown コピー。iOS/macOS が対象。
+        .target(
+            name: "MarkdownTextKit",
+            dependencies: [
+                "MarkdownAttributedKit"
+            ]
+        ),
+
         .target(
             name: "SwiftMarkdownView",
             dependencies: [
-                .product(name: "DesignSystem", package: "swift-design-system"),
-                .product(name: "Markdown", package: "swift-markdown")
+                "MarkdownModel",
+                "MarkdownAttributedKit",
+                "MarkdownTextKit",
+                .product(name: "DesignSystem", package: "swift-design-system")
             ]
         ),
         .target(
@@ -62,12 +101,12 @@ let package = Package(
         // MARK: - Editor
 
         // UI 非依存のドキュメントモデル層。EditorState / TextChange / 位置写像 /
-        // トークナイザ。Foundation と既存パーサ(SwiftMarkdownView)のみに依存し、
+        // トークナイザ。Foundation と意味モデル(MarkdownModel)のみに依存し、
         // UIKit/SwiftUI を一切 import しない（純ロジックを単体テストで固めるため）。
         .target(
             name: "SwiftMarkdownEditorCore",
             dependencies: [
-                "SwiftMarkdownView"
+                "MarkdownModel"
             ]
         ),
 

@@ -12,16 +12,16 @@ import Foundation
 /// are skipped. The delimiter specification is shared with LaTeXCore's
 /// `MathSegmenter` (swift-latex-view); this minimal port keeps the core
 /// module dependency-free.
-enum MathScanner {
+public enum MathScanner {
 
-    enum Part: Equatable {
+    public enum Part: Equatable, Sendable {
         /// Source text, preserved exactly.
         case text(String)
         /// A math region with delimiters stripped.
         case math(latex: String, isDisplay: Bool)
     }
 
-    static func parts(in source: String) -> [Part] {
+    public static func parts(in source: String) -> [Part] {
         var scanner = Scanner(chars: Array(source))
         return scanner.run()
     }

@@ -1,4 +1,5 @@
 import SwiftUI
+import DesignSystem
 
 /// A SwiftUI view that renders Markdown content.
 ///
@@ -41,9 +42,33 @@ public struct MarkdownView: View {
     }
 
     public var body: some View {
+        #if os(iOS) || os(macOS)
+        // iOS/macOS render the whole document into one TextKit 2 text view so
+        // selection runs continuously across blocks and Copy yields readable
+        // text. tvOS/watchOS (no UITextView/NSTextView host) keep the SwiftUI
+        // block renderer.
+        MarkdownTextKitBackend(content: content)
+        #else
         BlockRenderer.render(content.blocks)
+        #endif
     }
 }
+
+#if os(iOS) || os(macOS)
+/// Reads theme and syntax-highlighter from the environment and renders the
+/// document with the continuous-selection TextKit backend.
+private struct MarkdownTextKitBackend: View {
+    let content: MarkdownContent
+
+    @Environment(\.colorPalette) private var palette
+    @Environment(\.syntaxHighlighter) private var highlighter
+
+    var body: some View {
+        MarkdownSelectableText(content, theme: .resolved(palette: palette))
+            .codeHighlighter(SyntaxHighlighterAdapter(base: highlighter))
+    }
+}
+#endif
 
 #Preview {
     MarkdownView("""

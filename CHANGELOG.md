@@ -7,7 +7,24 @@
 
 ## [未リリース]
 
+## [1.4.0] - 2026-06-13
+
 ### 追加
+
+- **TextKit 2 連続選択レンダラ（描画バックエンド刷新）** — `MarkdownView` がブロックを横断した連続テキスト選択・部分コピーに対応（iOS/macOS）。従来はブロックごとに別の SwiftUI `Text` を積層していたため見出し→段落→リストを跨いだ選択が構造的に不可能だったのを、ドキュメント全体を単一の TextKit 2 テキストストレージに描画する方式へ作り変えた。デフォルトのコピーは「選択範囲の読めるテキスト」を返す。
+  - 新レイヤー: `MarkdownModel`（UI 非依存の意味モデル＋パーサ。`MarkdownContent`/`MarkdownBlock`/`MarkdownInline` 等を移設し `@_exported`、ソース互換）、`MarkdownAttributedKit`（意味モデル→単一 `NSAttributedString` ビルダー、テーマ `MarkdownTextTheme`、ハイライト/添付の拡張プロトコル）、`MarkdownTextKit`（read-only 選択可能な TextKit 2 ビュー部品とカスタム `NSTextLayoutFragment`）。依存方向は `MarkdownModel → MarkdownAttributedKit → MarkdownTextKit → SwiftMarkdownView`。
+  - コードブロックは全幅背景を描画しつつ**選択ハイライトを even-odd でくり抜いて維持**、水平線・引用バー・テーブル罫線もカスタムフラグメントで描画。テーブルはセル文字を実テキストとして保持するため**セル単位選択**が可能で、コピーはタブ区切り。
+  - 公開 API 追加: `MarkdownSelectableText`（明示的に選択可能な Markdown ビュー）、`MarkdownTextTheme`、`MarkdownCodeHighlighting` / `MarkdownAttachmentRendering`（注入プロトコル）。
+  - 設計の詳細は `Docs/RENDERER_ARCHITECTURE.md` を参照。
+
+### 変更
+
+- iOS/macOS の `MarkdownView` は内部的に SwiftUI `Text` 積層から TextKit 2 単一ストレージ描画へ切り替わった（`import SwiftMarkdownView` の公開 API はソース互換）。tvOS/watchOS は従来の SwiftUI ブロックレンダラを維持。
+
+### 既知の制限
+
+- 新バックエンドでは数式（`SwiftMarkdownViewLaTeX`）と画像が現状フォールバックで `$latex$` / `[alt]` の読めるソーステキストとして表示される（選択・コピーは可能、`.markdownSource` も保持）。`MarkdownAttachmentRendering` への SwiftLaTeXView ラスタライズ結線・リモート画像の非同期ロードは次段。
+- 「Markdown としてコピー」コマンド、ページ内検索、ストリーミング最適化、および旧 SwiftUI Text 描画を前提としたスナップショットテストの再録は次段（目視確認後に再録）。
 
 - **Markdown エディタ（Phase 1）** — iPhone/Mac 向けのソース編集機能を新しいレイヤー群として追加。
   - `SwiftMarkdownEditorCore`: UI 非依存のドキュメントモデル（`EditorState` / `TextChange` / 位置写像 / undo 履歴）、Markdown ハイライト用トークナイザ、整形コマンド（純関数）。
