@@ -67,6 +67,28 @@ struct MarkdownFormattingTests {
         #expect(apply(t, to: text) == "alpha\n- bravo")
     }
 
+    @Test("Toggle heading on an empty document inserts the marker, caret after it")
+    func headingPrefixEmptyDoc() {
+        let t = MarkdownFormatting.toggleLinePrefix(text: "", selection: Selection(caret: 0), prefix: "# ")
+        #expect(apply(t, to: "") == "# ")
+        #expect(t.selection == Selection(caret: 2))
+    }
+
+    @Test("Toggle heading on a blank line between text inserts only on that line")
+    func headingPrefixBlankLine() {
+        let text = "a\n\nb"
+        let t = MarkdownFormatting.toggleLinePrefix(text: text, selection: Selection(caret: 2), prefix: "# ")
+        #expect(apply(t, to: text) == "a\n# \nb")
+        #expect(t.selection == Selection(caret: 4))
+    }
+
+    @Test("Multi-line selection with a blank line skips the blank")
+    func headingPrefixMultilineSkipsBlank() {
+        let text = "a\n\nb"
+        let t = MarkdownFormatting.toggleLinePrefix(text: text, selection: Selection(anchor: 0, head: 4), prefix: "# ")
+        #expect(apply(t, to: text) == "# a\n\n# b")
+    }
+
     // MARK: - Link
 
     @Test("Insert link around a selection, selecting url placeholder")

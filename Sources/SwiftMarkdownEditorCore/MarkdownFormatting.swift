@@ -66,19 +66,40 @@ public enum MarkdownFormatting {
         let block = text.substring(in: TextSpan(lowerBound: blockStart, upperBound: blockEnd))
 
         let lines = block.components(separatedBy: "\n")
-        let allHavePrefix = lines.allSatisfy { $0.hasPrefix(prefix) || $0.isEmpty }
+        // A single line is always toggled — even when blank, so a heading/quote/
+        // list can be started on an empty line. In a multi-line block, blank lines
+        // are left untouched (they aren't separators worth prefixing).
+        let single = lines.count == 1
+        let toggled = single ? lines : lines.filter { !$0.isEmpty }
+        let allHavePrefix = !toggled.isEmpty && toggled.allSatisfy { $0.hasPrefix(prefix) }
 
         let newLines: [String]
         if allHavePrefix {
             newLines = lines.map { $0.hasPrefix(prefix) ? String($0.dropFirst(prefix.count)) : $0 }
         } else {
-            newLines = lines.map { $0.hasPrefix(prefix) || $0.isEmpty ? $0 : prefix + $0 }
+            newLines = lines.map { line in
+                if line.hasPrefix(prefix) { return line }
+                if line.isEmpty && !single { return line }
+                return prefix + line
+            }
         }
         let replacement = newLines.joined(separator: "\n")
 
         let change = TextChange(range: TextSpan(lowerBound: blockStart, upperBound: blockEnd), replacement: replacement)
-        let selection = Selection(anchor: blockStart, head: blockStart + replacement.utf16Length)
-        return EditTransform(change: change, selection: selection)
+
+        let newSelection: Selection
+        if range.lowerBound == range.upperBound {
+            // Collapsed caret: shift it by the prefix delta applied on its line so
+            // typing continues naturally (after the inserted "# ", not over it).
+            let prefixLength = prefix.utf16Length
+            let caret = allHavePrefix
+                ? Swift.max(blockStart, range.upperBound - prefixLength)
+                : range.upperBound + prefixLength
+            newSelection = Selection(caret: caret)
+        } else {
+            newSelection = Selection(anchor: blockStart, head: blockStart + replacement.utf16Length)
+        }
+        return EditTransform(change: change, selection: newSelection)
     }
 
     /// Inserts a Markdown link around the selection, selecting the `url`
