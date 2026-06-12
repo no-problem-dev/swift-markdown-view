@@ -59,4 +59,42 @@ struct LivePreviewStylerTests {
     func plain() {
         #expect(LivePreviewStyler.runs(text: "just words", selection: Selection(caret: 0), focused: true).isEmpty)
     }
+
+    // MARK: - Headings (block-level live preview)
+
+    @Test("Heading: content enlarged, marker + space concealed")
+    func heading() {
+        let r = runs("# Title", selection: nil, focused: false)
+        #expect(r.contains { $0 == (.heading(level: 1), "Title") })
+        #expect(r.contains { $0 == (.conceal, "# ") })
+    }
+
+    @Test("Heading level derives from the marker length")
+    func headingLevel() {
+        #expect(runs("### Sub", selection: nil, focused: false).contains { $0 == (.heading(level: 3), "Sub") })
+        #expect(runs("###### Deep", selection: nil, focused: false).contains { $0 == (.heading(level: 6), "Deep") })
+    }
+
+    @Test("Heading marker revealed when the caret is on its line, content still enlarged")
+    func headingRevealed() {
+        let r = runs("# Title", selection: Selection(caret: 3), focused: true)
+        #expect(r.contains { $0 == (.heading(level: 1), "Title") })
+        #expect(r.filter { $0.0 == .conceal }.isEmpty)
+    }
+
+    @Test("Inline emphasis inside a heading composes with the heading run")
+    func headingWithInline() {
+        let r = runs("# **b**", selection: nil, focused: false)
+        #expect(r.contains { $0 == (.heading(level: 1), "**b**") })
+        #expect(r.contains { $0 == (.bold, "b") })
+        #expect(r.contains { $0 == (.conceal, "# ") })
+    }
+
+    @Test("Heading among other lines concealed when caret elsewhere")
+    func headingMultiline() {
+        let text = "# Title\nbody text"
+        let r = runs(text, selection: Selection(caret: 12), focused: true) // in "body text"
+        #expect(r.contains { $0 == (.heading(level: 1), "Title") })
+        #expect(r.contains { $0 == (.conceal, "# ") })
+    }
 }

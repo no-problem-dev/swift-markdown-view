@@ -10,6 +10,8 @@ public struct StyleRun: Equatable, Sendable {
         case italic
         case monospace
         case strikethrough
+        /// An ATX heading's content — rendered larger and bold by level (1–6).
+        case heading(level: Int)
         /// Hide the range visually while keeping it in the text (markers).
         case conceal
     }
@@ -39,12 +41,15 @@ public enum LivePreviewStyler {
     ///   - focused: Whether the editor is focused. When false, everything is
     ///     concealed (read-only rendered look).
     public static func runs(text: String, selection: Selection?, focused: Bool) -> [StyleRun] {
-        let spans = InlineSpanParser.parse(text)
-        guard !spans.isEmpty else { return [] }
-
         let activeLine = (focused ? selection : nil).map { activeLineSpan(text: text, selection: $0) }
 
         var runs: [StyleRun] = []
+
+        // Block-level headings first, so inline traits inside a heading merge
+        // onto the enlarged font rather than overwriting it.
+        appendHeadingRuns(text: text, activeLine: activeLine, into: &runs)
+
+        let spans = InlineSpanParser.parse(text)
         for span in spans {
             // Content styling is always applied (revealed lines keep bold etc.).
             if let trait = contentTrait(for: span.kind), span.contentRange.length > 0 {
@@ -60,6 +65,40 @@ public enum LivePreviewStyler {
             }
         }
         return runs
+    }
+
+    // MARK: - Block headings
+
+    /// Emits a `.heading(level)` run over each ATX heading's content and conceals
+    /// its `#…` marker (and the space after it), unless the heading's line is the
+    /// active one — matching the marker-reveal rule used for inline spans.
+    private static func appendHeadingRuns(text: String, activeLine: TextSpan?, into runs: inout [StyleRun]) {
+        let tokens = MarkdownTokenizer.tokenize(text)
+        var i = 0
+        while i < tokens.count {
+            guard tokens[i].kind == .headingMarker else { i += 1; continue }
+            let marker = tokens[i].range
+            let level = max(1, min(6, marker.length))
+            var concealUpper = marker.upperBound
+
+            // Pair with the following `.heading` content token when present.
+            if i + 1 < tokens.count, tokens[i + 1].kind == .heading {
+                let content = tokens[i + 1].range
+                runs.append(StyleRun(range: content, trait: .heading(level: level)))
+                concealUpper = content.lowerBound   // conceal the marker + trailing space
+                i += 1
+            }
+
+            let line = text.lineRange(containing: marker.lowerBound)
+            let revealed = activeLine.map { $0.overlaps(line) } ?? false
+            if !revealed, concealUpper > marker.lowerBound {
+                runs.append(StyleRun(
+                    range: TextSpan(lowerBound: marker.lowerBound, upperBound: concealUpper),
+                    trait: .conceal
+                ))
+            }
+            i += 1
+        }
     }
 
     // MARK: - Helpers

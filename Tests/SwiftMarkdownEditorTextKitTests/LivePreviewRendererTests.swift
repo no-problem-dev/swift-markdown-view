@@ -144,4 +144,23 @@ struct LivePreviewRendererTests {
         let s = render(text, selection: Selection(caret: 9), focused: true)
         #expect(isConcealed(s, 0))         // line 1 markers stay hidden
     }
+
+    // MARK: - Headings
+
+    @Test("Heading content renders larger and bold; marker concealed")
+    func heading() {
+        let s = render("# Title", selection: nil, focused: false)
+        let titleFont = font(s, 2)          // "T" of "Title"
+        #expect(titleFont != nil)
+        #expect(titleFont!.pointSize > theme.baseFontSize)
+        #expect(isBold(titleFont))
+        #expect(isConcealed(s, 0))          // "#" hidden
+    }
+
+    @Test("Deeper headings are smaller than shallower ones")
+    func headingScale() {
+        let h1 = render("# A", selection: nil, focused: false)
+        let h3 = render("### A", selection: nil, focused: false)
+        #expect(font(h1, 2)!.pointSize > font(h3, 4)!.pointSize)
+    }
 }

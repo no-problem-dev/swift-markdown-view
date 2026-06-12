@@ -50,6 +50,12 @@ public enum LivePreviewRenderer {
                 storage.addAttribute(.foregroundColor, value: codeColor, range: r)
             case .strikethrough:
                 storage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: r)
+            case .heading(let level):
+                let size = headingSize(level: level, base: theme.baseFontSize)
+                storage.addAttribute(.font, value: MarkdownSyntaxHighlighter.font(size: size, bold: true), range: r)
+                if let color = theme.style(for: .heading).color {
+                    storage.addAttribute(.foregroundColor, value: color, range: r)
+                }
             case .conceal:
                 let markerText = ns.substring(with: r) as NSString
                 let width = markerText.size(withAttributes: [.font: concealFont]).width
@@ -59,6 +65,20 @@ public enum LivePreviewRenderer {
                     .kern: -width,
                 ], range: r)
             }
+        }
+    }
+
+    // MARK: - Heading sizing
+
+    /// Point size for an ATX heading line, scaled off the base font size.
+    static func headingSize(level: Int, base: CGFloat) -> CGFloat {
+        switch level {
+        case 1: return base * 1.7
+        case 2: return base * 1.45
+        case 3: return base * 1.28
+        case 4: return base * 1.15
+        case 5: return base * 1.07
+        default: return base * 1.0
         }
     }
 
