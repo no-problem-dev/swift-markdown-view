@@ -34,6 +34,8 @@ public final class MarkdownAttachment: NSObject {
         case image(source: String, alt: String)
         case inlineMath(latex: String)
         case displayMath(latex: String)
+        /// A Mermaid diagram; rendered by a WebView attachment.
+        case mermaid(source: String)
     }
 
     public let kind: Kind
@@ -50,6 +52,7 @@ public final class MarkdownAttachment: NSObject {
         switch kind {
         case .image(let s, _): return s.hashValue
         case .inlineMath(let l), .displayMath(let l): return l.hashValue
+        case .mermaid(let s): return s.hashValue
         }
     }
 }

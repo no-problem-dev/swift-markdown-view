@@ -60,8 +60,7 @@ public struct MarkdownAttributedBuilder {
             return displayMath(latex, indent: indent)
 
         case .mermaid(let source):
-            // Phase 5 renders the diagram; for now show its source as code.
-            return codeBlock(language: "mermaid", code: source, indent: indent)
+            return mermaid(source, indent: indent)
 
         case .aside(let kind, let content):
             return aside(kind: kind, content: content, indent: indent)
@@ -296,6 +295,19 @@ public struct MarkdownAttributedBuilder {
             source: "$$\(latex)$$",
             fallback: latex,
             context: codeContext()
+        )
+        return terminatedParagraph(body, style: style)
+    }
+
+    private func mermaid(_ source: String, indent: Int) -> NSAttributedString {
+        // A zero-bounds placeholder attachment the view layer swaps for a WebView
+        // attachment that renders the diagram; copy yields the fenced source.
+        let style = paragraphStyle(indent: indent, spacingAfter: theme.paragraphSpacing)
+        let body = makeAttachment(
+            image: nil,
+            bounds: .zero,
+            kind: .mermaid(source: source),
+            source: "```mermaid\n\(source)\n```"
         )
         return terminatedParagraph(body, style: style)
     }

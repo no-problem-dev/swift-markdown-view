@@ -23,6 +23,7 @@ public struct MarkdownSelectableText {
     public var theme: MarkdownTextTheme
     var highlighter: (any MarkdownCodeHighlighting)?
     var attachmentRenderer: (any MarkdownAttachmentRendering)?
+    var mermaidConfig: (scriptURL: URL, isDark: Bool)?
 
     public init(_ content: MarkdownContent, theme: MarkdownTextTheme = .default) {
         self.content = content
@@ -44,6 +45,13 @@ public struct MarkdownSelectableText {
     public func attachmentRenderer(_ renderer: (any MarkdownAttachmentRendering)?) -> MarkdownSelectableText {
         var copy = self
         copy.attachmentRenderer = renderer
+        return copy
+    }
+
+    /// Renders Mermaid diagrams in a WebView loaded from `scriptURL`.
+    func mermaid(scriptURL: URL, isDark: Bool) -> MarkdownSelectableText {
+        var copy = self
+        copy.mermaidConfig = (scriptURL, isDark)
         return copy
     }
 
@@ -72,6 +80,27 @@ public struct MarkdownSelectableText {
 
         var highlightTask: Task<Void, Never>?
         var imageTask: Task<Void, Never>?
+
+        /// Swaps each Mermaid placeholder attachment for a live, scrollable WebView
+        /// attachment. Idempotent — already-installed attachments are skipped.
+        @MainActor
+        func installMermaid(in storage: NSTextStorage, scriptURL: URL, isDark: Bool, displayHeight: CGFloat) {
+            let full = NSRange(location: 0, length: storage.length)
+            var swaps: [(NSRange, String)] = []
+            storage.enumerateAttribute(.markdownAttachment, in: full) { value, range, _ in
+                guard let markdownAttachment = value as? MarkdownAttachment,
+                      case .mermaid(let source) = markdownAttachment.kind,
+                      !(storage.attribute(.attachment, at: range.location, effectiveRange: nil) is MarkdownMermaidAttachment) else { return }
+                swaps.append((range, source))
+            }
+            guard !swaps.isEmpty else { return }
+            storage.beginEditing()
+            for (range, source) in swaps {
+                let attachment = MarkdownMermaidAttachment(source: source, scriptURL: scriptURL, isDark: isDark, displayHeight: displayHeight)
+                storage.addAttribute(.attachment, value: attachment, range: range)
+            }
+            storage.endEditing()
+        }
 
         /// Loads each image attachment's source off the main actor, then sets the
         /// image and aspect-fit bounds on the storage. Cancels any in-flight pass.
@@ -149,6 +178,9 @@ extension MarkdownSelectableText: UIViewRepresentable {
                 textView?.setNeedsLayout()
             }
         )
+        if let mermaid = mermaidConfig {
+            context.coordinator.installMermaid(in: textView.textStorage, scriptURL: mermaid.scriptURL, isDark: mermaid.isDark, displayHeight: 280)
+        }
     }
 
     /// Reports the content height for the proposed width so the non-scrolling
@@ -181,6 +213,9 @@ extension MarkdownSelectableText: NSViewRepresentable {
                 width: { [weak textView] in textView?.textContainer?.size.width ?? textView?.bounds.width ?? 0 },
                 invalidate: { [weak textView] in textView?.invalidateIntrinsicContentSize() }
             )
+            if let mermaid = mermaidConfig {
+                context.coordinator.installMermaid(in: storage, scriptURL: mermaid.scriptURL, isDark: mermaid.isDark, displayHeight: 280)
+            }
         }
     }
 

@@ -64,11 +64,24 @@ private struct MarkdownTextKitBackend: View {
     @Environment(\.spacingScale) private var spacing
     @Environment(\.syntaxHighlighter) private var highlighter
     @Environment(\.mathRenderer) private var mathRenderer
+    @Environment(\.mermaidScriptProvider) private var mermaidScriptProvider
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        MarkdownSelectableText(content, theme: .resolved(palette: palette, spacing: spacing))
+        var view = MarkdownSelectableText(content, theme: .resolved(palette: palette, spacing: spacing))
             .codeHighlighter(SyntaxHighlighterAdapter(base: highlighter))
             .attachmentRenderer(mathRenderer as? MarkdownAttachmentRendering)
+        if let url = Self.mermaidScriptURL(mermaidScriptProvider) {
+            view = view.mermaid(scriptURL: url, isDark: colorScheme == .dark)
+        }
+        return view
+    }
+
+    private static func mermaidScriptURL(_ provider: any MermaidScriptProvider) -> URL? {
+        if case .url(let url) = provider.scriptSource { return url }
+        if case .localFile(let url) = provider.scriptSource { return url }
+        if case .url(let url) = CDNMermaidScriptProvider().scriptSource { return url }
+        return nil
     }
 }
 #endif

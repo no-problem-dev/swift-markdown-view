@@ -82,7 +82,7 @@ extension LaTeXMathRenderer: MarkdownAttachmentRendering {
         switch kind {
         case .inlineMath(let value): latex = value; mode = .inline
         case .displayMath(let value): latex = value; mode = .display
-        case .image: return nil
+        case .image, .mermaid: return nil
         }
 
         return MainActor.assumeIsolated {
