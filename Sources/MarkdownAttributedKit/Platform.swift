@@ -18,23 +18,38 @@ public typealias PlatformImage = NSImage
 #if canImport(UIKit) || canImport(AppKit)
 public extension PlatformFont {
 
-    /// Returns this font with bold/italic symbolic traits applied, composing so a
-    /// font that is already italic can additionally become bold (bold-italic).
-    /// Falls back to `self` when the platform cannot synthesize the variant.
+    /// Returns this font with bold/italic applied.
+    ///
+    /// Uses the dedicated system-font constructors rather than descriptor
+    /// symbolic traits: the San Francisco system font carries a "UI usage"
+    /// attribute that overrides an italic trait applied via the descriptor, so
+    /// `withSymbolicTraits(.traitItalic)` silently produces upright text. The
+    /// `italicSystemFont`/`boldSystemFont` constructors are reliable.
     func withTraits(bold: Bool, italic: Bool) -> PlatformFont {
         guard bold || italic else { return self }
+        let size = pointSize
         #if canImport(UIKit)
-        var traits = fontDescriptor.symbolicTraits
-        if bold { traits.insert(.traitBold) }
-        if italic { traits.insert(.traitItalic) }
-        guard let descriptor = fontDescriptor.withSymbolicTraits(traits) else { return self }
-        return UIFont(descriptor: descriptor, size: pointSize)
+        let monospaced = fontDescriptor.symbolicTraits.contains(.traitMonoSpace)
+        switch (bold, italic) {
+        case (false, false):
+            return self
+        case (true, false):
+            return monospaced ? .monospacedSystemFont(ofSize: size, weight: .bold) : .boldSystemFont(ofSize: size)
+        case (false, true):
+            return .italicSystemFont(ofSize: size)
+        case (true, true):
+            let italicFont = UIFont.italicSystemFont(ofSize: size)
+            if let descriptor = italicFont.fontDescriptor.withSymbolicTraits([.traitItalic, .traitBold]) {
+                return UIFont(descriptor: descriptor, size: size)
+            }
+            return italicFont
+        }
         #elseif canImport(AppKit)
-        var traits = fontDescriptor.symbolicTraits
-        if bold { traits.insert(.bold) }
-        if italic { traits.insert(.italic) }
-        let descriptor = fontDescriptor.withSymbolicTraits(traits)
-        return NSFont(descriptor: descriptor, size: pointSize) ?? self
+        let manager = NSFontManager.shared
+        var font = self
+        if bold { font = manager.convert(font, toHaveTrait: .boldFontMask) }
+        if italic { font = manager.convert(font, toHaveTrait: .italicFontMask) }
+        return font
         #endif
     }
 
@@ -48,11 +63,16 @@ public extension PlatformFont {
     }
 
     /// A plain system font at the given size and weight.
+    ///
+    /// For the regular weight the un-weighted `systemFont(ofSize:)` is used on
+    /// purpose: a system font created with an explicit weight does not reliably
+    /// round-trip the italic symbolic trait, so `withTraits(italic:)` would
+    /// silently fail to produce italics.
     static func system(size: CGFloat, weight: PlatformFont.Weight = .regular) -> PlatformFont {
         #if canImport(UIKit)
-        return UIFont.systemFont(ofSize: size, weight: weight)
+        return weight == .regular ? UIFont.systemFont(ofSize: size) : UIFont.systemFont(ofSize: size, weight: weight)
         #elseif canImport(AppKit)
-        return NSFont.systemFont(ofSize: size, weight: weight)
+        return weight == .regular ? NSFont.systemFont(ofSize: size) : NSFont.systemFont(ofSize: size, weight: weight)
         #endif
     }
 }

@@ -63,8 +63,8 @@ public struct MarkdownAttributedBuilder {
             // Phase 5 renders the diagram; for now show its source as code.
             return codeBlock(language: "mermaid", code: source, indent: indent)
 
-        case .aside(_, let content):
-            return blockQuote(content, indent: indent)
+        case .aside(let kind, let content):
+            return aside(kind: kind, content: content, indent: indent)
 
         case .unorderedList(let items):
             return list(items, ordered: nil, indent: indent)
@@ -152,6 +152,94 @@ public struct MarkdownAttributedBuilder {
             }
         }
         return mutable
+    }
+
+    /// Renders an aside as a kind-colored callout (a colored label header + a
+    /// tinted leading bar) when it carries an explicit kind, otherwise as a plain
+    /// quote. A GitHub-style `[!NOTE]` marker is detected, used as the kind, and
+    /// stripped from the visible text.
+    private func aside(kind modelKind: AsideKind, content: [MarkdownBlock], indent: Int) -> NSAttributedString {
+        var kind = modelKind
+        var content = content
+        var explicit = false
+        if case .paragraph(let inlines)? = content.first,
+           let (detected, stripped) = strippedAlertMarker(inlines) {
+            kind = detected
+            explicit = true
+            content[0] = .paragraph(stripped)
+        }
+
+        // A plain `> quote` (no marker, default note kind) stays a simple quote
+        // rather than being labelled "Note".
+        guard explicit || kind != .note else {
+            return blockQuote(content, indent: indent)
+        }
+
+        let style = asideStyle(for: kind)
+        let out = NSMutableAttributedString()
+
+        var headerContext = InlineContext.body(theme)
+        headerContext.font = theme.bodyFont(bold: true)
+        headerContext.color = style.color
+        out.append(terminatedParagraph(
+            NSAttributedString(string: style.label, attributes: headerContext.attributes),
+            style: paragraphStyle(indent: indent + 1, spacingAfter: theme.paragraphSpacing * 0.2)
+        ))
+
+        for block in content {
+            out.append(attributedQuoted(for: block, indent: indent + 1))
+        }
+
+        let full = NSRange(location: 0, length: out.length)
+        out.addAttribute(.markdownBlockDecoration, value: MarkdownBlockDecoration(.blockQuote(level: indent + 1)), range: full)
+        out.addAttribute(.markdownDecorationBar, value: style.color, range: full)
+        return out
+    }
+
+    private func asideStyle(for kind: AsideKind) -> (color: PlatformColor, label: String) {
+        let color: PlatformColor
+        switch kind {
+        case .tip, .experiment:
+            color = .systemGreen
+        case .important, .attention:
+            color = .systemOrange
+        case .warning, .bug:
+            color = .systemRed
+        case .todo:
+            color = .systemPurple
+        case .custom(let name):
+            switch name.lowercased() {
+            case "caution", "warning": color = .systemRed
+            case "tip": color = .systemGreen
+            case "important": color = .systemOrange
+            default: color = theme.secondaryColor
+            }
+        default:
+            color = .systemBlue
+        }
+        return (color, kind.displayName)
+    }
+
+    /// Detects a leading `[!KIND]` marker in the first text run, returning the
+    /// matched kind and the inlines with the marker removed.
+    private func strippedAlertMarker(_ inlines: [MarkdownInline]) -> (AsideKind, [MarkdownInline])? {
+        guard case .text(let text) = inlines.first else { return nil }
+        let body = text.drop(while: { $0 == " " || $0 == "\t" })
+        guard body.hasPrefix("[!"), let close = body.firstIndex(of: "]") else { return nil }
+        let nameStart = body.index(body.startIndex, offsetBy: 2)
+        guard nameStart < close else { return nil }
+        let name = body[nameStart..<close]
+        guard !name.isEmpty, name.allSatisfy({ $0.isLetter }) else { return nil }
+
+        let remainder = String(body[body.index(after: close)...].drop(while: { $0 == " " || $0 == "\t" || $0 == "\n" }))
+        var rest = Array(inlines.dropFirst())
+        if remainder.isEmpty {
+            if case .softBreak = rest.first { rest.removeFirst() }
+            else if case .hardBreak = rest.first { rest.removeFirst() }
+        } else {
+            rest.insert(.text(remainder), at: 0)
+        }
+        return (AsideKind(rawValue: String(name)), rest)
     }
 
     private func list(_ items: [ListItem], ordered start: Int?, indent: Int) -> NSAttributedString {
@@ -370,12 +458,7 @@ public struct MarkdownAttributedBuilder {
                 out.append(attributed)
 
             case .image(let source, let alt, _):
-                out.append(attachmentOrFallback(
-                    kind: .image(source: source, alt: alt),
-                    source: "![\(alt)](\(source))",
-                    fallback: "[\(alt)]",
-                    context: context
-                ))
+                out.append(imageInline(source: source, alt: alt, context: context))
 
             case .inlineMath(let latex):
                 var mathContext = context
@@ -417,21 +500,51 @@ public struct MarkdownAttributedBuilder {
         context: InlineContext
     ) -> NSAttributedString {
         if let rendered = attachmentRenderer?.renderedImage(for: kind, theme: theme) {
-            let attachment = NSTextAttachment()
-            attachment.image = rendered.image
-            attachment.bounds = CGRect(x: 0, y: rendered.baselineOffset, width: rendered.size.width, height: rendered.size.height)
-            let result = NSMutableAttributedString(attributedString: NSAttributedString(attachment: attachment))
-            let full = NSRange(location: 0, length: result.length)
-            result.addAttributes([
-                .markdownAttachment: MarkdownAttachment(kind),
-                .markdownSource: source,
-            ], range: full)
-            return result
+            return makeAttachment(
+                image: rendered.image,
+                bounds: CGRect(x: 0, y: rendered.baselineOffset, width: rendered.size.width, height: rendered.size.height),
+                kind: kind,
+                source: source
+            )
         }
         var attrs = context.attributes
         attrs[.markdownSource] = source
         attrs[.markdownAttachment] = MarkdownAttachment(kind)
         return NSAttributedString(string: fallback, attributes: attrs)
+    }
+
+    /// An image becomes an attachment the view fills asynchronously (the
+    /// placeholder has zero bounds until the image loads). A synchronous renderer
+    /// wins if present; an empty source degrades to alt text.
+    private func imageInline(source: String, alt: String, context: InlineContext) -> NSAttributedString {
+        let kind = MarkdownAttachment.Kind.image(source: source, alt: alt)
+        let markdownSource = "![\(alt)](\(source))"
+        if let rendered = attachmentRenderer?.renderedImage(for: kind, theme: theme) {
+            return makeAttachment(
+                image: rendered.image,
+                bounds: CGRect(origin: .zero, size: rendered.size),
+                kind: kind,
+                source: markdownSource
+            )
+        }
+        guard !source.isEmpty else {
+            var attrs = context.attributes
+            attrs[.markdownSource] = markdownSource
+            return NSAttributedString(string: "[\(alt)]", attributes: attrs)
+        }
+        return makeAttachment(image: nil, bounds: .zero, kind: kind, source: markdownSource)
+    }
+
+    private func makeAttachment(image: PlatformImage?, bounds: CGRect, kind: MarkdownAttachment.Kind, source: String) -> NSAttributedString {
+        let attachment = NSTextAttachment()
+        attachment.image = image
+        attachment.bounds = bounds
+        let result = NSMutableAttributedString(attributedString: NSAttributedString(attachment: attachment))
+        result.addAttributes([
+            .markdownAttachment: MarkdownAttachment(kind),
+            .markdownSource: source,
+        ], range: NSRange(location: 0, length: result.length))
+        return result
     }
 
     // MARK: - Helpers
@@ -474,6 +587,9 @@ public struct MarkdownAttributedBuilder {
         let indentPoints = CGFloat(indent) * theme.indentStep + theme.codeBlockPadding
         style.firstLineHeadIndent = indentPoints
         style.headIndent = indentPoints
+        // Symmetric right padding so code text doesn't touch the box's edge
+        // (tailIndent <= 0 is measured from the trailing margin).
+        style.tailIndent = -theme.codeBlockPadding
         return style
     }
 

@@ -61,10 +61,11 @@ private struct MarkdownTextKitBackend: View {
     let content: MarkdownContent
 
     @Environment(\.colorPalette) private var palette
+    @Environment(\.spacingScale) private var spacing
     @Environment(\.syntaxHighlighter) private var highlighter
 
     var body: some View {
-        MarkdownSelectableText(content, theme: .resolved(palette: palette))
+        MarkdownSelectableText(content, theme: .resolved(palette: palette, spacing: spacing))
             .codeHighlighter(SyntaxHighlighterAdapter(base: highlighter))
     }
 }

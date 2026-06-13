@@ -50,7 +50,7 @@ public struct MarkdownSelectableText {
         var appliedContent: MarkdownContent?
         var appliedFontSize: CGFloat?
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        weak var textView: NSTextView?
+        weak var textView: MarkdownTextView?
         #endif
 
         func isUnchanged(content: MarkdownContent, fontSize: CGFloat) -> Bool {
@@ -63,6 +63,29 @@ public struct MarkdownSelectableText {
         }
 
         var highlightTask: Task<Void, Never>?
+        var imageTask: Task<Void, Never>?
+
+        /// Loads each image attachment's source off the main actor, then sets the
+        /// image and aspect-fit bounds on the storage. Cancels any in-flight pass.
+        @MainActor
+        func startImageLoading(in storage: NSTextStorage, width: @escaping () -> CGFloat, invalidate: @escaping () -> Void) {
+            imageTask?.cancel()
+            let requests = MarkdownImageAttachments.requests(in: storage)
+            guard !requests.isEmpty else { return }
+            imageTask = Task { @MainActor in
+                for request in requests {
+                    if Task.isCancelled { return }
+                    guard let image = await MarkdownImageLoader.load(request.source) else { continue }
+                    if Task.isCancelled { return }
+                    storage.beginEditing()
+                    request.attachment.image = image
+                    request.attachment.bounds = MarkdownImageAttachments.bounds(for: image, maxWidth: width())
+                    storage.edited(.editedAttributes, range: request.range, changeInLength: 0)
+                    storage.endEditing()
+                    invalidate()
+                }
+            }
+        }
 
         /// Highlights each code region off the main actor, then transplants the
         /// colors onto the storage. Cancels any in-flight pass first.
@@ -92,38 +115,70 @@ public struct MarkdownSelectableText {
 extension MarkdownSelectableText: UIViewRepresentable {
     public func makeUIView(context: Context) -> UITextView {
         let textView = MarkdownTextViewFactory.make()
-        context.coordinator.provider.palette = MarkdownDecorationPalette(theme: theme)
+        let palette = MarkdownDecorationPalette(theme: theme)
+        context.coordinator.provider.palette = palette
         MarkdownTextViewFactory.setFragmentProvider(context.coordinator.provider, on: textView)
+        MarkdownTextViewFactory.setDecorationPalette(palette, on: textView)
         return textView
     }
 
     public func updateUIView(_ textView: UITextView, context: Context) {
         guard !context.coordinator.isUnchanged(content: content, fontSize: theme.baseFontSize) else { return }
-        context.coordinator.provider.palette = MarkdownDecorationPalette(theme: theme)
+        let palette = MarkdownDecorationPalette(theme: theme)
+        context.coordinator.provider.palette = palette
+        MarkdownTextViewFactory.setDecorationPalette(palette, on: textView)
         MarkdownTextViewFactory.apply(attributedString(), to: textView)
         context.coordinator.markApplied(content: content, fontSize: theme.baseFontSize)
         context.coordinator.startHighlighting(highlighter, in: textView.textStorage)
+        context.coordinator.startImageLoading(
+            in: textView.textStorage,
+            width: { [weak textView] in
+                let width = textView?.textContainer.size.width ?? 0
+                return width > 0 ? width : (textView?.bounds.width ?? 0)
+            },
+            invalidate: { [weak textView] in
+                textView?.invalidateIntrinsicContentSize()
+                textView?.setNeedsLayout()
+            }
+        )
+    }
+
+    /// Reports the content height for the proposed width so the non-scrolling
+    /// text view sizes correctly inside a SwiftUI `ScrollView`/stack.
+    public func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
+        guard let width = proposal.width, width > 0, width != .infinity else { return nil }
+        let fitting = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: ceil(fitting.height))
     }
 }
 #elseif canImport(AppKit)
 extension MarkdownSelectableText: NSViewRepresentable {
-    public func makeNSView(context: Context) -> NSScrollView {
-        let (scrollView, textView) = MarkdownTextViewFactory.make()
+    public func makeNSView(context: Context) -> MarkdownTextView {
+        let textView = MarkdownTextViewFactory.make()
         context.coordinator.textView = textView
         context.coordinator.provider.palette = MarkdownDecorationPalette(theme: theme)
         MarkdownTextViewFactory.setFragmentProvider(context.coordinator.provider, on: textView)
-        return scrollView
+        return textView
     }
 
-    public func updateNSView(_ scrollView: NSScrollView, context: Context) {
-        guard let textView = context.coordinator.textView else { return }
+    public func updateNSView(_ textView: MarkdownTextView, context: Context) {
         guard !context.coordinator.isUnchanged(content: content, fontSize: theme.baseFontSize) else { return }
         context.coordinator.provider.palette = MarkdownDecorationPalette(theme: theme)
         MarkdownTextViewFactory.apply(attributedString(), to: textView)
         context.coordinator.markApplied(content: content, fontSize: theme.baseFontSize)
         if let storage = textView.textContentStorage?.textStorage {
             context.coordinator.startHighlighting(highlighter, in: storage)
+            context.coordinator.startImageLoading(
+                in: storage,
+                width: { [weak textView] in textView?.textContainer?.size.width ?? textView?.bounds.width ?? 0 },
+                invalidate: { [weak textView] in textView?.invalidateIntrinsicContentSize() }
+            )
         }
+    }
+
+    public func sizeThatFits(_ proposal: ProposedViewSize, nsView: MarkdownTextView, context: Context) -> CGSize? {
+        guard let width = proposal.width, width > 0, width != .infinity else { return nil }
+        return CGSize(width: width, height: MarkdownTextViewFactory.contentHeight(of: nsView, fittingWidth: width))
     }
 }
 #endif

@@ -7,6 +7,22 @@
 
 ## [未リリース]
 
+## [1.4.1] - 2026-06-13
+
+### 修正
+
+- **macOS の表示が空白になる不具合を修正**（v1.4.0 リグレッション）。macOS バックエンドが `NSScrollView` を返していて SwiftUI 上で高さが決まらず潰れていたのを、iOS と同じ **content-sized な非スクロール `NSTextView`**（`intrinsicContentSize` ＋ `sizeThatFits`）へ作り替え。
+- **iOS でコードブロック内を選択しても水色のハイライトが見えない不具合を修正**。iOS は選択が `UITextView.selectedRange`（UIKit 側）にあり TextKit2 の `textLayoutManager.textSelections` に来ないため、フラグメントの even-odd くり抜きが空振りして背景塗りが選択を覆っていた。iOS ではコード背景を**テキスト下のレイヤー**に描き、選択はシステム合成に任せる方式へ（macOS は従来どおりフラグメント描画＋くり抜き）。
+- **斜体・太字が効かない不具合を修正**。SF システムフォントは記述子の italic トレイトを無視するため、`italicSystemFont`/`boldSystemFont`（macOS は `NSFontManager`）を使う確実な実装へ。
+- 非スクロールビューが SwiftUI `ScrollView` 内で高さを失う問題に対し `sizeThatFits` を実装（iOS/macOS）。
+
+### 追加・改善
+
+- **Aside をコールアウト表示に**。`> [!NOTE]`/`[!WARNING]` 等のマーカーを検出・除去し、kind ごとの色付きラベル＋色付き左バーで描画（素の `>` 引用は従来どおり）。
+- **画像を `NSTextAttachment` で表示**。`![](…)` をプレースホルダ添付として置き、ビューが非同期ロード（HTTP(S)/ローカル/バンドル）して差し込む。
+- **DesignSystem 準拠を強化**。フォントを `Typography` トークン（本文 bodyLarge、見出し headline/title、semibold）、スペーシングを `SpacingScale` から解決。
+- Examples の `MarkdownPlayground` を **macOS 対応**にし、横断選択・コピーを確認する「選択・コピー」画面を追加。
+
 ## [1.4.0] - 2026-06-13
 
 ### 追加

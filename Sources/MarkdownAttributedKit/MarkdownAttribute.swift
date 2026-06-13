@@ -19,6 +19,10 @@ public extension NSAttributedString.Key {
     /// Identifies an attachment run (image or math) as a ``MarkdownAttachment``,
     /// so an async resolver can fill or refresh its image after layout.
     static let markdownAttachment = NSAttributedString.Key("markdownAttachment")
+
+    /// A `PlatformColor` for the leading bar of a blockquote/aside, overriding
+    /// the palette's default. Used to tint an aside's bar by its kind.
+    static let markdownDecorationBar = NSAttributedString.Key("markdownDecorationBar")
 }
 
 /// Describes an inline object (image or math) that occupies a single attachment

@@ -16,9 +16,17 @@ struct MarkdownPlaygroundApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MarkdownCatalogView()
-                .theme(themeProvider)
-                .adaptiveSyntaxHighlighting()
+            TabView {
+                MarkdownCatalogView()
+                    .tabItem { Label("カタログ", systemImage: "list.bullet.rectangle") }
+
+                NavigationStack {
+                    SelectionShowcaseView()
+                }
+                .tabItem { Label("選択・コピー", systemImage: "selection.pin.in.out") }
+            }
+            .theme(themeProvider)
+            .adaptiveSyntaxHighlighting()
         }
     }
 }

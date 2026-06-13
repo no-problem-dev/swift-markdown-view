@@ -16,6 +16,7 @@ public struct MarkdownDecorationPalette {
     var quoteBar: CGColor
     var indentStep: CGFloat
     var quoteBarWidth: CGFloat
+    var codeCornerRadius: CGFloat
 
     public init(theme: MarkdownTextTheme) {
         self.codeBackground = theme.codeBlockBackground.cgColor
@@ -23,6 +24,7 @@ public struct MarkdownDecorationPalette {
         self.quoteBar = theme.quoteBarColor.cgColor
         self.indentStep = theme.indentStep
         self.quoteBarWidth = theme.quoteBarWidth
+        self.codeCornerRadius = theme.codeBlockCornerRadius
     }
 }
 
@@ -53,7 +55,14 @@ final class MarkdownLayoutFragment: NSTextLayoutFragment {
     // MARK: Drawing
 
     override func draw(at point: CGPoint, in context: CGContext) {
+        #if !canImport(UIKit)
+        // macOS: fill the code background here and punch out the selection
+        // (which lives in `textLayoutManager.textSelections`). On UIKit the
+        // selection is owned by UITextView and never reaches the fragment, so the
+        // code background is drawn in a layer beneath the text instead (see
+        // `MarkdownTextView`); drawing it here would occlude the selection.
         drawCodeBackground(at: point, in: context)
+        #endif
         super.draw(at: point, in: context)
         drawThematicBreaks(at: point, in: context)
         drawBlockquoteBars(at: point, in: context)
@@ -197,12 +206,13 @@ final class MarkdownLayoutFragment: NSTextLayoutFragment {
 
         context.saveGState()
         defer { context.restoreGState() }
-        context.setFillColor(palette.quoteBar)
 
         for line in textLineFragments {
             let docStart = fragLocation + line.characterRange.location
             guard docStart < ts.length,
                   case .blockQuote(let level) = decoration(at: docStart)?.kind else { continue }
+            let barColor = (ts.attribute(.markdownDecorationBar, at: docStart, effectiveRange: nil) as? PlatformColor)?.cgColor ?? palette.quoteBar
+            context.setFillColor(barColor)
             let tb = line.typographicBounds
             let barY = point.y + tb.origin.y
             for i in 0..<max(1, level) {

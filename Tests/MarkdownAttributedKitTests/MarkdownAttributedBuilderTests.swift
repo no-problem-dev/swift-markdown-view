@@ -190,13 +190,24 @@ private struct StubAttachmentRenderer: MarkdownAttachmentRendering {
 @Suite("MarkdownAttributedBuilder — attachments")
 struct MarkdownAttachmentTests {
 
-    @Test("Without a renderer, an image falls back to alt text carrying its source")
-    func imageFallback() throws {
+    @Test("An image with a source becomes a placeholder attachment (filled async by the view)")
+    func imagePlaceholderAttachment() throws {
         let result = build("![a cat](https://x/c.png)")
-        #expect(result.string.contains("[a cat]"))
-        let i = try #require(result.index(of: "a cat"))
+        let i = try #require(result.index(of: "\u{FFFC}"))
+        let attachment = result.attribute(.markdownAttachment, at: i, effectiveRange: nil) as? MarkdownAttachment
+        #expect(attachment?.kind == .image(source: "https://x/c.png", alt: "a cat"))
+        #expect(result.attribute(.attachment, at: i, effectiveRange: nil) is NSTextAttachment)
         let source = result.attribute(.markdownSource, at: i, effectiveRange: nil) as? String
         #expect(source == "![a cat](https://x/c.png)")
+        // The image requests helper finds it for async loading.
+        let requests = MarkdownImageAttachments.requests(in: result)
+        #expect(requests.first?.source == "https://x/c.png")
+    }
+
+    @Test("An image with an empty source degrades to alt text")
+    func imageEmptySourceFallback() throws {
+        let result = build("![a cat]()")
+        #expect(result.string.contains("[a cat]"))
     }
 
     @Test("Without a renderer, inline math falls back to delimited source")
@@ -227,6 +238,34 @@ struct MarkdownAttachmentTests {
         #expect(attachment?.kind == .inlineMath(latex: "x^2"))
         let source = result.attribute(.markdownSource, at: i, effectiveRange: nil) as? String
         #expect(source == "$x^2$")
+    }
+}
+
+@Suite("MarkdownAttributedBuilder — asides")
+struct MarkdownAsideTests {
+
+    @Test("GitHub alert marker is stripped and the kind label is shown")
+    func alertCallout() throws {
+        let result = build("> [!WARNING]\n> 警告メッセージです。")
+        let plain = result.string
+        #expect(!plain.contains("[!WARNING]"))   // marker removed
+        #expect(plain.contains("Warning"))        // kind label header
+        #expect(plain.contains("警告メッセージです。"))
+    }
+
+    @Test("Aside content carries a kind-colored bar")
+    func coloredBar() throws {
+        let result = build("> [!WARNING]\n> 警告です。")
+        let i = try #require(result.index(of: "警告"))
+        let barColor = result.attribute(.markdownDecorationBar, at: i, effectiveRange: nil) as? PlatformColor
+        #expect(barColor == PlatformColor.systemRed)
+    }
+
+    @Test("Plain quote stays a quote without a kind label")
+    func plainQuote() {
+        let result = build("> ただの引用です。")
+        #expect(result.string.contains("ただの引用です。"))
+        #expect(!result.string.contains("Note"))
     }
 }
 

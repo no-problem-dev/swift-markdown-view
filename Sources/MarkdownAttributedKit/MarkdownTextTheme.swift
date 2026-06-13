@@ -57,7 +57,9 @@ public struct MarkdownTextTheme {
         indentStep: CGFloat = 22,
         codeBlockPadding: CGFloat = 12,
         codeBlockCornerRadius: CGFloat = 8,
-        quoteBarWidth: CGFloat = 3
+        quoteBarWidth: CGFloat = 3,
+        headingSizes: [CGFloat]? = nil,
+        headingWeight: PlatformFont.Weight = .bold
     ) {
         self.baseFont = baseFont
         self.codeFont = codeFont
@@ -76,6 +78,8 @@ public struct MarkdownTextTheme {
         self.codeBlockPadding = codeBlockPadding
         self.codeBlockCornerRadius = codeBlockCornerRadius
         self.quoteBarWidth = quoteBarWidth
+        self.headingSizes = headingSizes ?? Self.scaledHeadingSizes(base: baseFont.pointSize)
+        self.headingWeight = headingWeight
     }
 
     /// Point size of the body font.
@@ -86,19 +90,21 @@ public struct MarkdownTextTheme {
         baseFont.withTraits(bold: bold, italic: italic)
     }
 
-    /// The font for an ATX heading of the given level (1–6), scaled off the base
-    /// size and bold. Scale matches the editor's live-preview sizing.
+    /// Point sizes for ATX heading levels 1–6.
+    public var headingSizes: [CGFloat]
+    /// Weight applied to all headings.
+    public var headingWeight: PlatformFont.Weight
+
+    /// The font for an ATX heading of the given level (1–6).
     public func headingFont(level: Int) -> PlatformFont {
-        let scale: CGFloat
-        switch level {
-        case 1: scale = 1.7
-        case 2: scale = 1.45
-        case 3: scale = 1.28
-        case 4: scale = 1.15
-        case 5: scale = 1.07
-        default: scale = 1.0
-        }
-        return PlatformFont.system(size: baseFontSize * scale, weight: .bold)
+        let index = max(1, min(6, level)) - 1
+        return PlatformFont.system(size: headingSizes[index], weight: headingWeight)
+    }
+
+    /// Heading sizes scaled off a base size, used when explicit DesignSystem
+    /// sizes aren't supplied.
+    public static func scaledHeadingSizes(base: CGFloat) -> [CGFloat] {
+        [1.7, 1.45, 1.28, 1.15, 1.07, 1.0].map { base * $0 }
     }
 
     /// A reasonable light-mode default, usable without DesignSystem.
