@@ -22,6 +22,7 @@ public struct MarkdownSelectableText {
     public let content: MarkdownContent
     public var theme: MarkdownTextTheme
     var highlighter: (any MarkdownCodeHighlighting)?
+    var attachmentRenderer: (any MarkdownAttachmentRendering)?
 
     public init(_ content: MarkdownContent, theme: MarkdownTextTheme = .default) {
         self.content = content
@@ -39,8 +40,15 @@ public struct MarkdownSelectableText {
         return copy
     }
 
+    /// Applies a synchronous renderer for image/math attachments (e.g. LaTeX).
+    public func attachmentRenderer(_ renderer: (any MarkdownAttachmentRendering)?) -> MarkdownSelectableText {
+        var copy = self
+        copy.attachmentRenderer = renderer
+        return copy
+    }
+
     private func attributedString() -> NSAttributedString {
-        MarkdownAttributedBuilder(theme: theme).build(content)
+        MarkdownAttributedBuilder(theme: theme, attachmentRenderer: attachmentRenderer).build(content)
     }
 
     public final class Coordinator {

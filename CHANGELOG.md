@@ -7,6 +7,18 @@
 
 ## [未リリース]
 
+## [1.4.2] - 2026-06-13
+
+### 追加・改善
+
+- **数式（LaTeX）を新レンダラで表示**。`SwiftMarkdownViewLaTeX` の `LaTeXMathRenderer` を `MarkdownAttachmentRendering` にも適合させ、SwiftMath のベクター組版を**高 DPI（デバイススケール）でラスタライズ**して `NSTextAttachment` として埋め込む（通常サイズで十分シャープ）。既存の `.mathRenderer(LaTeXMathRenderer())` がそのまま新レンダラでも効く（`MarkdownView` が環境の math renderer を添付レンダラとして拾う）。インライン数式はベースラインに合わせて配置。
+- **コードブロックの上下に余白**を追加し、コード文字が背景ボックスの縁に触れないように（iOS のレイヤー描画・macOS のフラグメント描画の両方）。
+
+### 既知の残課題
+
+- **Mermaid** は現状コードブロックとしてソース表示（ダイアグラム描画は WKWebView のビュー添付が必要で次段）。
+- 「Markdown としてコピー」コマンドは未実装（デフォルトのコピーは選択範囲の読めるテキストを返す）。
+
 ## [1.4.1] - 2026-06-13
 
 ### 修正

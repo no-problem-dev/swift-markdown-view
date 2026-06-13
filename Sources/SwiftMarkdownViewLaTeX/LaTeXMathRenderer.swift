@@ -55,3 +55,65 @@ public struct LaTeXMathRenderer: MathRenderer {
         )
     }
 }
+
+// MARK: - TextKit attachment rendering
+
+/// A fixed-color math style so the rasterized image matches the surrounding
+/// Markdown text color (the attachment renders outside the view hierarchy, so
+/// the palette-based color resolution doesn't apply).
+private struct FixedColorMathStyle: MathStyle {
+    var color: Color
+    var inline: CGFloat
+    var display: CGFloat
+    var displayFontSize: CGFloat { display }
+    var inlineFontSize: CGFloat { inline }
+    func textColor(_ palette: any ColorPalette) -> Color { color }
+    func errorColor(_ palette: any ColorPalette) -> Color { color }
+}
+
+extension LaTeXMathRenderer: MarkdownAttachmentRendering {
+
+    /// Rasterizes math to a crisp (device-scale) image for embedding as an
+    /// `NSTextAttachment` in the TextKit renderer. SwiftMath typesets vector
+    /// glyphs, so a high-DPI raster is sharp at normal sizes.
+    public func renderedImage(for kind: MarkdownAttachment.Kind, theme: MarkdownTextTheme) -> MarkdownRenderedImage? {
+        let latex: String
+        let mode: MathMode
+        switch kind {
+        case .inlineMath(let value): latex = value; mode = .inline
+        case .displayMath(let value): latex = value; mode = .display
+        case .image: return nil
+        }
+
+        return MainActor.assumeIsolated {
+            let mathStyle = FixedColorMathStyle(
+                color: Color(theme.textColor),
+                inline: theme.baseFontSize,
+                display: theme.baseFontSize * 1.2
+            )
+            let renderer = ImageRenderer(
+                content: LaTeXView(latex, mode: mode).mathStyle(mathStyle).fixedSize()
+            )
+            renderer.scale = Self.displayScale
+            #if canImport(UIKit)
+            guard let image = renderer.uiImage else { return nil }
+            #elseif canImport(AppKit)
+            guard let image = renderer.nsImage else { return nil }
+            #endif
+            let size = image.size
+            // Inline math sits on the text baseline; drop it slightly so the
+            // typeset descenders align with surrounding text.
+            let baselineOffset: CGFloat = mode == .inline ? -(size.height * 0.18) : 0
+            return MarkdownRenderedImage(image: image, size: size, baselineOffset: baselineOffset)
+        }
+    }
+
+    @MainActor
+    private static var displayScale: CGFloat {
+        #if canImport(UIKit)
+        return max(2, UITraitCollection.current.displayScale)
+        #elseif canImport(AppKit)
+        return NSScreen.main?.backingScaleFactor ?? 2
+        #endif
+    }
+}

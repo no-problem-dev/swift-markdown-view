@@ -8,7 +8,11 @@ import AppKit
 
 /// An image produced for a Markdown attachment, with the metrics needed to place
 /// it as an `NSTextAttachment` (its bounds relative to the text baseline).
-public struct MarkdownRenderedImage {
+///
+/// `@unchecked Sendable`: the image is created (often on the main actor by the
+/// renderer) and never mutated afterwards, so it is safe to hand back across
+/// isolation boundaries.
+public struct MarkdownRenderedImage: @unchecked Sendable {
     public var image: PlatformImage
     public var size: CGSize
     /// Vertical offset of the image's bottom from the text baseline (negative

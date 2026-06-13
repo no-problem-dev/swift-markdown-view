@@ -74,12 +74,15 @@ public final class MarkdownTextView: UITextView {
 
         let width = bounds.width
         let radius = palette.codeCornerRadius
+        let vPad = palette.codeVerticalPadding
         let path = CGMutablePath()
         var current: CGRect?
 
         func flush() {
             if let rect = current {
-                path.addRoundedRect(in: rect, cornerWidth: radius, cornerHeight: radius)
+                // Expand the block's box vertically for breathing room around the
+                // code text (the rounded box hugs the union of its line frames).
+                path.addRoundedRect(in: rect.insetBy(dx: 0, dy: -vPad), cornerWidth: radius, cornerHeight: radius)
                 current = nil
             }
         }

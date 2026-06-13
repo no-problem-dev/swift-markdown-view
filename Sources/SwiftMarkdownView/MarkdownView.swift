@@ -63,10 +63,12 @@ private struct MarkdownTextKitBackend: View {
     @Environment(\.colorPalette) private var palette
     @Environment(\.spacingScale) private var spacing
     @Environment(\.syntaxHighlighter) private var highlighter
+    @Environment(\.mathRenderer) private var mathRenderer
 
     var body: some View {
         MarkdownSelectableText(content, theme: .resolved(palette: palette, spacing: spacing))
             .codeHighlighter(SyntaxHighlighterAdapter(base: highlighter))
+            .attachmentRenderer(mathRenderer as? MarkdownAttachmentRendering)
     }
 }
 #endif

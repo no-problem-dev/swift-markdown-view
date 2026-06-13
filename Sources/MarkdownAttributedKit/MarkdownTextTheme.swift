@@ -9,7 +9,7 @@ import AppKit
 /// string. Plain values (no SwiftUI / DesignSystem) so this layer is
 /// self-contained and headlessly testable; `SwiftMarkdownView` maps its
 /// DesignSystem tokens onto this theme.
-public struct MarkdownTextTheme {
+public struct MarkdownTextTheme: @unchecked Sendable {
 
     // Fonts
     public var baseFont: PlatformFont
@@ -35,6 +35,8 @@ public struct MarkdownTextTheme {
     public var indentStep: CGFloat
     /// Inset of code text from the edge of its rounded background box, in points.
     public var codeBlockPadding: CGFloat
+    /// Vertical breathing room added above/below code text inside its box.
+    public var codeBlockVerticalPadding: CGFloat
     /// Corner radius of the code-block background box, in points.
     public var codeBlockCornerRadius: CGFloat
     /// Width of the leading bar drawn for each blockquote level, in points.
@@ -56,6 +58,7 @@ public struct MarkdownTextTheme {
         lineHeightMultiple: CGFloat = 1.2,
         indentStep: CGFloat = 22,
         codeBlockPadding: CGFloat = 12,
+        codeBlockVerticalPadding: CGFloat = 8,
         codeBlockCornerRadius: CGFloat = 8,
         quoteBarWidth: CGFloat = 3,
         headingSizes: [CGFloat]? = nil,
@@ -76,6 +79,7 @@ public struct MarkdownTextTheme {
         self.lineHeightMultiple = lineHeightMultiple
         self.indentStep = indentStep
         self.codeBlockPadding = codeBlockPadding
+        self.codeBlockVerticalPadding = codeBlockVerticalPadding
         self.codeBlockCornerRadius = codeBlockCornerRadius
         self.quoteBarWidth = quoteBarWidth
         self.headingSizes = headingSizes ?? Self.scaledHeadingSizes(base: baseFont.pointSize)

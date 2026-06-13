@@ -17,6 +17,7 @@ public struct MarkdownDecorationPalette {
     var indentStep: CGFloat
     var quoteBarWidth: CGFloat
     var codeCornerRadius: CGFloat
+    var codeVerticalPadding: CGFloat
 
     public init(theme: MarkdownTextTheme) {
         self.codeBackground = theme.codeBlockBackground.cgColor
@@ -25,6 +26,7 @@ public struct MarkdownDecorationPalette {
         self.indentStep = theme.indentStep
         self.quoteBarWidth = theme.quoteBarWidth
         self.codeCornerRadius = theme.codeBlockCornerRadius
+        self.codeVerticalPadding = theme.codeBlockVerticalPadding
     }
 }
 
@@ -108,11 +110,14 @@ final class MarkdownLayoutFragment: NSTextLayoutFragment {
             height -= last.typographicBounds.height
         }
 
+        // Expand each code line's band by the vertical padding; stacked bands
+        // overlap (same color), giving the whole block top/bottom breathing room.
+        let vPad = palette.codeVerticalPadding
         let bgRect = CGRect(
             x: point.x - layoutFragmentFrame.origin.x,
-            y: point.y,
+            y: point.y - vPad,
             width: containerWidth,
-            height: height
+            height: height + vPad * 2
         )
 
         context.saveGState()
