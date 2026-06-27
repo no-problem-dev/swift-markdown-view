@@ -1,10 +1,6 @@
 name: Tests
 
 on:
-  pull_request:
-    branches:
-      - main
-      - 'release/**'
   workflow_dispatch:
 
 concurrency:
@@ -15,6 +11,7 @@ jobs:
   test-macos:
     name: macOS (Swift 6.0)
     runs-on: macos-15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4

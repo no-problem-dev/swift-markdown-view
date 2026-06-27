@@ -1,13 +1,9 @@
 name: Snapshot Report
 
 on:
-  # 手動実行用
+  # 手動実行のみ（main push 毎の自動実行は GHA コスト削減のため廃止。
+  # スナップショット更新が必要なときに main から手動 dispatch する）
   workflow_dispatch:
-
-  # releaseブランチからmainへのマージ時に実行
-  push:
-    branches:
-      - main
 
 permissions:
   contents: write
@@ -20,6 +16,7 @@ jobs:
   snapshot-test:
     name: Run Snapshot Tests
     runs-on: macos-26
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
