@@ -2,10 +2,10 @@ import SwiftUI
 import DesignSystem
 
 /// A row for displaying a catalog item in a list.
-public struct CategoryItemRow: View {
+struct CategoryItemRow: View {
 
     /// The catalog item to display.
-    public let item: MarkdownCatalogItem
+    let item: MarkdownCatalogItem
 
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.spacingScale) private var spacing
@@ -13,11 +13,11 @@ public struct CategoryItemRow: View {
     /// Creates a new category item row.
     ///
     /// - Parameter item: The catalog item to display.
-    public init(item: MarkdownCatalogItem) {
+    init(item: MarkdownCatalogItem) {
         self.item = item
     }
 
-    public var body: some View {
+    var body: some View {
         HStack(spacing: spacing.md) {
             Image(systemName: item.icon)
                 .typography(.titleLarge)

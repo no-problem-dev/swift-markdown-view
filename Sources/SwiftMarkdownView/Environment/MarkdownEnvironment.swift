@@ -4,7 +4,7 @@ import DesignSystem
 // MARK: - Markdown Typography Mapping
 
 /// Maps Markdown heading levels to DesignSystem Typography tokens.
-public enum MarkdownTypographyMapping {
+enum MarkdownTypographyMapping {
 
     /// Returns the appropriate Typography token for a heading level.
     public static func typography(for headingLevel: Int) -> Typography {
@@ -35,7 +35,7 @@ public enum MarkdownTypographyMapping {
 // MARK: - Markdown Spacing
 
 /// Spacing values for Markdown layout using DesignSystem tokens.
-public enum MarkdownSpacing {
+enum MarkdownSpacing {
 
     /// Spacing between block elements.
     public static func blockSpacing(_ scale: any SpacingScale) -> CGFloat {
@@ -76,7 +76,7 @@ public enum MarkdownSpacing {
 // MARK: - Markdown Colors
 
 /// Color mappings for Markdown elements using DesignSystem ColorPalette.
-public enum MarkdownColors {
+enum MarkdownColors {
 
     /// Text color for body content.
     public static func bodyText(_ palette: any ColorPalette) -> Color {
@@ -132,7 +132,7 @@ public enum MarkdownColors {
 // MARK: - Markdown Radius
 
 /// Corner radius values for Markdown elements.
-public enum MarkdownRadius {
+enum MarkdownRadius {
 
     /// Corner radius for code blocks.
     public static func codeBlock(_ scale: any RadiusScale) -> CGFloat {

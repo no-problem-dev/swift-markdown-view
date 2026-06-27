@@ -1,6 +1,6 @@
 # ``SwiftMarkdownView``
 
-SwiftUIネイティブなMarkdownレンダリングライブラリ。
+A SwiftUI-native Markdown rendering library with DesignSystem integration.
 
 @Metadata {
     @PageColor(blue)
@@ -8,108 +8,111 @@ SwiftUIネイティブなMarkdownレンダリングライブラリ。
 
 ## Overview
 
-SwiftMarkdownViewは、SwiftUIで美しいMarkdown表示を実現するライブラリです。
-`AttributedString`と`Text`連結による高性能レンダリング、DesignSystemとの統合、
-オプショナルな50+言語対応シンタックスハイライトを備えています。
+`SwiftMarkdownView` renders Markdown text as a native SwiftUI view. It supports CommonMark and GitHub Flavored Markdown, including tables, task lists, aside callouts, Mermaid diagrams, and math expressions. On iOS and macOS the library uses a single TextKit 2 text view so selection and copy work continuously across block boundaries.
 
-### 特徴
+The library integrates with `swift-design-system` out of the box: typography tokens, color palette, and spacing scale all flow through the SwiftUI environment, so your Markdown automatically matches the rest of your app's visual language.
 
-- **SwiftUIネイティブ**: `AttributedString`と`Text`連結による高性能レンダリング
-- **DesignSystem統合**: ColorPalette、Typography、Spacingとシームレスに連携
-- **シンタックスハイライト**: オプショナルモジュールで50+言語対応
-- **Mermaidダイアグラム**: フローチャート、シーケンス図等をサポート
-- **Aside（コールアウト）**: Note、Warning、Tipなど24種類 + カスタム
-- **豊富な要素サポート**: テーブル、タスクリスト、画像等
-
-### パッケージ構成
-
-このパッケージは2つのモジュールで構成されています：
-
-| モジュール | 用途 |
-|-----------|------|
-| **SwiftMarkdownView** | Markdownレンダリングのコアモジュール |
-| **SwiftMarkdownViewHighlightJS** | HighlightJSによるシンタックスハイライト（オプション） |
-
-### クイックスタート
+Optional add-on modules extend the core without adding mandatory dependencies. `SwiftMarkdownViewHighlightJS` brings HighlightJS syntax highlighting for 50+ languages; `SwiftMarkdownViewLaTeX` adds LaTeX math typesetting; `SwiftMarkdownEditor` provides a full Markdown editor with live preview.
 
 ```swift
 import SwiftUI
 import SwiftMarkdownView
 
-struct ContentView: View {
+struct ArticleView: View {
+    let markdown: String
+
     var body: some View {
-        MarkdownView("""
-        # Hello, Markdown!
-
-        This is a **bold** and *italic* text.
-
-        ```swift
-        let greeting = "Hello, World!"
-        print(greeting)
-        ```
-        """)
+        ScrollView {
+            MarkdownView(markdown)
+                .padding()
+        }
     }
 }
 ```
 
-### シンタックスハイライトを有効にする
-
-```swift
-import SwiftMarkdownView
-import SwiftMarkdownViewHighlightJS
-
-MarkdownView(source)
-    .adaptiveSyntaxHighlighting()
-```
-
 ## Topics
 
-### はじめに
+### Essentials
 
-- ``MarkdownView``
-- ``MarkdownContent``
 - <doc:GettingStarted>
 
-### シンタックスハイライト
+### Views
+
+- ``MarkdownView``
+- ``HighlightedCodeView``
+
+### Content Model
+
+- ``MarkdownContent``
+- ``MarkdownBlock``
+- ``MarkdownInline``
+
+### Syntax Highlighting
 
 - ``SyntaxHighlighter``
 - ``PlainTextHighlighter``
 - ``HighlightState``
-- ``HighlightedCodeView``
 - <doc:SyntaxHighlighting>
 
-### Aside（コールアウト）
+### Aside Callouts
 
+- ``AsideStyle``
 - ``DefaultAsideStyle``
+- ``AsideKind``
 - <doc:Asides>
 
-### Mermaidダイアグラム
+### Code Block Styling
 
-- <doc:MermaidDiagrams>
+- ``CodeBlockStyle``
+- ``DefaultCodeBlockStyle``
+- ``MinimalCodeBlockStyle``
+- ``TerminalCodeBlockStyle``
 
-### ドメインモデル
+### Heading Styling
 
-- ``MarkdownBlock``
-- ``MarkdownInline``
-- ``AsideKind``
-- ``TableData``
-- ``ListItem``
+- ``HeadingStyle``
+- ``DefaultHeadingStyle``
+- ``CompactHeadingStyle``
+- ``ColoredHeadingStyle``
+- ``DividedHeadingStyle``
 
-### スタイル
+### Link Styling
 
 - ``LinkStyle``
-- ``CodeBlockStyle``
+- ``DefaultLinkStyle``
+- ``SubtleLinkStyle``
+- ``BoldLinkStyle``
+- ``ClassicLinkStyle``
+- ``MonochromeLinkStyle``
+
+### Table Styling
+
 - ``TableStyle``
-- ``AsideStyle``
+- ``DefaultTableStyle``
+- ``StripedTableStyle``
+- ``BorderlessTableStyle``
+- ``CardTableStyle``
 
-### Mermaid
+### Rendering Options
 
-- ``MermaidDiagramView``
+- ``MarkdownRenderingOptions``
+
+### Math
+
+- ``MathRenderer``
+- ``PlainMathRenderer``
+
+### Mermaid Diagrams
+
+- ``MermaidScriptProvider``
+- ``MermaidScriptSource``
+- ``CDNMermaidScriptProvider``
+- ``BundledMermaidScriptProvider``
 - ``AdaptiveMermaidView``
 - ``MermaidFallbackView``
+- <doc:MermaidDiagrams>
 
-## 関連モジュール
+### Domain Types
 
-**SwiftMarkdownViewHighlightJS**: HighlightJSによる50+言語対応シンタックスハイライト
-
-シンタックスハイライトを使用するには、別途`SwiftMarkdownViewHighlightJS`モジュールをインポートしてください。
+- ``TableData``
+- ``ListItem``

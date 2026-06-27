@@ -3,7 +3,7 @@ import SwiftUI
 /// Categories for the Markdown catalog.
 ///
 /// Organizes catalog items into logical groups for navigation.
-public enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Sendable {
+internal enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Sendable {
 
     /// Block-level Markdown elements like headings, code blocks, lists.
     case blockElements = "ブロック要素"
@@ -20,10 +20,10 @@ public enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Sendabl
     /// DesignSystem integration and theme settings.
     case designSystem = "デザインシステム"
 
-    public var id: String { rawValue }
+    internal var id: String { rawValue }
 
     /// The SF Symbol icon for this category.
-    public var icon: String {
+    internal var icon: String {
         switch self {
         case .blockElements:
             return "square.stack.3d.up.fill"
@@ -39,7 +39,7 @@ public enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Sendabl
     }
 
     /// A brief description of this category.
-    public var description: String {
+    internal var description: String {
         switch self {
         case .blockElements:
             return "見出し、コードブロック、リスト、テーブルなど"
@@ -55,7 +55,7 @@ public enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Sendabl
     }
 
     /// The catalog items in this category.
-    public var items: [MarkdownCatalogItem] {
+    internal var items: [MarkdownCatalogItem] {
         switch self {
         case .blockElements:
             return BlockElementItem.allCases.map { $0.catalogItem }
@@ -80,7 +80,7 @@ public enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Sendabl
 // MARK: - Block Element Items
 
 /// Block-level element types for the catalog.
-public enum BlockElementItem: String, CaseIterable, Identifiable, Sendable {
+internal enum BlockElementItem: String, CaseIterable, Identifiable, Sendable {
     case heading = "見出し"
     case paragraph = "段落"
     case codeBlock = "コードブロック"
@@ -93,9 +93,9 @@ public enum BlockElementItem: String, CaseIterable, Identifiable, Sendable {
     case thematicBreak = "水平線"
     case image = "画像"
 
-    public var id: String { rawValue }
+    internal var id: String { rawValue }
 
-    public var catalogItem: MarkdownCatalogItem {
+    internal var catalogItem: MarkdownCatalogItem {
         MarkdownCatalogItem(
             name: rawValue,
             icon: icon,
@@ -103,7 +103,7 @@ public enum BlockElementItem: String, CaseIterable, Identifiable, Sendable {
         )
     }
 
-    public var icon: String {
+    internal var icon: String {
         switch self {
         case .heading: return "textformat.size"
         case .paragraph: return "text.alignleft"
@@ -119,7 +119,7 @@ public enum BlockElementItem: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    public var description: String {
+    internal var description: String {
         switch self {
         case .heading: return "H1〜H6の見出しレベル"
         case .paragraph: return "テキスト段落"
@@ -139,15 +139,15 @@ public enum BlockElementItem: String, CaseIterable, Identifiable, Sendable {
 // MARK: - Inline Element Items
 
 /// Inline element types for the catalog.
-public enum InlineElementItem: String, CaseIterable, Identifiable, Sendable {
+internal enum InlineElementItem: String, CaseIterable, Identifiable, Sendable {
     case textStyles = "テキストスタイル"
     case inlineCode = "インラインコード"
     case link = "リンク"
     case softBreak = "改行"
 
-    public var id: String { rawValue }
+    internal var id: String { rawValue }
 
-    public var catalogItem: MarkdownCatalogItem {
+    internal var catalogItem: MarkdownCatalogItem {
         MarkdownCatalogItem(
             name: rawValue,
             icon: icon,
@@ -155,7 +155,7 @@ public enum InlineElementItem: String, CaseIterable, Identifiable, Sendable {
         )
     }
 
-    public var icon: String {
+    internal var icon: String {
         switch self {
         case .textStyles: return "bold.italic.underline"
         case .inlineCode: return "chevron.left.forwardslash.chevron.right"
@@ -164,7 +164,7 @@ public enum InlineElementItem: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    public var description: String {
+    internal var description: String {
         switch self {
         case .textStyles: return "太字、斜体、取り消し線"
         case .inlineCode: return "文中のコードスニペット"
@@ -177,7 +177,7 @@ public enum InlineElementItem: String, CaseIterable, Identifiable, Sendable {
 // MARK: - Configuration Items
 
 /// Configuration and style options for the catalog.
-public enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
+internal enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
     case renderingOptions = "レンダリングオプション"
     case asideStyle = "Asideスタイル"
     case codeBlockStyle = "コードブロックスタイル"
@@ -186,9 +186,9 @@ public enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
     case linkStyle = "リンクスタイル"
     case syntaxHighlighter = "シンタックスハイライト"
 
-    public var id: String { rawValue }
+    internal var id: String { rawValue }
 
-    public var catalogItem: MarkdownCatalogItem {
+    internal var catalogItem: MarkdownCatalogItem {
         MarkdownCatalogItem(
             name: rawValue,
             icon: icon,
@@ -196,7 +196,7 @@ public enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
         )
     }
 
-    public var icon: String {
+    internal var icon: String {
         switch self {
         case .renderingOptions: return "gearshape.fill"
         case .asideStyle: return "bubble.left.fill"
@@ -208,7 +208,7 @@ public enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    public var description: String {
+    internal var description: String {
         switch self {
         case .renderingOptions: return "Mermaid、画像、テーブルの有効/無効"
         case .asideStyle: return "コールアウトの見た目をカスタマイズ"
@@ -224,12 +224,12 @@ public enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
 // MARK: - DesignSystem Items
 
 /// DesignSystem integration items for the catalog.
-public enum DesignSystemItem: String, CaseIterable, Identifiable, Sendable {
+internal enum DesignSystemItem: String, CaseIterable, Identifiable, Sendable {
     case fullCatalog = "デザインシステムカタログ"
 
-    public var id: String { rawValue }
+    internal var id: String { rawValue }
 
-    public var catalogItem: MarkdownCatalogItem {
+    internal var catalogItem: MarkdownCatalogItem {
         MarkdownCatalogItem(
             name: rawValue,
             icon: icon,
@@ -237,13 +237,13 @@ public enum DesignSystemItem: String, CaseIterable, Identifiable, Sendable {
         )
     }
 
-    public var icon: String {
+    internal var icon: String {
         switch self {
         case .fullCatalog: return "paintpalette.fill"
         }
     }
 
-    public var description: String {
+    internal var description: String {
         switch self {
         case .fullCatalog: return "テーマ、カラー、タイポグラフィ、スペーシングなど"
         }

@@ -22,23 +22,3 @@ public extension View {
     }
 }
 
-// MARK: - MarkdownView Convenience Extensions
-
-public extension MarkdownView {
-
-    /// Creates a MarkdownView with a specific theme applied.
-    ///
-    /// This is a convenience initializer that combines content parsing
-    /// with theme application.
-    ///
-    /// ```swift
-    /// MarkdownView("# Hello", theme: themeProvider)
-    /// ```
-    ///
-    /// - Parameters:
-    ///   - source: The Markdown string to parse and render.
-    ///   - theme: The ThemeProvider to apply.
-    init(_ source: String, theme: ThemeProvider) {
-        self.init(source)
-    }
-}

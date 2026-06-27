@@ -4,7 +4,7 @@ import DesignSystem
 /// A split-view catalog for regular layouts.
 ///
 /// Uses custom plain list style instead of system list styles.
-public struct MarkdownCatalogSplitView: View {
+struct MarkdownCatalogSplitView: View {
 
     @State private var selectedCategory: MarkdownCatalogCategory? = .blockElements
     @State private var selectedItem: MarkdownCatalogItem?
@@ -12,9 +12,9 @@ public struct MarkdownCatalogSplitView: View {
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.spacingScale) private var spacing
 
-    public init() {}
+    init() {}
 
-    public var body: some View {
+    var body: some View {
         NavigationSplitView {
             sidebarView
         } content: {

@@ -4,14 +4,14 @@ import DesignSystem
 /// A list-based catalog view for compact layouts.
 ///
 /// Uses a custom plain style instead of system list styles.
-public struct MarkdownCatalogListView: View {
+struct MarkdownCatalogListView: View {
 
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.spacingScale) private var spacing
 
-    public init() {}
+    init() {}
 
-    public var body: some View {
+    var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {

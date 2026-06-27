@@ -1,25 +1,27 @@
-# はじめに
+# Getting Started
 
-SwiftMarkdownViewを使ってMarkdownを表示する基本的な方法を学びます。
+Learn the basics of rendering Markdown with `SwiftMarkdownView`.
 
 ## Overview
 
-SwiftMarkdownViewは、SwiftUIアプリケーションでMarkdownテキストを
-美しくレンダリングするためのライブラリです。
+`SwiftMarkdownView` lets you drop Markdown rendering into any SwiftUI app with a single import. The library parses CommonMark and GitHub Flavored Markdown and renders it as native SwiftUI — headings, code blocks, tables, task lists, asides, images, and more — while automatically picking up your `swift-design-system` theme.
 
-## インストール
+## Installation
 
 ### Swift Package Manager
 
-`Package.swift`に以下を追加してください：
+Add the dependency to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/no-problem-dev/swift-markdown-view.git", from: "1.0.0")
+    .package(
+        url: "https://github.com/no-problem-dev/swift-markdown-view.git",
+        .upToNextMajor(from: "1.4.0")
+    )
 ]
 ```
 
-ターゲットに追加：
+Then add the product to your target:
 
 ```swift
 .target(
@@ -30,9 +32,17 @@ dependencies: [
 )
 ```
 
-## 基本的な使い方
+To enable syntax highlighting, also add `SwiftMarkdownViewHighlightJS`:
 
-### シンプルな表示
+```swift
+.product(name: "SwiftMarkdownViewHighlightJS", package: "swift-markdown-view")
+```
+
+## Basic Usage
+
+### Rendering a string
+
+Pass a Markdown string directly to ``MarkdownView``:
 
 ```swift
 import SwiftUI
@@ -40,50 +50,65 @@ import SwiftMarkdownView
 
 struct ContentView: View {
     var body: some View {
-        MarkdownView("# Hello, World!")
+        ScrollView {
+            MarkdownView("""
+            # Hello, Markdown!
+
+            This is **bold**, *italic*, and `inline code`.
+
+            ## Lists
+
+            - Item one
+            - Item two
+            - [x] Completed task
+
+            ```swift
+            let message = "Hello, World!"
+            print(message)
+            ```
+            """)
+            .padding()
+        }
     }
 }
 ```
 
-### 複雑なMarkdown
+### Pre-parsing for performance
+
+When you display the same Markdown in multiple places — or parse it off the main thread — use ``MarkdownContent`` directly:
 
 ```swift
-MarkdownView("""
-# タイトル
+let content = MarkdownContent(parsing: longMarkdownString)
 
-これは**太字**と*イタリック*のテキストです。
+// Later, on the main thread:
+MarkdownView(content)
+```
 
-## リスト
+### Applying styles
 
-- アイテム1
-- アイテム2
-- アイテム3
-
-## コードブロック
+Use environment modifiers to control how elements appear:
 
 ```swift
-let greeting = "Hello!"
-print(greeting)
+MarkdownView(source)
+    .codeBlockStyle(TerminalCodeBlockStyle())
+    .headingStyle(ColoredHeadingStyle())
+    .markdownLinkStyle(ClassicLinkStyle())
+    .markdownTableStyle(StripedTableStyle())
 ```
 
-## タスクリスト
+### Enabling syntax highlighting
 
-- [x] 完了したタスク
-- [ ] 未完了のタスク
-""")
-```
-
-## DesignSystemとの統合
-
-SwiftMarkdownViewは[swift-design-system](https://github.com/no-problem-dev/swift-design-system)と
-統合されており、テーマに応じた表示が可能です。
+Add `SwiftMarkdownViewHighlightJS` to your target (see Installation above), then:
 
 ```swift
-MarkdownView("# Themed Markdown")
-    .environment(\.colorPalette, .dark)
-    .environment(\.typographyScale, .large)
+import SwiftMarkdownViewHighlightJS
+
+MarkdownView(source)
+    .adaptiveSyntaxHighlighting()   // automatic light/dark theme
 ```
 
-## 次のステップ
+## Next Steps
 
-- <doc:SyntaxHighlighting>: シンタックスハイライトのカスタマイズ方法
+- <doc:SyntaxHighlighting>
+- <doc:Asides>
+- <doc:MermaidDiagrams>

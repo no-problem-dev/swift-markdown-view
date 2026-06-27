@@ -6,7 +6,7 @@ import DesignSystem
 /// Provides type-safe navigation to detail views based on
 /// category and item selection.
 @MainActor
-public enum MarkdownCatalogRouter {
+enum MarkdownCatalogRouter {
 
     /// Returns the destination view for a given category and item.
     ///
@@ -15,7 +15,7 @@ public enum MarkdownCatalogRouter {
     ///   - item: The selected item within the category.
     /// - Returns: The appropriate detail view.
     @ViewBuilder
-    public static func destination(
+    static func destination(
         for category: MarkdownCatalogCategory,
         item: MarkdownCatalogItem
     ) -> some View {
