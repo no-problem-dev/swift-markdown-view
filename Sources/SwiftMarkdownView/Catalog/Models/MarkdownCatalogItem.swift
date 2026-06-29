@@ -1,24 +1,23 @@
 import Foundation
 
-/// A single item in the Markdown catalog.
+/// Markdown カタログの単一アイテム。
 ///
-/// Represents a navigable entry in the catalog with a name,
-/// icon, and description.
+/// 名前・アイコン・説明を持つ、カタログ内のナビゲーション可能なエントリー。
 struct MarkdownCatalogItem: Identifiable, Hashable, Sendable {
 
-    /// Unique identifier for this item.
+    /// このアイテムの一意識別子。
     let id: UUID
 
-    /// The display name of this item.
+    /// このアイテムの表示名。
     let name: String
 
-    /// The SF Symbol icon for this item.
+    /// このアイテムの SF Symbol アイコン名。
     let icon: String
 
-    /// A brief description of this item.
+    /// このアイテムの概要説明。
     let description: String
 
-    /// Creates a new catalog item.
+    /// カタログアイテムを作成する。
     init(
         name: String,
         icon: String,

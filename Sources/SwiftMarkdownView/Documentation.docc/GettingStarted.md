@@ -1,27 +1,27 @@
-# Getting Started
+# はじめかた
 
-Learn the basics of rendering Markdown with `SwiftMarkdownView`.
+`SwiftMarkdownView` で Markdown をレンダリングする基本を学ぶ。
 
 ## Overview
 
-`SwiftMarkdownView` lets you drop Markdown rendering into any SwiftUI app with a single import. The library parses CommonMark and GitHub Flavored Markdown and renders it as native SwiftUI — headings, code blocks, tables, task lists, asides, images, and more — while automatically picking up your `swift-design-system` theme.
+`SwiftMarkdownView` はシングルインポートで任意の SwiftUI アプリに Markdown レンダリングを追加できる。CommonMark と GitHub Flavored Markdown を解析し、見出し・コードブロック・テーブル・タスクリスト・Aside・画像などをネイティブ SwiftUI としてレンダリングし、`swift-design-system` テーマを自動的に適用する。
 
-## Installation
+## インストール
 
 ### Swift Package Manager
 
-Add the dependency to your `Package.swift`:
+`Package.swift` に依存関係を追加する:
 
 ```swift
 dependencies: [
     .package(
         url: "https://github.com/no-problem-dev/swift-markdown-view.git",
-        .upToNextMajor(from: "1.4.0")
+        .upToNextMajor(from: "1.4.3")
     )
 ]
 ```
 
-Then add the product to your target:
+次に、ターゲットにプロダクトを追加する:
 
 ```swift
 .target(
@@ -32,17 +32,17 @@ Then add the product to your target:
 )
 ```
 
-To enable syntax highlighting, also add `SwiftMarkdownViewHighlightJS`:
+シンタックスハイライトを有効にするには、`SwiftMarkdownViewHighlightJS` も追加する:
 
 ```swift
 .product(name: "SwiftMarkdownViewHighlightJS", package: "swift-markdown-view")
 ```
 
-## Basic Usage
+## 基本的な使い方
 
-### Rendering a string
+### 文字列をレンダリングする
 
-Pass a Markdown string directly to ``MarkdownView``:
+Markdown 文字列を ``MarkdownView`` に直接渡す:
 
 ```swift
 import SwiftUI
@@ -73,20 +73,20 @@ struct ContentView: View {
 }
 ```
 
-### Pre-parsing for performance
+### パフォーマンス向上のための事前パース
 
-When you display the same Markdown in multiple places — or parse it off the main thread — use ``MarkdownContent`` directly:
+同じ Markdown を複数箇所で表示する場合やメインスレッド外で解析する場合は、``MarkdownContent`` を直接使用する:
 
 ```swift
 let content = MarkdownContent(parsing: longMarkdownString)
 
-// Later, on the main thread:
+// 後でメインスレッドで:
 MarkdownView(content)
 ```
 
-### Applying styles
+### スタイルを適用する
 
-Use environment modifiers to control how elements appear:
+環境モディファイアで各要素の表示を制御する:
 
 ```swift
 MarkdownView(source)
@@ -96,9 +96,9 @@ MarkdownView(source)
     .markdownTableStyle(StripedTableStyle())
 ```
 
-### Enabling syntax highlighting
+### シンタックスハイライトを有効にする
 
-Add `SwiftMarkdownViewHighlightJS` to your target (see Installation above), then:
+ターゲットに `SwiftMarkdownViewHighlightJS` を追加し（上記インストール参照）、次のようにする:
 
 ```swift
 import SwiftMarkdownViewHighlightJS
@@ -107,7 +107,7 @@ MarkdownView(source)
     .adaptiveSyntaxHighlighting()   // automatic light/dark theme
 ```
 
-## Next Steps
+## 次のステップ
 
 - <doc:SyntaxHighlighting>
 - <doc:Asides>

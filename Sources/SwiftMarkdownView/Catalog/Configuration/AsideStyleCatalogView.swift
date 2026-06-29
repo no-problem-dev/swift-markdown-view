@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for AsideStyle configuration.
+/// AsideStyle 設定のカタログ View。
 public struct AsideStyleCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

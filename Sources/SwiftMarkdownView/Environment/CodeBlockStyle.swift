@@ -3,10 +3,10 @@ import DesignSystem
 
 // MARK: - CodeBlockStyle Protocol
 
-/// A protocol that defines the visual styling for code blocks.
+/// コードブロックの外観スタイルを定義するプロトコル。
 ///
-/// Implement this protocol to customize the appearance of fenced code blocks
-/// in your Markdown content.
+/// このプロトコルを実装することで、Markdownコンテンツ内の
+/// フェンスコードブロックの外観をカスタマイズできる。
 ///
 /// ## Example
 ///
@@ -30,62 +30,61 @@ import DesignSystem
 /// ```
 public protocol CodeBlockStyle: Sendable {
 
-    /// Whether to show the language label above the code block.
+    /// コードブロック上部に言語ラベルを表示するかどうか。
     ///
-    /// When `true`, displays the language identifier (e.g., "swift", "python")
-    /// above the code block.
+    /// `true` の場合、コードブロックの上に言語識別子（例: "swift"、"python"）を表示する。
     var showLanguageLabel: Bool { get }
 
-    /// Whether to show line numbers alongside the code.
+    /// コードの横に行番号を表示するかどうか。
     ///
-    /// When `true`, displays line numbers in the left margin.
+    /// `true` の場合、左マージンに行番号を表示する。
     var showLineNumbers: Bool { get }
 
-    /// Whether to show a copy button for the code.
+    /// コードのコピーボタンを表示するかどうか。
     ///
-    /// When `true`, displays a button to copy the code to clipboard.
+    /// `true` の場合、クリップボードへコピーするボタンを表示する。
     var showCopyButton: Bool { get }
 
-    /// The corner radius for the code block container.
+    /// コードブロックコンテナのコーナー半径。
     ///
-    /// - Parameter radius: The current radius scale from the environment.
-    /// - Returns: The corner radius in points.
+    /// - Parameter radius: 環境から取得した現在の半径スケール。
+    /// - Returns: コーナー半径（ポイント）。
     func cornerRadius(_ radius: any RadiusScale) -> CGFloat
 
-    /// The padding inside the code block.
+    /// コードブロック内のパディング。
     ///
-    /// - Parameter spacing: The current spacing scale from the environment.
-    /// - Returns: The padding in points.
+    /// - Parameter spacing: 環境から取得した現在のスペーシングスケール。
+    /// - Returns: パディング（ポイント）。
     func padding(_ spacing: any SpacingScale) -> CGFloat
 
-    /// The background color for the code block.
+    /// コードブロックの背景色。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The background color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: 背景色。
     func backgroundColor(_ palette: any ColorPalette) -> Color
 
-    /// The text color for the code.
+    /// コードのテキストカラー。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The text color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: テキストカラー。
     func textColor(_ palette: any ColorPalette) -> Color
 
-    /// The color for the language label text.
+    /// 言語ラベルテキストのカラー。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The label color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: ラベルカラー。
     func languageLabelColor(_ palette: any ColorPalette) -> Color
 
-    /// The color for line numbers.
+    /// 行番号のカラー。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The line number color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: 行番号カラー。
     func lineNumberColor(_ palette: any ColorPalette) -> Color
 }
 
 // MARK: - Default Implementation
 
-/// Provides default implementations for optional protocol methods.
+/// プロトコルのオプションメソッドにデフォルト実装を提供する。
 extension CodeBlockStyle {
 
     public func cornerRadius(_ radius: any RadiusScale) -> CGFloat {
@@ -107,22 +106,19 @@ extension CodeBlockStyle {
 
 // MARK: - DefaultCodeBlockStyle
 
-/// The default code block style with sensible defaults.
-///
-/// This style provides a clean, readable appearance that works well
-/// with both light and dark color schemes.
+/// ライト・ダーク両カラースキームに対応した、クリーンで読みやすいデフォルトコードブロックスタイル。
 public struct DefaultCodeBlockStyle: CodeBlockStyle, Sendable {
 
     public var showLanguageLabel: Bool
     public var showLineNumbers: Bool
     public var showCopyButton: Bool
 
-    /// Creates a new default code block style.
+    /// デフォルトコードブロックスタイルを生成する。
     ///
     /// - Parameters:
-    ///   - showLanguageLabel: Whether to show the language label. Defaults to `true`.
-    ///   - showLineNumbers: Whether to show line numbers. Defaults to `false`.
-    ///   - showCopyButton: Whether to show the copy button. Defaults to `false`.
+    ///   - showLanguageLabel: 言語ラベルを表示するかどうか。デフォルトは `true`。
+    ///   - showLineNumbers: 行番号を表示するかどうか。デフォルトは `false`。
+    ///   - showCopyButton: コピーボタンを表示するかどうか。デフォルトは `false`。
     public init(
         showLanguageLabel: Bool = true,
         showLineNumbers: Bool = false,
@@ -144,10 +140,9 @@ public struct DefaultCodeBlockStyle: CodeBlockStyle, Sendable {
 
 // MARK: - MinimalCodeBlockStyle
 
-/// A minimal code block style without decorations.
+/// 装飾なしのミニマルコードブロックスタイル。
 ///
-/// This style hides the language label, line numbers, and copy button
-/// for a cleaner appearance.
+/// 言語ラベル・行番号・コピーボタンをすべて非表示にし、クリーンな外観を提供する。
 public struct MinimalCodeBlockStyle: CodeBlockStyle, Sendable {
 
     public var showLanguageLabel: Bool { false }
@@ -167,10 +162,9 @@ public struct MinimalCodeBlockStyle: CodeBlockStyle, Sendable {
 
 // MARK: - TerminalCodeBlockStyle
 
-/// A terminal-inspired code block style.
+/// ターミナル風のコードブロックスタイル。
 ///
-/// This style mimics a terminal appearance with a dark background
-/// and light text.
+/// 暗い背景と明るいテキストでターミナルの外観を再現する。
 public struct TerminalCodeBlockStyle: CodeBlockStyle, Sendable {
 
     public var showLanguageLabel: Bool { true }
@@ -208,9 +202,9 @@ private struct CodeBlockStyleKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// The style used for rendering code blocks.
+    /// コードブロックのレンダリングに使用するスタイル。
     ///
-    /// Use the ``SwiftUICore/View/codeBlockStyle(_:)`` modifier to set this value.
+    /// この値を設定するには ``SwiftUICore/View/codeBlockStyle(_:)`` モディファイアを使用する。
     public var codeBlockStyle: any CodeBlockStyle {
         get { self[CodeBlockStyleKey.self] }
         set { self[CodeBlockStyleKey.self] = newValue }
@@ -221,10 +215,10 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Sets a custom code block style for this view hierarchy.
+    /// このビュー階層にコードブロックのカスタムスタイルを設定する。
     ///
-    /// Use this modifier to customize the appearance of fenced code blocks
-    /// rendered by ``MarkdownView``.
+    /// ``MarkdownView`` がレンダリングするフェンスコードブロックの
+    /// 外観をカスタマイズするにはこのモディファイアを使用する。
     ///
     /// ## Example
     ///
@@ -238,8 +232,8 @@ extension View {
     /// .codeBlockStyle(TerminalCodeBlockStyle())
     /// ```
     ///
-    /// - Parameter style: The code block style to use.
-    /// - Returns: A view with the code block style applied.
+    /// - Parameter style: 使用するコードブロックスタイル。
+    /// - Returns: コードブロックスタイルが適用されたビュー。
     public func codeBlockStyle(_ style: some CodeBlockStyle) -> some View {
         environment(\.codeBlockStyle, style)
     }

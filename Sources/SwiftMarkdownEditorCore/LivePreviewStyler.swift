@@ -1,18 +1,17 @@
 import Foundation
 
-/// A single styling contribution over a range. Contributions are *additive*:
-/// the TextKit layer merges them onto the base attributes (so `bold` over a
-/// range that already has `italic` yields bold-italic). `conceal` ranges are
-/// disjoint from content ranges, so they never conflict.
+/// ある範囲への単一スタイル貢献。貢献は *加算的* で、
+/// TextKit 層がベース属性にマージする（例：`italic` 済み範囲に `bold` を適用すると bold-italic になる）。
+/// `conceal` 範囲はコンテンツ範囲と重複しないため衝突は起きない。
 public struct StyleRun: Equatable, Sendable {
     public enum Trait: Equatable, Sendable {
         case bold
         case italic
         case monospace
         case strikethrough
-        /// An ATX heading's content — rendered larger and bold by level (1–6).
+        /// ATX 見出しのコンテンツ — レベル（1–6）に応じて大きく太字でレンダリングされる。
         case heading(level: Int)
-        /// Hide the range visually while keeping it in the text (markers).
+        /// テキストを保持したまま範囲を視覚的に非表示にする（マーカー用）。
         case conceal
     }
 
@@ -25,21 +24,19 @@ public struct StyleRun: Equatable, Sendable {
     }
 }
 
-/// Computes live-preview styling: content is styled, and delimiter markers are
-/// concealed — except on the line(s) the selection touches, where the raw
-/// markers are revealed (the Obsidian/Typora "cursor line shows source" rule,
-/// confirmed against CodeMirror 6 and swift-markdown-engine).
+/// ライブプレビューのスタイルを計算する。コンテンツにスタイルを適用し、デリミタマーカーを非表示にする。
+/// ただしセレクションが触れる行ではマーカーを表示する
+/// （Obsidian/Typora の「カーソル行はソースを表示」ルール。CodeMirror 6 および swift-markdown-engine で確認済み）。
 ///
-/// Pure and UI-independent: returns semantic ``StyleRun``s; the TextKit layer
-/// maps `conceal` to the clear-color + tiny-font + negative-kern technique and
-/// the traits to font symbolic traits.
+/// 純粋で UI に依存しない。セマンティックな ``StyleRun`` を返し、
+/// TextKit 層が `conceal` をクリアカラー＋極小フォント＋負カーニングで実装し、
+/// 各トレイトをフォントのシンボリックトレイトにマッピングする。
 public enum LivePreviewStyler {
 
     /// - Parameters:
-    ///   - text: The document source.
-    ///   - selection: The current selection, or `nil` when not editing.
-    ///   - focused: Whether the editor is focused. When false, everything is
-    ///     concealed (read-only rendered look).
+    ///   - text: ドキュメントのソーステキスト。
+    ///   - selection: 現在のセレクション。編集中でない場合は `nil`。
+    ///   - focused: エディタがフォーカスされているかどうか。`false` のとき全て非表示になる（読み取り専用のレンダリング状態）。
     public static func runs(text: String, selection: Selection?, focused: Bool) -> [StyleRun] {
         let activeLine = (focused ? selection : nil).map { activeLineSpan(text: text, selection: $0) }
 
@@ -69,9 +66,8 @@ public enum LivePreviewStyler {
 
     // MARK: - Block headings
 
-    /// Emits a `.heading(level)` run over each ATX heading's content and conceals
-    /// its `#…` marker (and the space after it), unless the heading's line is the
-    /// active one — matching the marker-reveal rule used for inline spans.
+    /// 各 ATX 見出しのコンテンツに `.heading(level)` ランを出力し、`#…` マーカー（および直後のスペース）を非表示にする。
+    /// ただし見出しの行がアクティブな場合はマーカーを表示する（インラインスパンのマーカー表示ルールと一致）。
     private static func appendHeadingRuns(text: String, activeLine: TextSpan?, into runs: inout [StyleRun]) {
         let tokens = MarkdownTokenizer.tokenize(text)
         var i = 0
@@ -112,12 +108,12 @@ public enum LivePreviewStyler {
         }
     }
 
-    /// The line range of a span (the line its opening marker sits on).
+    /// スパンの開きマーカーが位置する行の範囲。
     private static func spanLine(text: String, span: InlineSpan) -> TextSpan {
         text.lineRange(containing: span.fullRange.lowerBound)
     }
 
-    /// The union of lines touched by the selection (anchor line … head line).
+    /// セレクションが触れる行の合計範囲（anchor 行から head 行まで）。
     private static func activeLineSpan(text: String, selection: Selection) -> TextSpan {
         let lower = text.lineRange(containing: selection.range.lowerBound).lowerBound
         let upper = text.lineRange(containing: selection.range.upperBound).upperBound

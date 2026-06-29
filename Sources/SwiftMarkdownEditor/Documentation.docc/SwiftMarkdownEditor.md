@@ -1,6 +1,6 @@
 # ``SwiftMarkdownEditor``
 
-A SwiftUI Markdown editor with live syntax highlighting, a formatting toolbar, and an optional rendered preview.
+ライブシンタックスハイライト・フォーマットツールバー・レンダリングプレビューを備えた SwiftUI Markdown エディタ。
 
 @Metadata {
     @PageColor(orange)
@@ -8,13 +8,13 @@ A SwiftUI Markdown editor with live syntax highlighting, a formatting toolbar, a
 
 ## Overview
 
-`SwiftMarkdownEditor` provides `MarkdownEditor`, a drop-in SwiftUI `View` that wraps a TextKit 2 text view for source editing and reuses `MarkdownView` for the rendered preview. The plain Markdown string bound to the view is always the single source of truth — no intermediate representation is exposed.
+`SwiftMarkdownEditor` は `MarkdownEditor` を提供する。TextKit 2 テキストビューをラップしてソース編集を行い、レンダリングプレビューには `MarkdownView` を再利用するドロップイン SwiftUI `View`。バインドされたプレーン Markdown 文字列が唯一の正であり、中間表現は公開しない。
 
-The editor supports three presentation modes controlled by `MarkdownEditorMode`. In `.edit` mode the source is shown with live syntax highlighting applied by the underlying TextKit 2 layout manager. In `.preview` mode the rendered `MarkdownView` fills the content area. In `.split` mode — best on macOS and wide iPad layouts — both panels appear side by side, separated by a divider. The user switches between modes using a segmented control in the editor header.
+`MarkdownEditorMode` で制御する 3 つの表示モードをサポートする。`.edit` モードでは TextKit 2 レイアウトマネージャがライブシンタックスハイライトを適用してソースを表示する。`.preview` モードではレンダリングされた `MarkdownView` がコンテンツ領域を占める。`.split` モード（macOS や幅広 iPad レイアウトに最適）では両パネルがディバイダーで区切られて並列表示される。ユーザーはエディタヘッダーのセグメントコントロールでモードを切り替える。
 
-A scrollable formatting toolbar sits below the mode switcher in `.edit` and `.split` modes. Each button applies a formatting transform — bold, italic, strikethrough, inline code, heading promotion, bullet list, blockquote, and link insertion — to the selected range in the source text view.
+`.edit` モードと `.split` モードでは、モードスイッチャーの下にスクロール可能なフォーマットツールバーが表示される。各ボタンは太字・斜体・取り消し線・インラインコード・見出し変換・箇条書き・引用・リンク挿入などのフォーマット変換をソーステキストビューの選択範囲に適用する。
 
-Autoformatting input rules fire automatically as the user types. The default rule set continues list items on return and wraps selected text in paired Markdown delimiters. Pass a custom `InputRuleProcessor` to the initialiser to extend or replace the rules.
+オートフォーマット入力ルールはユーザーのタイプに応じて自動的に発火する。デフォルトのルールセットは Return でリストアイテムを継続し、選択テキストを対応する Markdown デリミタで囲む。ルールを拡張・置換するにはカスタムの `InputRuleProcessor` をイニシャライザに渡す。
 
 ```swift
 import SwiftUI
@@ -29,11 +29,11 @@ struct NoteEditor: View {
 }
 ```
 
-Colors and spacing come from the `swift-design-system` theme in the SwiftUI environment, so the editor matches the rest of your app automatically.
+色とスペーシングは SwiftUI 環境内の `swift-design-system` テーマから取得するため、アプリ全体のデザインに自動的に合わせる。
 
 ## Topics
 
-### Editor View
+### エディタビュー
 
 - ``MarkdownEditor``
 - ``MarkdownEditorMode``

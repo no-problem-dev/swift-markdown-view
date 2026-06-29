@@ -1,19 +1,18 @@
 import SwiftUI
 import DesignSystem
 
-/// Router for navigating between catalog views.
+/// カタログ View 間のナビゲーションを担当するルーター。
 ///
-/// Provides type-safe navigation to detail views based on
-/// category and item selection.
+/// カテゴリとアイテムの選択に基づき、型安全に Detail ビューへ遷移する。
 @MainActor
 enum MarkdownCatalogRouter {
 
-    /// Returns the destination view for a given category and item.
+    /// カテゴリとアイテムに対応する Detail ビューを返す。
     ///
     /// - Parameters:
-    ///   - category: The selected category.
-    ///   - item: The selected item within the category.
-    /// - Returns: The appropriate detail view.
+    ///   - category: 選択されたカテゴリ。
+    ///   - item: カテゴリ内で選択されたアイテム。
+    /// - Returns: 対応する Detail ビュー。
     @ViewBuilder
     static func destination(
         for category: MarkdownCatalogCategory,

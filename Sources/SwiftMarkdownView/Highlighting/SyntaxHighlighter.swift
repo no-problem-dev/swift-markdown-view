@@ -1,13 +1,12 @@
 import SwiftUI
 
-/// A type that can highlight source code asynchronously.
+/// ソースコードを非同期にハイライトできる型。
 ///
-/// Implementations of this protocol take source code and produce
-/// an `AttributedString` with syntax highlighting applied.
+/// このプロトコルの実装はソースコードを受け取り、
+/// シンタックスハイライトを適用した `AttributedString` を生成する。
 ///
-/// The default implementation is ``PlainTextHighlighter`` which applies
-/// no coloring. To enable syntax highlighting, use the
-/// `SwiftMarkdownViewHighlightJS` module:
+/// デフォルト実装は ``PlainTextHighlighter`` で、カラー付けを行わない。
+/// シンタックスハイライトを有効にするには `SwiftMarkdownViewHighlightJS` モジュールを使用する:
 ///
 /// ```swift
 /// import SwiftMarkdownViewHighlightJS
@@ -15,33 +14,33 @@ import SwiftUI
 /// MarkdownView(source)
 ///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
 ///
-/// // Or use adaptive highlighting
+/// // またはアダプティブハイライトを使用
 /// MarkdownView(source)
 ///     .adaptiveSyntaxHighlighting()
 /// ```
 public protocol SyntaxHighlighter: Sendable {
-    /// Highlights the given source code.
+    /// 指定したソースコードをハイライトする。
     ///
     /// - Parameters:
-    ///   - code: The source code to highlight.
-    ///   - language: The programming language (e.g., "swift", "python").
-    ///               If nil, the highlighter may attempt auto-detection.
-    /// - Returns: An `AttributedString` with syntax highlighting applied.
-    /// - Throws: An error if highlighting fails.
+    ///   - code: ハイライト対象のソースコード。
+    ///   - language: プログラミング言語（例: "swift"、"python"）。
+    ///               `nil` の場合、ハイライターは自動検出を試みることがある。
+    /// - Returns: シンタックスハイライトを適用した `AttributedString`。
+    /// - Throws: ハイライトが失敗した場合にエラーをスローする。
     func highlight(_ code: String, language: String?) async throws -> AttributedString
 }
 
 // MARK: - Environment Key
 
-/// Environment key for injecting a custom syntax highlighter.
+/// カスタムシンタックスハイライターを注入するための環境キー。
 private struct SyntaxHighlighterKey: EnvironmentKey {
     static let defaultValue: any SyntaxHighlighter = PlainTextHighlighter()
 }
 
 extension EnvironmentValues {
-    /// The syntax highlighter used for code highlighting.
+    /// コードハイライトに使用するシンタックスハイライター。
     ///
-    /// Use this to inject a custom highlighter into the view hierarchy:
+    /// カスタムハイライターをビュー階層に注入するには以下を使用する:
     ///
     /// ```swift
     /// MarkdownView(source)
@@ -56,10 +55,10 @@ extension EnvironmentValues {
 // MARK: - View Modifier
 
 extension View {
-    /// Sets a custom syntax highlighter for code highlighting.
+    /// コードハイライト用のカスタムシンタックスハイライターを設定する。
     ///
-    /// By default, ``PlainTextHighlighter`` is used which applies no coloring.
-    /// Use this modifier to enable syntax highlighting:
+    /// デフォルトではカラー付けなしの ``PlainTextHighlighter`` が使用される。
+    /// シンタックスハイライトを有効にするにはこのモディファイアを使用する:
     ///
     /// ```swift
     /// import SwiftMarkdownViewHighlightJS
@@ -68,8 +67,8 @@ extension View {
     ///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
     /// ```
     ///
-    /// - Parameter highlighter: The highlighter to use.
-    /// - Returns: A view with the custom highlighter applied.
+    /// - Parameter highlighter: 使用するハイライター。
+    /// - Returns: カスタムハイライターが適用されたビュー。
     public func syntaxHighlighter(_ highlighter: some SyntaxHighlighter) -> some View {
         environment(\.syntaxHighlighter, highlighter)
     }

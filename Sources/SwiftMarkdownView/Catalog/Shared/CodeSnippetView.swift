@@ -1,15 +1,15 @@
 import SwiftUI
 import DesignSystem
 
-/// A view for displaying Swift code snippets with syntax highlighting.
+/// シンタックスハイライト付きでコードスニペットを表示する View。
 ///
-/// Includes a copy button for easy clipboard access.
+/// クリップボードへのコピーボタンを内蔵する。
 public struct CodeSnippetView: View {
 
-    /// The code to display.
+    /// 表示するコード。
     public let code: String
 
-    /// The programming language for syntax highlighting.
+    /// シンタックスハイライトに使用するプログラミング言語名。
     public let language: String
 
     @Environment(\.colorPalette) private var colorPalette
@@ -18,11 +18,11 @@ public struct CodeSnippetView: View {
 
     @State private var copied = false
 
-    /// Creates a new code snippet view.
+    /// コードスニペット View を作成する。
     ///
     /// - Parameters:
-    ///   - code: The code to display.
-    ///   - language: The programming language. Defaults to "swift".
+    ///   - code: 表示するコード。
+    ///   - language: プログラミング言語名。デフォルトは "swift"。
     public init(code: String, language: String = "swift") {
         self.code = code
         self.language = language

@@ -1,6 +1,6 @@
 # ``SwiftMarkdownView``
 
-A SwiftUI-native Markdown rendering library with DesignSystem integration.
+DesignSystem 統合を備えた SwiftUI ネイティブな Markdown レンダリングライブラリ。
 
 @Metadata {
     @PageColor(blue)
@@ -8,11 +8,11 @@ A SwiftUI-native Markdown rendering library with DesignSystem integration.
 
 ## Overview
 
-`SwiftMarkdownView` renders Markdown text as a native SwiftUI view. It supports CommonMark and GitHub Flavored Markdown, including tables, task lists, aside callouts, Mermaid diagrams, and math expressions. On iOS and macOS the library uses a single TextKit 2 text view so selection and copy work continuously across block boundaries.
+`SwiftMarkdownView` は Markdown テキストをネイティブ SwiftUI ビューとしてレンダリングする。CommonMark と GitHub Flavored Markdown をサポートし、テーブル・タスクリスト・Aside コールアウト・Mermaid ダイアグラム・数式に対応する。iOS と macOS では単一の TextKit 2 テキストビューを使用するため、ブロック境界をまたいだ選択とコピーが連続して機能する。
 
-The library integrates with `swift-design-system` out of the box: typography tokens, color palette, and spacing scale all flow through the SwiftUI environment, so your Markdown automatically matches the rest of your app's visual language.
+ライブラリはデフォルトで `swift-design-system` と統合されており、タイポグラフィトークン・カラーパレット・スペーシングスケールがすべて SwiftUI 環境を通じて流れるため、Markdown がアプリの残りのビジュアル言語に自動的に一致する。
 
-`SwiftMarkdownView` is the core of a four-module family. Import only the products you need — each add-on is an independent library product with no mandatory dependencies on the others.
+`SwiftMarkdownView` は 4 モジュール構成のコアモジュール。必要なプロダクトだけをインポートすればよく、各アドオンは他モジュールへの必須依存なしの独立したライブラリプロダクトだ。
 
 ```swift
 import SwiftUI
@@ -30,13 +30,13 @@ struct ArticleView: View {
 }
 ```
 
-`SwiftMarkdownViewHighlightJS` adds accurate syntax highlighting for 50+ programming languages, powered by HighlightSwift. It ships a rich collection of light and dark themes — Xcode, GitHub, Atom One, Solarized, Tokyo Night, and the accessible `a11y` series — and automatically pairs them with the system color scheme via `.adaptiveSyntaxHighlighting()`. Import `SwiftMarkdownViewHighlightJS` whenever your Markdown is likely to include code blocks and plain monospace output is not sufficient.
+`SwiftMarkdownViewHighlightJS` は HighlightSwift を使用した 50 以上のプログラミング言語に対応する高精度シンタックスハイライトを追加する。Xcode・GitHub・Atom One・Solarized・Tokyo Night・アクセシブルな `a11y` シリーズなど豊富なライト/ダークテーマを内蔵し、`.adaptiveSyntaxHighlighting()` でシステムのカラースキームと自動連動する。Markdown にコードブロックが含まれる可能性があり、プレーンな等幅出力では不十分な場合にインポートする。
 
-`SwiftMarkdownViewLaTeX` upgrades inline `$...$` and block `$$...$$` math expressions from plain source text to real LaTeX typesetting via the SwiftMath engine. Inline math flows naturally inside the surrounding `Text` run; display math renders as a full-width block. Activate it by injecting `.mathRenderer(LaTeXMathRenderer())` into the view hierarchy. Import `SwiftMarkdownViewLaTeX` whenever your Markdown may contain mathematical notation.
+`SwiftMarkdownViewLaTeX` はインライン `$...$` とブロック `$$...$$` の数式をプレーンなソーステキストから SwiftMath エンジンによる本格的な LaTeX 組版にアップグレードする。インライン数式は周囲の `Text` 行内に自然にフローし、ディスプレイ数式は全幅ブロックとしてレンダリングされる。ビュー階層に `.mathRenderer(LaTeXMathRenderer())` を注入することで有効化する。Markdown に数式表記が含まれる可能性がある場合にインポートする。
 
-`SwiftMarkdownEditor` provides a full Markdown authoring experience. `MarkdownEditor` wraps a TextKit 2 source editor with live syntax highlighting, a scrollable formatting toolbar, and an optional side-by-side preview pane that reuses `MarkdownView` internally. The plain Markdown string is always the single source of truth. Import `SwiftMarkdownEditor` to add authoring capability alongside rendering.
+`SwiftMarkdownEditor` は完全な Markdown 執筆体験を提供する。`MarkdownEditor` はリアルタイムシンタックスハイライト・スクロール可能なフォーマットツールバー・内部で `MarkdownView` を再利用するオプションのサイドバイサイドプレビューペインを備えた TextKit 2 ソースエディタをラップする。プレーンな Markdown 文字列が常に唯一の信頼できる情報源となる。レンダリングに加えて執筆機能を追加する場合にインポートする。
 
-The module layout:
+モジュール構成:
 
 ```
 SwiftMarkdownView (core renderer — this module)
@@ -63,43 +63,43 @@ struct ArticleView: View {
 
 ## Topics
 
-### Essentials
+### はじめに
 
 - <doc:GettingStarted>
 
-### Views
+### ビュー
 
 - ``MarkdownView``
 - ``HighlightedCodeView``
 
-### Content Model
+### コンテンツモデル
 
 - ``MarkdownContent``
 - ``MarkdownBlock``
 - ``MarkdownInline``
 
-### Syntax Highlighting
+### シンタックスハイライト
 
 - ``SyntaxHighlighter``
 - ``PlainTextHighlighter``
 - ``HighlightState``
 - <doc:SyntaxHighlighting>
 
-### Aside Callouts
+### Aside コールアウト
 
 - ``AsideStyle``
 - ``DefaultAsideStyle``
 - ``AsideKind``
 - <doc:Asides>
 
-### Code Block Styling
+### コードブロックスタイル
 
 - ``CodeBlockStyle``
 - ``DefaultCodeBlockStyle``
 - ``MinimalCodeBlockStyle``
 - ``TerminalCodeBlockStyle``
 
-### Heading Styling
+### 見出しスタイル
 
 - ``HeadingStyle``
 - ``DefaultHeadingStyle``
@@ -107,7 +107,7 @@ struct ArticleView: View {
 - ``ColoredHeadingStyle``
 - ``DividedHeadingStyle``
 
-### Link Styling
+### リンクスタイル
 
 - ``LinkStyle``
 - ``DefaultLinkStyle``
@@ -116,7 +116,7 @@ struct ArticleView: View {
 - ``ClassicLinkStyle``
 - ``MonochromeLinkStyle``
 
-### Table Styling
+### テーブルスタイル
 
 - ``TableStyle``
 - ``DefaultTableStyle``
@@ -124,16 +124,16 @@ struct ArticleView: View {
 - ``BorderlessTableStyle``
 - ``CardTableStyle``
 
-### Rendering Options
+### レンダリングオプション
 
 - ``MarkdownRenderingOptions``
 
-### Math
+### 数式
 
 - ``MathRenderer``
 - ``PlainMathRenderer``
 
-### Mermaid Diagrams
+### Mermaid ダイアグラム
 
 - ``MermaidScriptProvider``
 - ``MermaidScriptSource``
@@ -143,7 +143,7 @@ struct ArticleView: View {
 - ``MermaidFallbackView``
 - <doc:MermaidDiagrams>
 
-### Domain Types
+### ドメイン型
 
 - ``TableData``
 - ``ListItem``

@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Interactive playground for Markdown editing and preview.
+/// Markdown の編集とプレビューを同時に行えるインタラクティブなプレイグラウンド。
 public struct MarkdownPlaygroundView: View {
 
     @Environment(\.colorPalette) private var colorPalette

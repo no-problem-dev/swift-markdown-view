@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for image elements.
+/// 画像要素のカタログ View。
 public struct ImageCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

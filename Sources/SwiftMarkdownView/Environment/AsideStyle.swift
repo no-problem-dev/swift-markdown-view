@@ -3,10 +3,10 @@ import DesignSystem
 
 // MARK: - AsideStyle Protocol
 
-/// A protocol that defines the visual styling for aside blocks.
+/// Aside（コールアウト/警告ブロック）の外観スタイルを定義するプロトコル。
 ///
-/// Implement this protocol to customize the icon, colors, and appearance
-/// of aside (callout/admonition) blocks in your Markdown content.
+/// このプロトコルを実装することで、Markdownコンテンツ内の
+/// Aside ブロックのアイコン・カラー・外観をカスタマイズできる。
 ///
 /// ## Example
 ///
@@ -35,51 +35,48 @@ import DesignSystem
 ///     }
 /// }
 ///
-/// // Usage
+/// // 使用例
 /// MarkdownView(source)
 ///     .asideStyle(MyAsideStyle())
 /// ```
 public protocol AsideStyle: Sendable {
 
-    /// Returns the SF Symbol name for the given aside kind.
+    /// 指定した Aside の種類に対応する SF Symbol 名を返す。
     ///
-    /// - Parameter kind: The kind of aside.
-    /// - Returns: An SF Symbol name to display as the aside icon.
+    /// - Parameter kind: Aside の種類。
+    /// - Returns: Aside アイコンとして表示する SF Symbol 名。
     func icon(for kind: AsideKind) -> String
 
-    /// Returns the accent color for the given aside kind.
+    /// 指定した Aside の種類に対応するアクセントカラーを返す。
     ///
-    /// The accent color is used for the left border and icon.
+    /// アクセントカラーは左ボーダーとアイコンに使用する。
     ///
     /// - Parameters:
-    ///   - kind: The kind of aside.
-    ///   - colorPalette: The current color palette from the environment.
-    /// - Returns: The accent color for this aside kind.
+    ///   - kind: Aside の種類。
+    ///   - colorPalette: 環境から取得した現在のカラーパレット。
+    /// - Returns: この Aside 種類のアクセントカラー。
     func accentColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color
 
-    /// Returns the background color for the given aside kind.
+    /// 指定した Aside の種類に対応する背景色を返す。
     ///
     /// - Parameters:
-    ///   - kind: The kind of aside.
-    ///   - colorPalette: The current color palette from the environment.
-    /// - Returns: The background color for this aside kind.
+    ///   - kind: Aside の種類。
+    ///   - colorPalette: 環境から取得した現在のカラーパレット。
+    /// - Returns: この Aside 種類の背景色。
     func backgroundColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color
 
-    /// Returns the title text color for the given aside kind.
+    /// 指定した Aside の種類に対応するタイトルテキストカラーを返す。
     ///
     /// - Parameters:
-    ///   - kind: The kind of aside.
-    ///   - colorPalette: The current color palette from the environment.
-    /// - Returns: The title color for this aside kind.
+    ///   - kind: Aside の種類。
+    ///   - colorPalette: 環境から取得した現在のカラーパレット。
+    /// - Returns: この Aside 種類のタイトルカラー。
     func titleColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color
 }
 
 // MARK: - DefaultAsideStyle
 
-/// The default aside style with semantic colors for common aside kinds.
-///
-/// This style provides sensible defaults that work well with both
-/// light and dark color schemes.
+/// ライト・ダーク両カラースキームに対応した、意味的カラーを用いるデフォルト Aside スタイル。
 public struct DefaultAsideStyle: AsideStyle, Sendable {
 
     public init() {}
@@ -169,9 +166,9 @@ private struct AsideStyleKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// The style used for rendering aside blocks.
+    /// Aside ブロックのレンダリングに使用するスタイル。
     ///
-    /// Use the ``SwiftUICore/View/asideStyle(_:)`` modifier to set this value.
+    /// この値を設定するには ``SwiftUICore/View/asideStyle(_:)`` モディファイアを使用する。
     public var asideStyle: any AsideStyle {
         get { self[AsideStyleKey.self] }
         set { self[AsideStyleKey.self] = newValue }
@@ -182,23 +179,23 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Sets a custom aside style for this view hierarchy.
+    /// このビュー階層に Aside のカスタムスタイルを設定する。
     ///
-    /// Use this modifier to customize the appearance of aside blocks
-    /// (callouts/admonitions) rendered by ``MarkdownView``.
+    /// ``MarkdownView`` がレンダリングする Aside ブロック（コールアウト/警告）の
+    /// 外観をカスタマイズするにはこのモディファイアを使用する。
     ///
     /// ## Example
     ///
     /// ```swift
     /// MarkdownView("""
-    /// > Note: This is a note.
-    /// > Warning: This is a warning.
+    /// > Note: これはノートだ。
+    /// > Warning: これは警告だ。
     /// """)
     /// .asideStyle(MyCustomAsideStyle())
     /// ```
     ///
-    /// - Parameter style: The aside style to use.
-    /// - Returns: A view with the aside style applied.
+    /// - Parameter style: 使用する Aside スタイル。
+    /// - Returns: Aside スタイルが適用されたビュー。
     public func asideStyle(_ style: some AsideStyle) -> some View {
         environment(\.asideStyle, style)
     }

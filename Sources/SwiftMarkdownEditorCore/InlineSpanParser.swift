@@ -1,19 +1,18 @@
 import Foundation
 
-/// Pairs inline Markdown delimiters into ``InlineSpan``s for live preview.
+/// ライブプレビュー用にインライン Markdown デリミタをペアリングし ``InlineSpan`` を生成する。
 ///
-/// Scope (Phase 2, increment 1): code spans (`` ` ``), strong (`**`/`__`),
-/// emphasis (`*`/`_`), strikethrough (`~~`). Matching is line-scoped (emphasis
-/// does not cross newlines in CommonMark) and run-length exact — `**a**` pairs,
-/// `**a*` does not. Different delimiter widths use independent stacks, so simple
-/// nesting like `**a *b* c**` resolves (outer strong, inner emphasis). Code
-/// spans take precedence and their interior is excluded from emphasis scanning.
+/// 対象（Phase 2 increment 1）：コードスパン（`` ` ``）・strong（`**`/`__`）・
+/// emphasis（`*`/`_`）・取り消し線（`~~`）。
+/// マッチングは行スコープ（CommonMark では emphasis は改行を越えない）で、
+/// ランの長さが一致したときのみペアになる（`**a**` は対応し、`**a*` は対応しない）。
+/// デリミタ幅ごとに独立したスタックを持つため、`**a *b* c**` のような単純なネストを解決できる。
+/// コードスパンが優先され、その内部は emphasis スキャンから除外される。
 ///
-/// This is deliberately *not* a full CommonMark emphasis resolver (flanking
-/// rules, mixed-width runs like `***`): it is the pragmatic, fully unit-tested
-/// subset that covers the dominant cases, and the conceal/reveal mechanism it
-/// feeds is independent of matcher sophistication, so the matcher can be
-/// hardened later without touching the rendering path.
+/// 完全な CommonMark emphasis リゾルバ（フランキングルール・`***` のような混合幅ラン）は
+/// 意図的に実装しない。支配的なケースをカバーする実用的なサブセットであり、
+/// 非表示／表示メカニズムはマッチャーの精度と独立しているため、
+/// レンダリングパスを変更せずに後からマッチャーを強化できる。
 public enum InlineSpanParser {
 
     private enum C {

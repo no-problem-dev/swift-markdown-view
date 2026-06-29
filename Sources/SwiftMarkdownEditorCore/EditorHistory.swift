@@ -1,28 +1,26 @@
 import Foundation
 
-/// Undo/redo history as a pure value type.
+/// undo/redo 履歴を純粋値型で管理する。
 ///
-/// Each committed edit is stored as an ``Entry`` holding both the forward change
-/// and its inverse plus the selections on each side, so stepping in either
-/// direction is a simple stack move + change application (this is the
-/// transaction-history model used by CodeMirror's `history` and
-/// `prosemirror-history`).
+/// コミットされた編集は各々 ``Entry`` として格納される。``Entry`` は
+/// 順方向変更・逆方向変更・前後のセレクションを保持するため、
+/// どちら方向への移動もスタック操作＋変更適用のみで完結する
+/// （CodeMirror の `history` / `prosemirror-history` が採用するトランザクション履歴モデル）。
 ///
-/// Consecutive single insertions from typing are *coalesced* into one entry so
-/// that one undo removes a word's worth of typing rather than one character —
-/// without depending on wall-clock time, which keeps it deterministic and
-/// testable.
+/// 連続したタイプ入力の単一挿入は 1 エントリに *合成* される。
+/// 1 回の undo で単語単位の入力が取り消され、
+/// ウォールクロック時間に依存しないため決定論的かつテスト可能。
 public struct EditorHistory: Equatable, Sendable {
 
-    /// One reversible step in the history.
+    /// 1 つの可逆ステップ。
     public struct Entry: Equatable, Sendable {
-        /// The change that moved the document forward (old → new).
+        /// ドキュメントを前進させた変更（old → new）。
         public var forward: TextChange
-        /// The change that moves the document back (new → old).
+        /// ドキュメントを巻き戻す変更（new → old）。
         public var inverse: TextChange
-        /// The selection before the forward change was applied.
+        /// 順方向変更適用前のセレクション。
         public var selectionBefore: Selection
-        /// The selection after the forward change was applied.
+        /// 順方向変更適用後のセレクション。
         public var selectionAfter: Selection
     }
 
@@ -34,15 +32,12 @@ public struct EditorHistory: Equatable, Sendable {
     public var canUndo: Bool { !undoStack.isEmpty }
     public var canRedo: Bool { !redoStack.isEmpty }
 
-    /// Records a committed edit, coalescing with the previous entry when it is a
-    /// natural continuation of typing.
+    /// コミット済み編集を記録し、前のエントリへの自然な継続であれば合成する。
     ///
-    /// Recording any new edit clears the redo stack (the standard linear-history
-    /// behavior).
+    /// 新しい編集を記録するとリドゥスタックがクリアされる（標準的な線形履歴の挙動）。
     ///
-    /// - Parameter allowCoalescing: When `false`, forces a new history group
-    ///   (used after input-rule transforms, paste, or selection jumps so they
-    ///   undo as discrete steps).
+    /// - Parameter allowCoalescing: `false` のとき新しい履歴グループを強制する
+    ///   （入力ルール変換・ペースト・セレクションジャンプ後など、個別の undo ステップとして扱う場合）。
     public mutating func record(_ entry: Entry, allowCoalescing: Bool = true) {
         redoStack.removeAll()
 
@@ -55,21 +50,21 @@ public struct EditorHistory: Equatable, Sendable {
         }
     }
 
-    /// Pops the most recent undo entry and moves it onto the redo stack.
+    /// 最新の undo エントリをポップし、redo スタックへ移す。
     public mutating func popForUndo() -> Entry? {
         guard let entry = undoStack.popLast() else { return nil }
         redoStack.append(entry)
         return entry
     }
 
-    /// Pops the most recent redo entry and moves it back onto the undo stack.
+    /// 最新の redo エントリをポップし、undo スタックへ戻す。
     public mutating func popForRedo() -> Entry? {
         guard let entry = redoStack.popLast() else { return nil }
         undoStack.append(entry)
         return entry
     }
 
-    /// Drops all recorded history.
+    /// 記録されたすべての履歴を削除する。
     public mutating func clear() {
         undoStack.removeAll()
         redoStack.removeAll()
@@ -77,7 +72,7 @@ public struct EditorHistory: Equatable, Sendable {
 
     // MARK: - Coalescing
 
-    /// Whether `next` is a continuation of typing immediately after `previous`.
+    /// `next` が `previous` の直後に続くタイプ入力かどうか。
     private static func canCoalesce(previous: Entry, next: Entry) -> Bool {
         // Both must be pure insertions (the replaced range is empty).
         guard previous.forward.range.isEmpty, next.forward.range.isEmpty else { return false }
@@ -90,7 +85,7 @@ public struct EditorHistory: Equatable, Sendable {
         return true
     }
 
-    /// Merges two contiguous insertions into a single entry.
+    /// 2 つの連続する挿入を 1 エントリにまとめる。
     private static func coalesce(previous: Entry, next: Entry) -> Entry {
         let start = previous.forward.range.lowerBound
         let combinedText = previous.forward.replacement + next.forward.replacement

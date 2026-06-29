@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for text style elements (bold, italic, strikethrough).
+/// テキストスタイル要素（太字・斜体・取り消し線）のカタログ View。
 public struct TextStylesCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

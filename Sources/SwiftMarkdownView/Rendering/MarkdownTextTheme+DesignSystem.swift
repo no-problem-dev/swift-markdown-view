@@ -11,9 +11,9 @@ import AppKit
 
 extension MarkdownTextTheme {
 
-    /// Builds a TextKit theme from DesignSystem tokens — colors from the palette,
-    /// fonts/sizes from `Typography`, spacing from the `SpacingScale` — so the
-    /// selectable renderer matches the app's design system.
+    /// DesignSystem トークン（パレットからカラー、`Typography` からフォント/サイズ、
+    /// `SpacingScale` からスペーシング）を基に TextKit テーマを構築する。
+    /// 選択可能レンダラーがアプリのデザインシステムに一致するようにする。
     @MainActor
     static func resolved(palette: any ColorPalette, spacing: any SpacingScale) -> MarkdownTextTheme {
         func color(_ swiftUIColor: Color) -> PlatformColor { PlatformColor(swiftUIColor) }
@@ -48,8 +48,8 @@ extension MarkdownTextTheme {
     }
 }
 
-/// Bridges the SwiftUI `SyntaxHighlighter` (which returns an `AttributedString`)
-/// to the TextKit-facing ``MarkdownCodeHighlighting`` protocol.
+/// SwiftUI の `SyntaxHighlighter`（`AttributedString` を返す）を
+/// TextKit 向けの ``MarkdownCodeHighlighting`` プロトコルにブリッジする。
 struct SyntaxHighlighterAdapter: MarkdownCodeHighlighting {
     let base: any SyntaxHighlighter
 

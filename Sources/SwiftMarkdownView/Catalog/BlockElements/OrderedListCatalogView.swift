@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for ordered (numbered) list elements.
+/// 順序付き（番号付き）リスト要素のカタログ View。
 public struct OrderedListCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

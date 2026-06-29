@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for line break elements.
+/// 改行要素のカタログ View。
 public struct SoftBreakCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

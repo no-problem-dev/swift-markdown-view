@@ -8,28 +8,28 @@ import UIKit
 import AppKit
 #endif
 
-/// A SwiftUI wrapper around a TextKit 2 `UITextView`/`NSTextView` that edits
-/// Markdown source with live syntax highlighting.
+/// TextKit 2 の `UITextView`/`NSTextView` をラップした SwiftUI コンポーネント。
+/// Markdown ソースをライブシンタックスハイライト付きで編集する。
 ///
-/// Design notes (per the editor strategy):
-/// - Built on TextKit 2 (`usingTextLayoutManager: true`); the code never touches
-///   `.layoutManager`, which would silently drop the view back to TextKit 1.
-/// - Highlighting is attribute-only, re-applied on change, preserving selection.
-/// - Markdown smart quotes/dashes are disabled — they corrupt `*`/`-`/`"` syntax.
-/// - Autoformatting (list continuation, smart wrapping) is routed through the
-///   pure ``InputRuleProcessor`` from the rules layer.
+/// 設計上の注意（エディタ戦略より）:
+/// - TextKit 2（`usingTextLayoutManager: true`）上に構築。`.layoutManager` には触れず、
+///   これを触ると TextKit 1 に静かにフォールバックする。
+/// - ハイライトは属性のみで変更時に再適用し、セレクションを保持する。
+/// - Markdown のスマートクォート・ダッシュは無効化 — `*`/`-`/`"` の構文を破壊するため。
+/// - オートフォーマット（リスト継続・スマートラッピング）はルール層の
+///   純粋な ``InputRuleProcessor`` を通じてルーティングされる。
 public struct MarkdownSourceTextView {
 
     @Binding public var text: String
     public var theme: MarkdownEditorTheme
     public var inputRules: InputRuleProcessor
     public var isEditable: Bool
-    /// When true, inline markers are concealed and the source renders inline
-    /// (Notion-style live preview); the line the caret touches reveals its raw
-    /// markers. When false, markers stay visible with source highlighting.
+    /// `true` のとき、インラインマーカーを非表示にしてソースをインプレースレンダリングする
+    /// （Notion スタイルのライブプレビュー）。キャレットが触れる行ではマーカーが表示される。
+    /// `false` のときマーカーはソースハイライト付きで表示される。
     public var livePreview: Bool
-    /// Receives the platform text view once created (lets a controller drive
-    /// formatting actions from a SwiftUI toolbar).
+    /// テキストビューが作成されたときに受け取るコールバック
+    /// （SwiftUI ツールバーからコントローラがフォーマットアクションを操作できるようにする）。
     public var onMakeTextView: ((PlatformTextView) -> Void)?
 
     public init(
@@ -53,8 +53,8 @@ public struct MarkdownSourceTextView {
         Coordinator(text: $text, theme: theme, inputRules: inputRules, livePreview: livePreview)
     }
 
-    /// A hash of the inputs that affect styling. `updateUIView`/`updateNSView`
-    /// re-styles only when this changes, never on every layout pass.
+    /// スタイルに影響する入力のハッシュ。`updateUIView`/`updateNSView` はこれが変わったときのみ再スタイルし、
+    /// レイアウトパスのたびに実行しない。
     func styleSignature() -> Int {
         var hasher = Hasher()
         hasher.combine(livePreview)
@@ -74,11 +74,11 @@ public extension MarkdownSourceTextView {
         var theme: MarkdownEditorTheme
         var inputRules: InputRuleProcessor
         var livePreview: Bool
-        /// Guards against re-entrant binding updates while we set text ourselves.
+        /// 自分でテキストをセットしている間の再入バインディング更新を防ぐ。
         var isApplyingProgrammaticChange = false
-        /// The style inputs last applied, so `updateUIView`/`updateNSView` stays
-        /// idempotent — re-styling only when theme/mode actually changed, never
-        /// on every layout pass (which would loop during snapshot measuring).
+        /// 最後に適用したスタイル入力。`updateUIView`/`updateNSView` の冪等性を保つため使用。
+        /// テーマ・モードが実際に変わったときのみ再スタイルし、レイアウトパスのたびには実行しない
+        /// （スナップショット計測中のループを防ぐ）。
         var appliedStyleSignature: Int?
 
         init(text: Binding<String>, theme: MarkdownEditorTheme, inputRules: InputRuleProcessor, livePreview: Bool) {
@@ -88,9 +88,9 @@ public extension MarkdownSourceTextView {
             self.livePreview = livePreview
         }
 
-        /// Applies styling to `storage` in place. In live-preview mode this
-        /// conceals/reveals markers based on `selection`/`focused`; otherwise it
-        /// applies plain source highlighting.
+        /// `storage` にスタイルをインプレースで適用する。ライブプレビューモードでは
+        /// `selection`/`focused` に応じてマーカーを非表示・表示する。
+        /// それ以外ではプレーンなソースハイライトを適用する。
         func applyStyling(to storage: NSTextStorage, selection: NSRange, focused: Bool) {
             storage.beginEditing()
             if livePreview {
@@ -107,13 +107,13 @@ public extension MarkdownSourceTextView {
             storage.endEditing()
         }
 
-        /// Re-applies styling, preserving `selection`.
+        /// `selection` を保持したままスタイルを再適用する。
         func rehighlight(_ storage: NSTextStorage, selection: NSRange, focused: Bool, restore: (NSRange) -> Void) {
             applyStyling(to: storage, selection: selection, focused: focused)
             restore(selection)
         }
 
-        /// Resolves an input rule for the pending edit, if any.
+        /// 保留中の編集に対応する入力ルール変換を解決する。該当がない場合は `nil`。
         func ruleTransform(currentText: String, replacing range: NSRange, with replacement: String) -> RuleTransform? {
             let state = EditorState(text: currentText, selection: Selection(range: TextSpan(range)))
             return inputRules.transform(state: state, inserting: replacement, replacing: TextSpan(range))

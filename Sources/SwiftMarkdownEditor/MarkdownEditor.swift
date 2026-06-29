@@ -5,8 +5,7 @@ import SwiftMarkdownEditorCore
 import SwiftMarkdownEditorRules
 import SwiftMarkdownEditorTextKit
 
-/// A SwiftUI Markdown editor with live syntax highlighting, a formatting
-/// toolbar, and an optional rendered preview.
+/// ライブシンタックスハイライト・フォーマットツールバー・レンダリングプレビューを備えた SwiftUI Markdown エディタ。
 ///
 /// ```swift
 /// @State private var text = "# Hello"
@@ -15,10 +14,10 @@ import SwiftMarkdownEditorTextKit
 /// }
 /// ```
 ///
-/// The plain Markdown string in `text` is always the single source of truth.
-/// Editing happens on a TextKit 2 text view; the preview reuses ``MarkdownView``
-/// so the rendered output matches the rest of the package exactly. Colors and
-/// spacing come from the `swift-design-system` theme in the environment.
+/// `text` のプレーン Markdown 文字列が唯一の正。
+/// 編集は TextKit 2 テキストビュー上で行われ、プレビューは ``MarkdownView`` を再利用するため
+/// パッケージ全体でレンダリング結果が一致する。
+/// 色とスペーシングは環境の `swift-design-system` テーマから取得する。
 public struct MarkdownEditor: View {
 
     @Binding private var text: String
@@ -30,16 +29,15 @@ public struct MarkdownEditor: View {
     @State private var mode: MarkdownEditorMode
     @Environment(\.colorPalette) private var palette
 
-    /// Creates a Markdown editor bound to `text`.
+    /// `text` にバインドした Markdown エディタを作成する。
     ///
     /// - Parameters:
-    ///   - text: The Markdown source to edit.
-    ///   - initialMode: The starting presentation mode.
-    ///   - baseFontSize: The editor's base font size.
-    ///   - livePreview: When true, the edit surface conceals inline markers and
-    ///     renders the source in place (Notion-style); the caret's line reveals
-    ///     its raw markers. The plain `.md` text stays the source of truth.
-    ///   - inputRules: The autoformatting rules (defaults to the standard set).
+    ///   - text: 編集対象の Markdown ソース。
+    ///   - initialMode: 初期表示モード。
+    ///   - baseFontSize: エディタのベースフォントサイズ。
+    ///   - livePreview: `true` のとき、編集面でインラインマーカーを非表示にしてソースをインプレースレンダリングする
+    ///     （Notion スタイル）。キャレット行ではマーカーが表示される。プレーン `.md` テキストが唯一の正を維持する。
+    ///   - inputRules: オートフォーマットルール（デフォルトは標準セット）。
     public init(
         text: Binding<String>,
         initialMode: MarkdownEditorMode = .edit,

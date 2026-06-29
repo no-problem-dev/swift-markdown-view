@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for link elements.
+/// リンク要素のカタログ View。
 public struct LinkCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

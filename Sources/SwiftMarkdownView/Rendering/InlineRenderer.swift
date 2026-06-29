@@ -1,22 +1,22 @@
 import SwiftUI
 import DesignSystem
 
-/// Renders inline Markdown elements as SwiftUI Text.
+/// インライン Markdown 要素を SwiftUI Text としてレンダリングする。
 ///
-/// This renderer converts `MarkdownInline` elements into concatenated `Text` views,
-/// preserving formatting such as emphasis, strong, and inline code.
-/// Links are rendered as tappable elements using AttributedString.
+/// `MarkdownInline` 要素を連結した `Text` ビューに変換し、
+/// 強調・太字・インラインコードなどの書式を保持する。
+/// リンクは AttributedString を使用してタップ可能な要素としてレンダリングされる。
 enum InlineRenderer {
 
-    /// Renders an array of inline elements as a single concatenated Text.
+    /// インライン要素配列を単一の連結 Text としてレンダリングする。
     ///
     /// - Parameters:
-    ///   - inlines: The inline elements to render.
-    ///   - colorPalette: The color palette for theming inline elements.
-    ///   - bodyFont: The base font to apply to all text runs. When provided, every run
-    ///     in the AttributedString receives an explicit font attribute, preventing
-    ///     SwiftUI's View-level `.font()` from overriding the first run.
-    /// - Returns: A `Text` view with all formatting applied.
+    ///   - inlines: レンダリングするインライン要素。
+    ///   - colorPalette: インライン要素のテーマ用カラーパレット。
+    ///   - bodyFont: すべてのテキストランに適用するベースフォント。指定した場合、
+    ///     AttributedString 内の各ランに明示的なフォント属性が付与され、
+    ///     SwiftUI の View レベル `.font()` が最初のランを上書きするのを防ぐ。
+    /// - Returns: すべての書式を適用した `Text` ビュー。
     static func render(
         _ inlines: [MarkdownInline],
         colorPalette: any ColorPalette,
@@ -31,11 +31,11 @@ enum InlineRenderer {
         return Text(attributed)
     }
 
-    /// Renders inline elements, delegating inline math to a math renderer.
+    /// インライン要素をレンダリングし、インライン数式を数式レンダラーに委譲する。
     ///
-    /// AttributedString cannot host arbitrary views, so the paragraph is
-    /// built as concatenated `Text` segments: attributed runs are flushed
-    /// whenever an inline math element produces its own `Text`.
+    /// AttributedString は任意のビューをホストできないため、段落は
+    /// 連結した `Text` セグメントとして構築される。インライン数式要素が
+    /// 独自の `Text` を生成するたびに、蓄積された attributed ランをフラッシュする。
     @MainActor
     static func render(
         _ inlines: [MarkdownInline],
@@ -117,14 +117,14 @@ enum InlineRenderer {
         }
     }
 
-    /// Renders inline elements with specific style context.
+    /// 特定のスタイルコンテキストでインライン要素をレンダリングする。
     ///
     /// - Parameters:
-    ///   - inlines: The inline elements to render.
-    ///   - style: The inherited style context.
-    ///   - colorPalette: The color palette for theming.
-    ///   - bodyFont: The base font for plain text runs.
-    /// - Returns: An AttributedString with all formatting applied.
+    ///   - inlines: レンダリングするインライン要素。
+    ///   - style: 継承されたスタイルコンテキスト。
+    ///   - colorPalette: テーマ用カラーパレット。
+    ///   - bodyFont: プレーンテキストランのベースフォント。
+    /// - Returns: すべての書式を適用した AttributedString。
     private static func buildAttributedString(
         _ inlines: [MarkdownInline],
         style: InlineStyle,
@@ -138,7 +138,7 @@ enum InlineRenderer {
         return result
     }
 
-    /// Builds an AttributedString for a single inline element.
+    /// 単一のインライン要素から AttributedString を構築する。
     private static func buildSingle(
         _ inline: MarkdownInline,
         style: InlineStyle,
@@ -199,11 +199,11 @@ enum InlineRenderer {
         }
     }
 
-    /// Applies accumulated style to an AttributedString.
+    /// 蓄積されたスタイルを AttributedString に適用する。
     ///
-    /// When `bodyFont` is provided, every text run receives an explicit font attribute.
-    /// This prevents SwiftUI's View-level `.font()` from overriding the first run's
-    /// font in an AttributedString (a known SwiftUI behavior).
+    /// `bodyFont` が指定された場合、すべてのテキストランに明示的なフォント属性を付与する。
+    /// これにより、AttributedString において SwiftUI の View レベル `.font()` が
+    /// 最初のランのフォントを上書きする既知の SwiftUI 挙動を防ぐ。
     private static func applyStyle(_ attributed: inout AttributedString, style: InlineStyle, bodyFont: Font?) {
         if let bodyFont {
             if style.isEmphasis && style.isStrong {
@@ -237,7 +237,7 @@ enum InlineRenderer {
 
 // MARK: - Inline Style
 
-/// Tracks accumulated inline formatting styles.
+/// 蓄積されたインライン書式スタイルを追跡する。
 private struct InlineStyle {
     var isEmphasis: Bool = false
     var isStrong: Bool = false

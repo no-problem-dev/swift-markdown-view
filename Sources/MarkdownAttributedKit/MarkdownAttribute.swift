@@ -1,40 +1,30 @@
 import Foundation
 
 public extension NSAttributedString.Key {
-    /// Marks a paragraph range as a decorated block so the TextKit layout
-    /// fragment can draw its background or ornament (code-block fill, quote bar,
-    /// thematic rule). The value is a ``MarkdownBlockDecoration``.
+    /// 段落範囲をデコレーションブロックとしてマークし、TextKit レイアウトフラグメントが背景や装飾（コードブロック塗りつぶし、引用バー、水平線）を描画できるようにする。値は ``MarkdownBlockDecoration``。
     static let markdownBlockDecoration = NSAttributedString.Key("markdownBlockDecoration")
 
-    /// The language string of a code block (empty when unspecified). Marks the
-    /// code's character range so an async syntax highlighter can locate and
-    /// recolor it after the initial layout.
+    /// コードブロックの言語文字列（未指定の場合は空文字）。コードの文字範囲をマークし、非同期シンタックスハイライターが初期レイアウト後に範囲を特定して再着色できるようにする。
     static let markdownCodeLanguage = NSAttributedString.Key("markdownCodeLanguage")
 
-    /// The Markdown source for a run that renders as something other than its
-    /// literal text (an image/math attachment, a list marker). Used to
-    /// reconstruct Markdown on a "Copy as Markdown" command.
+    /// リテラルテキスト以外として描画されるテキストラン（画像/数式アタッチメント、リストマーカー）の Markdown ソース。「Markdown としてコピー」コマンドで Markdown を再構築するために使用する。
     static let markdownSource = NSAttributedString.Key("markdownSource")
 
-    /// Identifies an attachment run (image or math) as a ``MarkdownAttachment``,
-    /// so an async resolver can fill or refresh its image after layout.
+    /// アタッチメントラン（画像または数式）を ``MarkdownAttachment`` として識別し、非同期リゾルバーがレイアウト後に画像を埋めたり更新したりできるようにする。
     static let markdownAttachment = NSAttributedString.Key("markdownAttachment")
 
-    /// A `PlatformColor` for the leading bar of a blockquote/aside, overriding
-    /// the palette's default. Used to tint an aside's bar by its kind.
+    /// ブロッククォート/aside のリーディングバーに使用する `PlatformColor`。パレットのデフォルトを上書きし、aside の種類に応じてバーを着色する。
     static let markdownDecorationBar = NSAttributedString.Key("markdownDecorationBar")
 }
 
-/// Describes an inline object (image or math) that occupies a single attachment
-/// character (U+FFFC) in the rendered text, so selection passes through it as one
-/// character and Copy-as-Markdown can reconstruct its source.
+/// レンダリングテキスト内でアタッチメント文字（U+FFFC）1文字を占めるインラインオブジェクト（画像または数式）。選択が1文字として通過し、Copy-as-Markdown がソースを再構築できる。
 public final class MarkdownAttachment: NSObject {
 
     public enum Kind: Equatable, Sendable {
         case image(source: String, alt: String)
         case inlineMath(latex: String)
         case displayMath(latex: String)
-        /// A Mermaid diagram; rendered by a WebView attachment.
+        /// Mermaid ダイアグラム。WebView アタッチメントとして描画する。
         case mermaid(source: String)
     }
 
@@ -57,22 +47,17 @@ public final class MarkdownAttachment: NSObject {
     }
 }
 
-/// Describes how a block range should be ornamented by the custom layout
-/// fragment. A reference type (`NSObject`) so it is a valid `NSTextStorage`
-/// attribute value that survives copy/edit operations.
+/// カスタムレイアウトフラグメントによってブロック範囲をどう装飾するかを記述する。参照型（`NSObject`）として `NSTextStorage` の属性値になり、コピー/編集操作でも生き残る。
 public final class MarkdownBlockDecoration: NSObject {
 
     public enum Kind: Equatable, Sendable {
-        /// A fenced/indented code block; the fragment fills a rounded background.
+        /// フェンス/インデント形式のコードブロック。フラグメントが丸角背景を塗りつぶす。
         case codeBlock(language: String?)
-        /// A blockquote at the given nesting depth (1 = top level); the fragment
-        /// draws a leading bar per level.
+        /// 指定ネスト深度のブロッククォート（1 = 最上位）。フラグメントが各レベルにリーディングバーを描画する。
         case blockQuote(level: Int)
-        /// A thematic break; the fragment draws a horizontal rule.
+        /// テーマティックブレーク。フラグメントが水平線を描画する。
         case thematicBreak
-        /// A table; the fragment draws a header underline and row separators.
-        /// `headerLength` is the character length of the header row (incl. its
-        /// trailing newline) so the fragment can distinguish header from body.
+        /// テーブル。フラグメントがヘッダー下線と行区切りを描画する。
         case table(columns: Int)
     }
 

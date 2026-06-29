@@ -6,17 +6,13 @@ import UIKit
 import AppKit
 #endif
 
-/// An image produced for a Markdown attachment, with the metrics needed to place
-/// it as an `NSTextAttachment` (its bounds relative to the text baseline).
+/// Markdown アタッチメント用に生成された画像。テキストベースラインを基準とした配置メトリクスを保持し、`NSTextAttachment` として埋め込む際に使用する。
 ///
-/// `@unchecked Sendable`: the image is created (often on the main actor by the
-/// renderer) and never mutated afterwards, so it is safe to hand back across
-/// isolation boundaries.
+/// `@unchecked Sendable`: 画像はレンダラー（多くの場合メインアクター上）が生成し、その後変更されない。そのため、isolation 境界をまたいで安全に受け渡せる。
 public struct MarkdownRenderedImage: @unchecked Sendable {
     public var image: PlatformImage
     public var size: CGSize
-    /// Vertical offset of the image's bottom from the text baseline (negative
-    /// drops it below the baseline). Used for inline math alignment.
+    /// 画像底辺のテキストベースラインからの垂直オフセット（負値でベースライン下に沈む）。インライン数式の垂直整列に使用する。
     public var baselineOffset: CGFloat
 
     public init(image: PlatformImage, size: CGSize, baselineOffset: CGFloat = 0) {
@@ -26,14 +22,10 @@ public struct MarkdownRenderedImage: @unchecked Sendable {
     }
 }
 
-/// Renders an image for an image/math attachment. Synchronous: math typesetting
-/// (SwiftLaTeXView/SwiftMath) and locally available images resolve immediately at
-/// build time. Remote image loading is layered on separately by the view.
+/// 画像/数式アタッチメント用の画像をレンダリングするプロトコル。同期的に動作し、数式組版（SwiftLaTeXView/SwiftMath）とローカル画像はビルド時に即座に解決する。リモート画像のロードはビュー層が別途担う。
 ///
-/// UI-free abstraction (lives here); concrete renderers live in the satellite
-/// targets (`SwiftMarkdownViewLaTeX` for math) and are injected.
+/// UI 非依存の抽象（このターゲットに置く）。具体的なレンダラーはサテライトターゲット（数式は `SwiftMarkdownViewLaTeX`）に置き、注入する。
 public protocol MarkdownAttachmentRendering {
-    /// Returns a rendered image for the attachment, or `nil` to fall back to
-    /// readable text (`[alt]` / `$latex$`).
+    /// アタッチメント用のレンダリング済み画像を返す。`nil` を返すと読み取り可能なフォールバックテキスト（`[alt]` / `$latex$`）にフォールバックする。
     func renderedImage(for kind: MarkdownAttachment.Kind, theme: MarkdownTextTheme) -> MarkdownRenderedImage?
 }

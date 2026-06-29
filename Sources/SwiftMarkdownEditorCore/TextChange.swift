@@ -1,28 +1,27 @@
 import Foundation
 
-/// How a position that lands exactly at an edit boundary is mapped.
+/// 編集境界上の位置をどう変換するかの指定。
 ///
-/// Mirrors CodeMirror's `assoc`/ProseMirror's `bias`: when inserted text is
-/// added at a position, a caret sitting on that position can either stay before
-/// the insertion (`.left`) or move after it (`.right`). Typing should push the
-/// caret to the right of what you just typed, so `.right` is the default.
+/// CodeMirror の `assoc` / ProseMirror の `bias` に相当する。
+/// ある位置にテキストが挿入されるとき、その位置にあるキャレットは
+/// 挿入の前（`.left`）か後（`.right`）に留まる。
+/// タイプ入力ではキャレットを入力テキストの右に押し出すため `.right` がデフォルト。
 public enum AssociationBias: Sendable {
     case left
     case right
 }
 
-/// A single atomic edit: replace `range` in the old text with `replacement`.
+/// 単一のアトミックな編集：旧テキストの `range` を `replacement` で置換する。
 ///
-/// This is the editor's unit of change (CodeMirror's `ChangeSpec` /
-/// ProseMirror's `ReplaceStep`). It is a pure value: it can be applied to a
-/// string, used to map saved positions (carets, decorations) across the edit,
-/// and inverted to support undo.
+/// エディタの変更単位（CodeMirror の `ChangeSpec` / ProseMirror の `ReplaceStep`）。
+/// 純粋値として文字列に適用でき、保存済みの位置（キャレット・デコレーション）を
+/// 変更にマッピングでき、undo のために逆変換できる。
 public struct TextChange: Equatable, Sendable {
 
-    /// The range in the **old** text that is replaced (UTF-16 offsets).
+    /// 置換対象の **旧テキスト** における範囲（UTF-16 オフセット）。
     public var range: TextSpan
 
-    /// The text inserted in place of `range`.
+    /// `range` の位置に挿入するテキスト。
     public var replacement: String
 
     public init(range: TextSpan, replacement: String) {
@@ -30,25 +29,25 @@ public struct TextChange: Equatable, Sendable {
         self.replacement = replacement
     }
 
-    /// Convenience: an insertion at a caret offset.
+    /// キャレットオフセット位置への挿入を作成する。
     public init(insert text: String, at offset: Int) {
         self.init(range: TextSpan(caret: offset), replacement: text)
     }
 
-    /// The length of the inserted text in UTF-16 code units.
+    /// 挿入テキストの長さ（UTF-16 コードユニット数）。
     public var insertedLength: Int { replacement.utf16Length }
 
-    /// The signed change in total document length this edit produces.
+    /// この編集によるドキュメント長の符号付き変化量。
     public var lengthDelta: Int { insertedLength - range.length }
 
-    /// The range the replacement occupies in the **new** text.
+    /// **新テキスト** における置換後テキストの範囲。
     public var insertedRange: TextSpan {
         TextSpan(location: range.lowerBound, length: insertedLength)
     }
 
     // MARK: - Apply
 
-    /// Returns `text` with this change applied.
+    /// この変更を適用した `text` を返す。
     public func apply(to text: String) -> String {
         var result = text
         result.replaceSubrange(text.range(for: range), with: replacement)
@@ -57,14 +56,12 @@ public struct TextChange: Equatable, Sendable {
 
     // MARK: - Position mapping
 
-    /// Maps an offset in the old text to the corresponding offset in the new text.
+    /// 旧テキスト上のオフセットを新テキスト上の対応するオフセットにマッピングする。
     ///
-    /// - Positions before the edit are unchanged.
-    /// - Positions after the edit shift by `lengthDelta`.
-    /// - Positions strictly inside the replaced range collapse to the start
-    ///   (`.left`) or the end of the insertion (`.right`).
-    /// - A position exactly at the edit's start stays put for `.left` and moves
-    ///   to the end of the insertion for `.right`.
+    /// - 編集より前の位置は変化しない。
+    /// - 編集より後の位置は `lengthDelta` だけシフトする。
+    /// - 置換範囲の厳密な内部にある位置は挿入の開始（`.left`）または終端（`.right`）に折り畳まれる。
+    /// - 編集開始位置に正確に一致する位置は `.left` でそのまま、`.right` で挿入終端に移動する。
     public func mapOffset(_ offset: Int, bias: AssociationBias = .right) -> Int {
         if offset < range.lowerBound { return offset }
         if offset > range.upperBound { return offset + lengthDelta }
@@ -77,7 +74,7 @@ public struct TextChange: Equatable, Sendable {
         }
     }
 
-    /// Maps a selection across this change, preserving direction.
+    /// この変更にわたってセレクションをマッピングし、方向を保持する。
     public func mapSelection(_ selection: Selection, bias: AssociationBias = .right) -> Selection {
         Selection(
             anchor: mapOffset(selection.anchor, bias: bias),
@@ -87,10 +84,9 @@ public struct TextChange: Equatable, Sendable {
 
     // MARK: - Invert
 
-    /// Returns the inverse change that undoes this one.
+    /// この変更を取り消す逆変換を返す。
     ///
-    /// Requires the original text because the inverse must restore the bytes
-    /// that were replaced.
+    /// 逆変換は置換されたバイト列を復元する必要があるため、元のテキストが必要。
     public func inverted(in oldText: String) -> TextChange {
         let replaced = oldText.substring(in: range)
         return TextChange(range: insertedRange, replacement: replaced)

@@ -1,23 +1,19 @@
 import Foundation
 
-/// Scans raw Markdown source for math delimiters.
+/// 生の Markdown ソースから数式デリミターをスキャンする。
 ///
-/// Recognizes the delimiter styles emitted by major LLMs:
-/// - `$$...$$` and `\[...\]` — display math (multiline allowed)
-/// - `\(...\)` — inline math
-/// - `$...$` — inline math, guarded by Pandoc rules to avoid
-///   currency false positives
+/// 主要な LLM が出力するデリミタースタイルを認識する:
+/// - `$$...$$` と `\[...\]` — ディスプレイ数式（複数行対応）
+/// - `\(...\)` — インライン数式
+/// - `$...$` — インライン数式。通貨の誤検知を防ぐ Pandoc ルールを適用
 ///
-/// Markdown code constructs (fenced code blocks and inline code spans)
-/// are skipped. The delimiter specification is shared with LaTeXCore's
-/// `MathSegmenter` (swift-latex-view); this minimal port keeps the core
-/// module dependency-free.
+/// フェンスコードブロックとインラインコードスパンはスキップする。デリミター仕様は LaTeXCore の `MathSegmenter`（swift-latex-view）と共通であり、このポートでコアモジュールの依存をゼロに保つ。
 public enum MathScanner {
 
     public enum Part: Equatable, Sendable {
-        /// Source text, preserved exactly.
+        /// ソーステキスト。そのまま保持する。
         case text(String)
-        /// A math region with delimiters stripped.
+        /// デリミターを除去した数式領域。
         case math(latex: String, isDisplay: Bool)
     }
 

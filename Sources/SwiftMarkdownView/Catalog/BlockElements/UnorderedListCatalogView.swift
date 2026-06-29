@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for unordered (bulleted) list elements.
+/// 順序なし（箇条書き）リスト要素のカタログ View。
 public struct UnorderedListCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

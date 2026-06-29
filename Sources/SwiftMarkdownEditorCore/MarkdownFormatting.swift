@@ -1,6 +1,6 @@
 import Foundation
 
-/// A computed edit: the change to apply plus the resulting selection.
+/// 適用する変更と結果のセレクションをまとめた計算済み編集。
 public struct EditTransform: Equatable, Sendable {
     public var change: TextChange
     public var selection: Selection
@@ -11,17 +11,17 @@ public struct EditTransform: Equatable, Sendable {
     }
 }
 
-/// Pure toolbar/keyboard formatting commands.
+/// ツールバー・キーボードのフォーマットコマンド（純粋関数）。
 ///
-/// Each command is a pure function `(text, selection) -> EditTransform`, so the
-/// entire formatting behavior (wrap, toggle, line prefixes, links) is unit
-/// tested without a text view. The TextKit layer just applies the resulting
-/// change to the platform text view (which gives native undo).
+/// 各コマンドは `(text, selection) -> EditTransform` の純粋関数のため、
+/// フォーマット全体の挙動（囲み・トグル・行プレフィックス・リンク）を
+/// テキストビューなしでユニットテストできる。
+/// TextKit 層は結果の変更をプラットフォームテキストビューに適用するだけでよい（ネイティブ undo が得られる）。
 public enum MarkdownFormatting {
 
-    /// Wraps the selection with `delimiter`, or unwraps it if already wrapped.
+    /// セレクションを `delimiter` で囲む。すでに囲まれている場合は取り外す。
     ///
-    /// At a caret, inserts a delimiter pair and places the caret between them.
+    /// キャレット上ではデリミタのペアを挿入し、キャレットをその間に置く。
     public static func wrap(text: String, selection: Selection, delimiter: String) -> EditTransform {
         let range = selection.range
         let delimLen = delimiter.utf16Length
@@ -57,8 +57,8 @@ public enum MarkdownFormatting {
         return EditTransform(change: change, selection: selection)
     }
 
-    /// Toggles a line prefix (`# `, `> `, `- `) on every line the selection
-    /// touches. If all touched lines already have the prefix, it is removed.
+    /// セレクションが触れる全行の行プレフィックス（`# ` ・`> ` ・`- `）をトグルする。
+    /// 対象の全行が既にプレフィックスを持つ場合は削除する。
     public static func toggleLinePrefix(text: String, selection: Selection, prefix: String) -> EditTransform {
         let range = selection.range
         let blockStart = text.lineRange(containing: range.lowerBound).lowerBound
@@ -102,8 +102,7 @@ public enum MarkdownFormatting {
         return EditTransform(change: change, selection: newSelection)
     }
 
-    /// Inserts a Markdown link around the selection, selecting the `url`
-    /// placeholder so the user can type the destination.
+    /// セレクションを Markdown リンクとして挿入し、URL プレースホルダを選択状態にしてユーザーが宛先を入力できるようにする。
     public static func insertLink(text: String, selection: Selection, urlPlaceholder: String = "url") -> EditTransform {
         let range = selection.range
         let selected = text.substring(in: range)

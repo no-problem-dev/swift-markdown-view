@@ -3,10 +3,10 @@ import DesignSystem
 
 // MARK: - TableStyle Protocol
 
-/// A protocol that defines the visual styling for tables.
+/// テーブルの外観スタイルを定義するプロトコル。
 ///
-/// Implement this protocol to customize the appearance of tables
-/// in your Markdown content.
+/// このプロトコルを実装することで、Markdownコンテンツ内の
+/// テーブルの外観をカスタマイズできる。
 ///
 /// ## Example
 ///
@@ -25,75 +25,75 @@ import DesignSystem
 /// ```
 public protocol TableStyle: Sendable {
 
-    /// Whether to show a border around the table.
+    /// テーブル周囲にボーダーを表示するかどうか。
     var showBorder: Bool { get }
 
-    /// Whether to show borders between columns.
+    /// 列間にボーダーを表示するかどうか。
     var showColumnBorders: Bool { get }
 
-    /// Whether to show borders between rows.
+    /// 行間にボーダーを表示するかどうか。
     var showRowBorders: Bool { get }
 
-    /// Whether to use alternating row colors (striped rows).
+    /// 交互に行カラーを使用する（縞模様行）かどうか。
     var stripedRows: Bool { get }
 
-    /// The corner radius for the table container.
+    /// テーブルコンテナのコーナー半径。
     ///
-    /// - Parameter radius: The current radius scale from the environment.
-    /// - Returns: The corner radius in points.
+    /// - Parameter radius: 環境から取得した現在の半径スケール。
+    /// - Returns: コーナー半径（ポイント）。
     func cornerRadius(_ radius: any RadiusScale) -> CGFloat
 
-    /// The background color for the header row.
+    /// ヘッダー行の背景色。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The header background color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: ヘッダー背景色。
     func headerBackgroundColor(_ palette: any ColorPalette) -> Color
 
-    /// The text color for the header row.
+    /// ヘッダー行のテキストカラー。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The header text color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: ヘッダーテキストカラー。
     func headerTextColor(_ palette: any ColorPalette) -> Color
 
-    /// The background color for regular rows.
+    /// 通常行の背景色。
     ///
     /// - Parameters:
-    ///   - palette: The current color palette from the environment.
-    ///   - isAlternate: Whether this is an alternate (odd-numbered) row.
-    /// - Returns: The row background color.
+    ///   - palette: 環境から取得した現在のカラーパレット。
+    ///   - isAlternate: 交互行（奇数行）かどうか。
+    /// - Returns: 行の背景色。
     func rowBackgroundColor(_ palette: any ColorPalette, isAlternate: Bool) -> Color
 
-    /// The text color for regular rows.
+    /// 通常行のテキストカラー。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The row text color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: 行のテキストカラー。
     func rowTextColor(_ palette: any ColorPalette) -> Color
 
-    /// The border color for the table.
+    /// テーブルのボーダーカラー。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The border color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: ボーダーカラー。
     func borderColor(_ palette: any ColorPalette) -> Color
 
-    /// The border width for the table.
+    /// テーブルのボーダー幅。
     var borderWidth: CGFloat { get }
 
-    /// The horizontal padding for cells.
+    /// セルの水平パディング。
     ///
-    /// - Parameter spacing: The current spacing scale from the environment.
-    /// - Returns: The horizontal padding in points.
+    /// - Parameter spacing: 環境から取得した現在のスペーシングスケール。
+    /// - Returns: 水平パディング（ポイント）。
     func cellHorizontalPadding(_ spacing: any SpacingScale) -> CGFloat
 
-    /// The vertical padding for cells.
+    /// セルの垂直パディング。
     ///
-    /// - Parameter spacing: The current spacing scale from the environment.
-    /// - Returns: The vertical padding in points.
+    /// - Parameter spacing: 環境から取得した現在のスペーシングスケール。
+    /// - Returns: 垂直パディング（ポイント）。
     func cellVerticalPadding(_ spacing: any SpacingScale) -> CGFloat
 }
 
 // MARK: - Default Implementation
 
-/// Provides default implementations for optional protocol methods.
+/// プロトコルのオプションメソッドにデフォルト実装を提供する。
 extension TableStyle {
 
     public var showColumnBorders: Bool { true }
@@ -127,17 +127,17 @@ extension TableStyle {
 
 // MARK: - DefaultTableStyle
 
-/// The default table style with subtle borders and header highlighting.
+/// ほのかなボーダーとヘッダーハイライトを持つデフォルトテーブルスタイル。
 public struct DefaultTableStyle: TableStyle, Sendable {
 
     public var showBorder: Bool
     public var stripedRows: Bool
 
-    /// Creates a new default table style.
+    /// デフォルトテーブルスタイルを生成する。
     ///
     /// - Parameters:
-    ///   - showBorder: Whether to show a border around the table. Defaults to `true`.
-    ///   - stripedRows: Whether to use alternating row colors. Defaults to `false`.
+    ///   - showBorder: テーブル周囲にボーダーを表示するかどうか。デフォルトは `true`。
+    ///   - stripedRows: 交互に行カラーを使用するかどうか。デフォルトは `false`。
     public init(
         showBorder: Bool = true,
         stripedRows: Bool = false
@@ -160,7 +160,7 @@ public struct DefaultTableStyle: TableStyle, Sendable {
 
 // MARK: - StripedTableStyle
 
-/// A table style with alternating row colors for better readability.
+/// 読みやすさのために交互の行カラーを使用するテーブルスタイル。
 public struct StripedTableStyle: TableStyle, Sendable {
 
     public var showBorder: Bool { true }
@@ -179,7 +179,7 @@ public struct StripedTableStyle: TableStyle, Sendable {
 
 // MARK: - BorderlessTableStyle
 
-/// A minimal table style without borders.
+/// ボーダーなしのミニマルテーブルスタイル。
 public struct BorderlessTableStyle: TableStyle, Sendable {
 
     public var showBorder: Bool { false }
@@ -208,7 +208,7 @@ public struct BorderlessTableStyle: TableStyle, Sendable {
 
 // MARK: - CardTableStyle
 
-/// A table style that looks like a card with rounded corners and shadow.
+/// 角丸とシャドウを持つカード風テーブルスタイル。
 public struct CardTableStyle: TableStyle, Sendable {
 
     public var showBorder: Bool { true }
@@ -245,9 +245,9 @@ private struct TableStyleKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// The style used for rendering tables.
+    /// テーブルのレンダリングに使用するスタイル。
     ///
-    /// Use the ``SwiftUICore/View/markdownTableStyle(_:)`` modifier to set this value.
+    /// この値を設定するには ``SwiftUICore/View/markdownTableStyle(_:)`` モディファイアを使用する。
     public var markdownTableStyle: any TableStyle {
         get { self[TableStyleKey.self] }
         set { self[TableStyleKey.self] = newValue }
@@ -258,10 +258,10 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Sets a custom table style for Markdown tables in this view hierarchy.
+    /// このビュー階層の Markdown テーブルにカスタムテーブルスタイルを設定する。
     ///
-    /// Use this modifier to customize the appearance of tables
-    /// rendered by ``MarkdownView``.
+    /// ``MarkdownView`` がレンダリングするテーブルの外観をカスタマイズするには
+    /// このモディファイアを使用する。
     ///
     /// ## Example
     ///
@@ -275,8 +275,8 @@ extension View {
     /// .markdownTableStyle(StripedTableStyle())
     /// ```
     ///
-    /// - Parameter style: The table style to use.
-    /// - Returns: A view with the table style applied.
+    /// - Parameter style: 使用するテーブルスタイル。
+    /// - Returns: テーブルスタイルが適用されたビュー。
     public func markdownTableStyle(_ style: some TableStyle) -> some View {
         environment(\.markdownTableStyle, style)
     }

@@ -1,9 +1,8 @@
 import Foundation
 
-/// A parsed Markdown document represented as a collection of blocks.
+/// Markdown ドキュメントをブロックのコレクションとして表したパース済みの値型。
 ///
-/// `MarkdownContent` is a value type that holds the parsed structure of a Markdown string.
-/// It can be created once and reused for multiple renderings.
+/// 一度生成すれば複数のレンダリングに使い回せる。
 ///
 /// ```swift
 /// let content = MarkdownContent(parsing: "# Hello **World**")
@@ -11,19 +10,19 @@ import Foundation
 /// ```
 public struct MarkdownContent: Sendable, Equatable {
 
-    /// The block-level elements in this Markdown content.
+    /// このコンテンツのブロックレベル要素。
     public let blocks: [MarkdownBlock]
 
-    /// Creates a new MarkdownContent by parsing the given string.
+    /// Markdown 文字列をパースして MarkdownContent を生成する。
     ///
-    /// - Parameter source: The Markdown string to parse.
+    /// - Parameter source: パースする Markdown 文字列。
     public init(parsing source: String) {
         self.blocks = MarkdownParser.parse(source)
     }
 
-    /// Creates a new MarkdownContent with the given blocks.
+    /// ブロックを直接指定して MarkdownContent を生成する。
     ///
-    /// - Parameter blocks: The block-level elements.
+    /// - Parameter blocks: ブロックレベル要素。
     internal init(blocks: [MarkdownBlock]) {
         self.blocks = blocks
     }

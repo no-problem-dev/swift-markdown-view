@@ -1,28 +1,28 @@
 import SwiftUI
 
-/// Categories for the Markdown catalog.
+/// Markdown カタログのカテゴリ。
 ///
-/// Organizes catalog items into logical groups for navigation.
+/// カタログアイテムをナビゲーション用の論理グループに整理する。
 internal enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Sendable {
 
-    /// Block-level Markdown elements like headings, code blocks, lists.
+    /// 見出し・コードブロック・リストなどのブロックレベル要素。
     case blockElements = "ブロック要素"
 
-    /// Inline Markdown elements like bold, italic, links.
+    /// 太字・斜体・リンクなどのインライン要素。
     case inlineElements = "インライン要素"
 
-    /// Configuration and styling options.
+    /// 設定とスタイルオプション。
     case configuration = "設定"
 
-    /// Interactive playground for testing Markdown.
+    /// Markdown を試すインタラクティブなプレイグラウンド。
     case playground = "プレイグラウンド"
 
-    /// DesignSystem integration and theme settings.
+    /// DesignSystem 統合とテーマ設定。
     case designSystem = "デザインシステム"
 
     internal var id: String { rawValue }
 
-    /// The SF Symbol icon for this category.
+    /// このカテゴリの SF Symbol アイコン名。
     internal var icon: String {
         switch self {
         case .blockElements:
@@ -38,7 +38,7 @@ internal enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Senda
         }
     }
 
-    /// A brief description of this category.
+    /// このカテゴリの概要説明。
     internal var description: String {
         switch self {
         case .blockElements:
@@ -54,7 +54,7 @@ internal enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Senda
         }
     }
 
-    /// The catalog items in this category.
+    /// このカテゴリのカタログアイテム一覧。
     internal var items: [MarkdownCatalogItem] {
         switch self {
         case .blockElements:
@@ -79,7 +79,7 @@ internal enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Senda
 
 // MARK: - Block Element Items
 
-/// Block-level element types for the catalog.
+/// カタログで使用するブロックレベル要素の種類。
 internal enum BlockElementItem: String, CaseIterable, Identifiable, Sendable {
     case heading = "見出し"
     case paragraph = "段落"
@@ -138,7 +138,7 @@ internal enum BlockElementItem: String, CaseIterable, Identifiable, Sendable {
 
 // MARK: - Inline Element Items
 
-/// Inline element types for the catalog.
+/// カタログで使用するインライン要素の種類。
 internal enum InlineElementItem: String, CaseIterable, Identifiable, Sendable {
     case textStyles = "テキストスタイル"
     case inlineCode = "インラインコード"
@@ -176,7 +176,7 @@ internal enum InlineElementItem: String, CaseIterable, Identifiable, Sendable {
 
 // MARK: - Configuration Items
 
-/// Configuration and style options for the catalog.
+/// カタログで使用する設定・スタイルオプションの種類。
 internal enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
     case renderingOptions = "レンダリングオプション"
     case asideStyle = "Asideスタイル"
@@ -223,7 +223,7 @@ internal enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
 
 // MARK: - DesignSystem Items
 
-/// DesignSystem integration items for the catalog.
+/// カタログで使用する DesignSystem 統合アイテムの種類。
 internal enum DesignSystemItem: String, CaseIterable, Identifiable, Sendable {
     case fullCatalog = "デザインシステムカタログ"
 

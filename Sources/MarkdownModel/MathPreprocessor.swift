@@ -1,13 +1,8 @@
 import Foundation
 
-/// Extracts math regions before swift-markdown parsing and restores them
-/// into AST nodes afterwards.
+/// swift-markdown パーシング前に数式領域を抽出し、パース後に AST ノードとして復元する。
 ///
-/// Math must be extracted *before* Markdown parsing: `\(...\)` delimiters
-/// are destroyed by backslash-escape processing, and `$a_b$` subscripts
-/// are eaten by emphasis parsing. Each math region is replaced by a
-/// placeholder token (Private Use Area characters that survive cmark as
-/// plain text); display math is isolated into its own paragraph.
+/// `\(...\)` デリミターはバックスラッシュエスケープ処理で破壊され、`$a_b$` の添字は強調パーシングで消費されるため、Markdown パーシング前に数式を抽出する必要がある。各数式領域はプレースホルダートークン（cmark でもプレーンテキストとして残る私用領域文字）に置き換える。ディスプレイ数式は独立した段落に分離する。
 enum MathPreprocessor {
 
     struct Capture: Equatable {
@@ -126,7 +121,7 @@ enum MathPreprocessor {
         }
     }
 
-    /// Splits a text run at placeholder tokens into text and math inlines.
+    /// テキストランをプレースホルダートークンで分割し、テキストと数式インラインに変換する。
     private static func splitText(_ text: String, captures: [Capture]) -> [MarkdownInline] {
         guard text.contains(tokenStart) else { return [.text(text)] }
 
@@ -156,8 +151,7 @@ enum MathPreprocessor {
         return result
     }
 
-    /// Returns the capture if the inlines consist of exactly one
-    /// display-math placeholder (ignoring whitespace).
+    /// インラインがディスプレイ数式プレースホルダー1つだけから成る（空白を除く）場合、そのキャプチャを返す。
     private static func soleDisplayCapture(of inlines: [MarkdownInline], captures: [Capture]) -> Capture? {
         var token: String?
         for inline in inlines {

@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for TableStyle configuration.
+/// TableStyle 設定のカタログ View。
 public struct TableStyleCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

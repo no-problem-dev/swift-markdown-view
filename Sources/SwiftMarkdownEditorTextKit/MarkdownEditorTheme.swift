@@ -2,15 +2,14 @@ import Foundation
 import CoreGraphics
 import SwiftMarkdownEditorCore
 
-/// Visual styling for the source editor: the base font/colors plus how each
-/// ``MarkdownToken/Kind`` is tinted.
+/// ソースエディタの外観スタイル：ベースフォント・色と各 ``MarkdownToken/Kind`` の着色設定。
 ///
-/// This is intentionally framework-light (platform colors + a font size) so the
-/// SwiftUI layer can build one from the design system, while the TextKit bridge
-/// and unit tests can use the built-in `.light` / `.dark` presets.
+/// フレームワーク依存を意図的に最小化（プラットフォームカラー＋フォントサイズ）し、
+/// SwiftUI 層がデザインシステムから構築でき、
+/// TextKit ブリッジとユニットテストは組み込みの `.light` / `.dark` プリセットを使えるようにする。
 public struct MarkdownEditorTheme {
 
-    /// Per-token styling: a color plus font-trait toggles.
+    /// トークンごとのスタイル：色とフォントトレイトのトグル。
     public struct TokenStyle {
         public var color: PlatformColor?
         public var bold: Bool
@@ -53,7 +52,7 @@ public struct MarkdownEditorTheme {
         self.styles = styles
     }
 
-    /// The style for a token kind, or an empty style if unspecified.
+    /// トークン種別のスタイルを返す。未指定の場合は空のスタイル。
     public func style(for kind: MarkdownToken.Kind) -> TokenStyle {
         styles[kind] ?? TokenStyle()
     }
@@ -61,8 +60,7 @@ public struct MarkdownEditorTheme {
 
 public extension MarkdownEditorTheme {
 
-    /// A theme whose token tints derive from a base text color, a muted color,
-    /// an accent color, and a code color — the four roles every preset needs.
+    /// ベーステキスト色・ミュート色・アクセント色・コード色の 4 役割からトークン着色を導出するテーマを構築する。
     static func make(
         baseFontSize: CGFloat,
         textColor: PlatformColor,
@@ -96,7 +94,7 @@ public extension MarkdownEditorTheme {
         )
     }
 
-    /// The default light preset, built from system semantic colors.
+    /// システムセマンティックカラーから構築したデフォルトのライトプリセット。
     static var light: MarkdownEditorTheme {
         make(
             baseFontSize: 16,
@@ -108,8 +106,8 @@ public extension MarkdownEditorTheme {
         )
     }
 
-    /// The default dark preset. System semantic colors already adapt, so this
-    /// mirrors `.light`; it exists as an explicit hook for dark-only tweaks.
+    /// デフォルトのダークプリセット。システムセマンティックカラーが自動適応するため `.light` と同値。
+    /// ダーク専用の調整を加えるための明示的なフックとして存在する。
     static var dark: MarkdownEditorTheme { light }
 }
 

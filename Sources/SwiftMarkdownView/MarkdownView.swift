@@ -1,42 +1,40 @@
 import SwiftUI
 import DesignSystem
 
-/// A SwiftUI view that renders Markdown content.
+/// Markdown テキストをレンダリングする SwiftUI View。
 ///
-/// `MarkdownView` parses and displays Markdown text with full support for
-/// CommonMark and GitHub Flavored Markdown syntax.
+/// CommonMark および GitHub Flavored Markdown 構文を完全サポートし、
+/// Markdown テキストをパースして描画する。
 ///
 /// ```swift
-/// // Basic usage with a string
+/// // 文字列から直接作成
 /// MarkdownView("# Hello **World**")
 ///
-/// // Using pre-parsed content for performance
+/// // パフォーマンスのために事前パース済みコンテンツを使用
 /// let content = MarkdownContent(parsing: markdownString)
 /// MarkdownView(content)
 /// ```
 ///
-/// The view automatically integrates with your app's theme through
-/// the `swift-design-system` package, using appropriate typography,
-/// colors, and spacing tokens.
+/// `swift-design-system` パッケージが提供するテーマと自動統合し、
+/// 適切なタイポグラフィ・色・スペーシングトークンを適用する。
 public struct MarkdownView: View {
 
-    /// The parsed Markdown content to render.
+    /// レンダリング対象のパース済み Markdown コンテンツ。
     public let content: MarkdownContent
 
-    /// Creates a MarkdownView by parsing the given Markdown string.
+    /// Markdown 文字列をパースして MarkdownView を作成する。
     ///
-    /// - Parameter source: The Markdown string to parse and render.
+    /// - Parameter source: パースしてレンダリングする Markdown 文字列。
     public init(_ source: String) {
         self.content = MarkdownContent(parsing: source)
     }
 
-    /// Creates a MarkdownView with pre-parsed Markdown content.
+    /// パース済みの Markdown コンテンツで MarkdownView を作成する。
     ///
-    /// Use this initializer when you want to parse the Markdown once
-    /// and reuse it, or when you need to manipulate the content
-    /// before rendering.
+    /// Markdown を一度だけパースして再利用したい場合や、
+    /// レンダリング前にコンテンツを加工したい場合に使用する。
     ///
-    /// - Parameter content: The pre-parsed Markdown content.
+    /// - Parameter content: パース済みの Markdown コンテンツ。
     public init(_ content: MarkdownContent) {
         self.content = content
     }
@@ -55,8 +53,8 @@ public struct MarkdownView: View {
 }
 
 #if os(iOS) || os(macOS)
-/// Reads theme and syntax-highlighter from the environment and renders the
-/// document with the continuous-selection TextKit backend.
+/// 環境からテーマとシンタックスハイライターを読み取り、
+/// 連続選択 TextKit バックエンドでドキュメントをレンダリングする。
 private struct MarkdownTextKitBackend: View {
     let content: MarkdownContent
 

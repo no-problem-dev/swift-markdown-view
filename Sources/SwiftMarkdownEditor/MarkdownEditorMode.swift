@@ -1,15 +1,15 @@
 import Foundation
 
-/// How the editor presents content.
+/// エディタのコンテンツ表示方式。
 public enum MarkdownEditorMode: String, CaseIterable, Hashable, Sendable {
-    /// Source editing only.
+    /// ソース編集のみ。
     case edit
-    /// Rendered preview only.
+    /// レンダリングプレビューのみ。
     case preview
-    /// Side-by-side source + preview (best on macOS / wide layouts).
+    /// ソースとプレビューを並列表示（macOS や幅広レイアウトに最適）。
     case split
 
-    /// A short localized-ish label for the mode switcher.
+    /// モードスイッチャー用の短いラベル。
     public var displayName: String {
         switch self {
         case .edit: return "編集"

@@ -10,14 +10,14 @@ import UIKit
 import AppKit
 #endif
 
-/// A Markdown view that renders the whole document into a **single** TextKit 2
-/// text view, so text selection runs continuously across blocks (heading →
-/// paragraph → list …) and the system Copy yields the selected readable text —
-/// the behaviour SwiftUI's per-block `Text` rendering structurally cannot provide.
+/// ドキュメント全体を**単一の** TextKit 2 テキストビューにレンダリングする Markdown ビュー。
 ///
-/// This is the new rendering backend. `MarkdownView` will delegate to it once it
-/// reaches feature parity (math, images, tables); until then it is offered as an
-/// explicit, opt-in selectable view.
+/// テキスト選択がブロック間（見出し → 段落 → リスト…）を連続して行え、
+/// システムのコピーで選択した可読テキストを取得できる —
+/// SwiftUI のブロック単位 `Text` レンダリングでは構造上実現できない挙動。
+///
+/// 新しいレンダリングバックエンド。数式・画像・テーブルの機能が揃った段階で
+/// `MarkdownView` がこちらに委譲する。それまでは明示的なオプトイン選択可能ビューとして提供する。
 public struct MarkdownSelectableText {
     public let content: MarkdownContent
     public var theme: MarkdownTextTheme
@@ -34,21 +34,21 @@ public struct MarkdownSelectableText {
         self.init(MarkdownContent(parsing: source), theme: theme)
     }
 
-    /// Applies an async syntax highlighter to code blocks after layout.
+    /// レイアウト後にコードブロックへ非同期シンタックスハイライターを適用する。
     public func codeHighlighter(_ highlighter: (any MarkdownCodeHighlighting)?) -> MarkdownSelectableText {
         var copy = self
         copy.highlighter = highlighter
         return copy
     }
 
-    /// Applies a synchronous renderer for image/math attachments (e.g. LaTeX).
+    /// 画像/数式アタッチメント（例: LaTeX）に同期レンダラーを適用する。
     public func attachmentRenderer(_ renderer: (any MarkdownAttachmentRendering)?) -> MarkdownSelectableText {
         var copy = self
         copy.attachmentRenderer = renderer
         return copy
     }
 
-    /// Renders Mermaid diagrams in a WebView loaded from `scriptURL`.
+    /// `scriptURL` から読み込む WebView で Mermaid ダイアグラムをレンダリングする。
     func mermaid(scriptURL: URL, isDark: Bool) -> MarkdownSelectableText {
         var copy = self
         copy.mermaidConfig = (scriptURL, isDark)
@@ -61,8 +61,8 @@ public struct MarkdownSelectableText {
 
     public final class Coordinator {
         let provider = MarkdownLayoutFragmentProvider()
-        /// Last applied inputs, so layout passes that didn't change content or
-        /// font size skip re-styling (which would reset the user's selection).
+        /// 最後に適用した入力。コンテンツやフォントサイズが変わらないレイアウトパスは
+        /// 再スタイリングをスキップし、ユーザーの選択をリセットしない。
         var appliedContent: MarkdownContent?
         var appliedFontSize: CGFloat?
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -81,8 +81,8 @@ public struct MarkdownSelectableText {
         var highlightTask: Task<Void, Never>?
         var imageTask: Task<Void, Never>?
 
-        /// Swaps each Mermaid placeholder attachment for a live, scrollable WebView
-        /// attachment. Idempotent — already-installed attachments are skipped.
+        /// 各 Mermaid プレースホルダーアタッチメントをライブかつスクロール可能な
+        /// WebView アタッチメントに交換する。冪等 — インストール済みのアタッチメントはスキップする。
         @MainActor
         func installMermaid(in storage: NSTextStorage, scriptURL: URL, isDark: Bool, displayHeight: CGFloat) {
             let full = NSRange(location: 0, length: storage.length)
@@ -102,8 +102,8 @@ public struct MarkdownSelectableText {
             storage.endEditing()
         }
 
-        /// Loads each image attachment's source off the main actor, then sets the
-        /// image and aspect-fit bounds on the storage. Cancels any in-flight pass.
+        /// 各画像アタッチメントのソースをメインアクター外でロードし、
+        /// ストレージに画像とアスペクトフィットのバウンドを設定する。進行中のパスはキャンセルする。
         @MainActor
         func startImageLoading(in storage: NSTextStorage, width: @escaping () -> CGFloat, invalidate: @escaping () -> Void) {
             imageTask?.cancel()
@@ -124,8 +124,8 @@ public struct MarkdownSelectableText {
             }
         }
 
-        /// Highlights each code region off the main actor, then transplants the
-        /// colors onto the storage. Cancels any in-flight pass first.
+        /// 各コード領域をメインアクター外でハイライトし、カラーをストレージに適用する。
+        /// 最初に進行中のパスをキャンセルする。
         @MainActor
         func startHighlighting(_ highlighter: (any MarkdownCodeHighlighting)?, in storage: NSTextStorage) {
             highlightTask?.cancel()
@@ -183,8 +183,8 @@ extension MarkdownSelectableText: UIViewRepresentable {
         }
     }
 
-    /// Reports the content height for the proposed width so the non-scrolling
-    /// text view sizes correctly inside a SwiftUI `ScrollView`/stack.
+    /// SwiftUI `ScrollView` / スタック内でスクロールなしテキストビューが正しくサイズ調整できるよう、
+    /// 提案幅に対するコンテンツ高さを返す。
     public func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
         guard let width = proposal.width, width > 0, width != .infinity else { return nil }
         let fitting = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))

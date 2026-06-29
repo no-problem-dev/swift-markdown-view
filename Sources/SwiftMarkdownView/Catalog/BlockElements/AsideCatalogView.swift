@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for aside (callout/admonition) elements.
+/// Aside（コールアウト/注釈）要素のカタログ View。
 public struct AsideCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

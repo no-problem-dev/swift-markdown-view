@@ -5,41 +5,49 @@ import UIKit
 import AppKit
 #endif
 
-/// Resolved fonts, colors, and spacing for building the rendered attributed
-/// string. Plain values (no SwiftUI / DesignSystem) so this layer is
-/// self-contained and headlessly testable; `SwiftMarkdownView` maps its
-/// DesignSystem tokens onto this theme.
+/// レンダリング済み属性文字列を構築するためのフォント・カラー・スペーシングの解決値。SwiftUI / DesignSystem に依存しないプレーン値のため、このレイヤーは自己完結しヘッドレステスト可能。`SwiftMarkdownView` が DesignSystem トークンをこのテーマにマップする。
 public struct MarkdownTextTheme: @unchecked Sendable {
 
     // Fonts
+    /// 本文テキストに使用するベースフォント。
     public var baseFont: PlatformFont
+    /// コードブロックおよびインラインコードに使用する等幅フォント。
     public var codeFont: PlatformFont
 
     // Colors
+    /// 本文テキストの前景色。
     public var textColor: PlatformColor
+    /// 補助テキスト（キャプション等）の前景色。
     public var secondaryColor: PlatformColor
+    /// 見出しテキストの前景色。
     public var headingColor: PlatformColor
+    /// リンクテキストの前景色。
     public var linkColor: PlatformColor
+    /// インラインコードの前景色。
     public var inlineCodeForeground: PlatformColor
+    /// インラインコードの背景色。
     public var inlineCodeBackground: PlatformColor
+    /// コードブロックの背景色。
     public var codeBlockBackground: PlatformColor
+    /// ブロッククォートのリーディングバーの色。
     public var quoteBarColor: PlatformColor
+    /// 水平線（`---`）の描画色。
     public var ruleColor: PlatformColor
 
     // Spacing
-    /// Vertical gap between sibling blocks, in points.
+    /// 兄弟ブロック間の垂直ギャップ（ポイント単位）。
     public var paragraphSpacing: CGFloat
-    /// Line-height multiple applied to body text.
+    /// 本文テキストに適用するライン高さ倍率。
     public var lineHeightMultiple: CGFloat
-    /// Indent per nesting level for lists and quotes, in points.
+    /// リストおよびクォートのネストレベルごとのインデント幅（ポイント単位）。
     public var indentStep: CGFloat
-    /// Inset of code text from the edge of its rounded background box, in points.
+    /// コードテキストと丸角背景ボックスの端との内側余白（ポイント単位）。
     public var codeBlockPadding: CGFloat
-    /// Vertical breathing room added above/below code text inside its box.
+    /// コードテキストの上下に追加する垂直余白（ポイント単位）。
     public var codeBlockVerticalPadding: CGFloat
-    /// Corner radius of the code-block background box, in points.
+    /// コードブロック背景ボックスの角丸半径（ポイント単位）。
     public var codeBlockCornerRadius: CGFloat
-    /// Width of the leading bar drawn for each blockquote level, in points.
+    /// ブロッククォートの各レベルに描画するリーディングバーの幅（ポイント単位）。
     public var quoteBarWidth: CGFloat
 
     public init(
@@ -86,32 +94,31 @@ public struct MarkdownTextTheme: @unchecked Sendable {
         self.headingWeight = headingWeight
     }
 
-    /// Point size of the body font.
+    /// 本文フォントのポイントサイズ。
     public var baseFontSize: CGFloat { baseFont.pointSize }
 
-    /// The body font with optional bold/italic traits.
+    /// オプションの太字/斜体トレイトを適用した本文フォント。
     public func bodyFont(bold: Bool = false, italic: Bool = false) -> PlatformFont {
         baseFont.withTraits(bold: bold, italic: italic)
     }
 
-    /// Point sizes for ATX heading levels 1–6.
+    /// ATX 見出しレベル 1–6 のポイントサイズ。
     public var headingSizes: [CGFloat]
-    /// Weight applied to all headings.
+    /// すべての見出しに適用するウェイト。
     public var headingWeight: PlatformFont.Weight
 
-    /// The font for an ATX heading of the given level (1–6).
+    /// 指定レベル（1–6）の ATX 見出しフォント。
     public func headingFont(level: Int) -> PlatformFont {
         let index = max(1, min(6, level)) - 1
         return PlatformFont.system(size: headingSizes[index], weight: headingWeight)
     }
 
-    /// Heading sizes scaled off a base size, used when explicit DesignSystem
-    /// sizes aren't supplied.
+    /// DesignSystem のサイズが指定されていない場合にベースサイズから比率で算出した見出しサイズ。
     public static func scaledHeadingSizes(base: CGFloat) -> [CGFloat] {
         [1.7, 1.45, 1.28, 1.15, 1.07, 1.0].map { base * $0 }
     }
 
-    /// A reasonable light-mode default, usable without DesignSystem.
+    /// DesignSystem なしで使用できる、ライトモード向けのデフォルト設定。
     public static var `default`: MarkdownTextTheme {
         let base: CGFloat = 16
         return MarkdownTextTheme(

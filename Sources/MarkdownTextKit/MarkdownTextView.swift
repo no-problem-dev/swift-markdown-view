@@ -7,23 +7,13 @@ import UIKit
 import AppKit
 #endif
 
-/// Builds and configures the single-storage, read-only, **selectable** TextKit 2
-/// text view that hosts a whole rendered Markdown document. Because the entire
-/// document lives in one text storage, selection runs continuously across blocks
-/// and the system Copy yields the selected readable text.
+/// 単一ストレージを持つ読み取り専用・選択可能な TextKit 2 テキストビューを構築・設定する。ドキュメント全体が1つのテキストストレージに収まるため、選択がブロックをまたいで連続し、システムのコピーが選択テキストを返す。
 ///
-/// This layer is UIKit/AppKit-only (SwiftUI-free); `SwiftMarkdownView` wraps the
-/// view in a Representable. The code never touches `.layoutManager`, which would
-/// silently drop the view to TextKit 1 and disable later custom fragment drawing.
+/// このレイヤーは UIKit/AppKit のみ（SwiftUI-free）。`SwiftMarkdownView` が Representable でラップする。`.layoutManager` には触れず、TextKit 1 へのサイレントダウングレードとカスタムフラグメント描画の無効化を防ぐ。
 public enum MarkdownTextViewFactory {}
 
 #if canImport(UIKit)
-/// A read-only selectable TextKit 2 text view that paints code-block backgrounds
-/// in a layer **beneath the text**. On iOS the selection highlight is owned by
-/// `UITextView` (in `selectedTextRange`) and composited above the text by the
-/// system — it never reaches an `NSTextLayoutFragment` — so filling the code
-/// background in a fragment would hide it. Drawing the fill in a sublayer below
-/// the text lets the system's selection highlight show through normally.
+/// コードブロック背景をテキスト**下**のレイヤーに描画する、読み取り専用・選択可能な TextKit 2 テキストビュー。iOS では選択ハイライトが `UITextView`（`selectedTextRange`）に所有され、システムがテキストの上に合成するため `NSTextLayoutFragment` には届かない。コードブロック背景をフラグメントで描くとハイライトが隠れる。テキスト下のサブレイヤーに描くことでシステムの選択ハイライトが正常に表示される。
 public final class MarkdownTextView: UITextView {
 
     public var decorationPalette: MarkdownDecorationPalette? {
@@ -117,8 +107,7 @@ public final class MarkdownTextView: UITextView {
 
 public extension MarkdownTextViewFactory {
 
-    /// A content-sized (non-scrolling) read-only selectable text view. Embed it
-    /// in a SwiftUI `ScrollView`; it reports its height via intrinsic content size.
+    /// コンテンツサイズに合わせた非スクロール・読み取り専用・選択可能なテキストビュー。SwiftUI の `ScrollView` に埋め込み、固有コンテンツサイズで高さを報告する。
     @MainActor
     static func make() -> MarkdownTextView {
         MarkdownTextView()
@@ -131,15 +120,13 @@ public extension MarkdownTextViewFactory {
         textView.setNeedsLayout()
     }
 
-    /// Installs the decoration fragment provider as the layout manager delegate.
-    /// Call before applying content so decorated fragments are vended on first
-    /// layout. The caller must retain `provider` (the delegate is weak).
+    /// デコレーションフラグメントプロバイダーをレイアウトマネージャーのデリゲートとして設定する。デコレーション済みフラグメントが初回レイアウト時に生成されるよう、コンテンツ適用前に呼ぶ。呼び出し側が `provider` を保持すること（デリゲートは弱参照）。
     @MainActor
     static func setFragmentProvider(_ provider: MarkdownLayoutFragmentProvider, on textView: UITextView) {
         textView.textLayoutManager?.delegate = provider
     }
 
-    /// Sets the palette used to paint code-block backgrounds beneath the text.
+    /// テキスト下のコードブロック背景を描くパレットを設定する。
     @MainActor
     static func setDecorationPalette(_ palette: MarkdownDecorationPalette, on textView: UITextView) {
         (textView as? MarkdownTextView)?.decorationPalette = palette
@@ -148,14 +135,9 @@ public extension MarkdownTextViewFactory {
 #endif
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-/// A read-only selectable TextKit 2 `NSTextView` that sizes to its content (no
-/// enclosing scroll view), so it embeds in a SwiftUI layout/`ScrollView` and
-/// reports its height via `intrinsicContentSize` — mirroring the iOS view. The
-/// previous scroll-view wrapper collapsed to zero height under SwiftUI.
+/// コンテンツサイズに合わせてリサイズする、読み取り専用・選択可能な TextKit 2 `NSTextView`（スクロールビューラッパーなし）。SwiftUI のレイアウト/`ScrollView` に埋め込んで `intrinsicContentSize` で高さを報告する。スクロールビューラッパーは SwiftUI 下でゼロ高さになる問題があった。
 ///
-/// On macOS the selection lives in `textLayoutManager.textSelections`, so the
-/// code-block background and its selection cut-out are drawn by the layout
-/// fragment (unlike iOS, which paints it in a layer beneath the text).
+/// macOS では選択が `textLayoutManager.textSelections` にあるため、コードブロック背景と選択くり抜きはレイアウトフラグメントが描画する（iOS とは異なりテキスト下のレイヤーは使わない）。
 public final class MarkdownTextView: NSTextView {
 
     public convenience init() {
@@ -201,16 +183,13 @@ public extension MarkdownTextViewFactory {
         textView.invalidateIntrinsicContentSize()
     }
 
-    /// Installs the decoration fragment provider as the layout manager delegate.
-    /// Call before applying content so decorated fragments are vended on first
-    /// layout. The caller must retain `provider` (the delegate is weak).
+    /// デコレーションフラグメントプロバイダーをレイアウトマネージャーのデリゲートとして設定する。デコレーション済みフラグメントが初回レイアウト時に生成されるよう、コンテンツ適用前に呼ぶ。呼び出し側が `provider` を保持すること（デリゲートは弱参照）。
     @MainActor
     static func setFragmentProvider(_ provider: MarkdownLayoutFragmentProvider, on textView: MarkdownTextView) {
         textView.textLayoutManager?.delegate = provider
     }
 
-    /// Content height for the given width, for the SwiftUI representable's
-    /// `sizeThatFits`.
+    /// SwiftUI の Representable で `sizeThatFits` に使用する、指定幅に収まるコンテンツ高さ。
     @MainActor
     static func contentHeight(of textView: MarkdownTextView, fittingWidth width: CGFloat) -> CGFloat {
         textView.setFrameSize(NSSize(width: width, height: textView.frame.height))

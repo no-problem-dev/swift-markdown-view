@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for thematic break (horizontal rule) elements.
+/// 水平線（テーマティックブレーク）要素のカタログ View。
 public struct ThematicBreakCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

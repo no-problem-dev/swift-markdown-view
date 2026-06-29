@@ -1,14 +1,14 @@
 import Foundation
 import SwiftMarkdownEditorCore
 
-/// A transform an input rule wants to perform *instead of* the plain insertion.
+/// 入力ルールが通常の挿入の代わりに適用する変換。
 public struct RuleTransform: Equatable, Sendable {
-    /// The change to apply in place of the user's raw insertion.
+    /// ユーザーの生の挿入の代わりに適用する変更。
     public var change: TextChange
-    /// The selection for the resulting state.
+    /// 結果の状態のセレクション。
     public var selection: Selection
-    /// Whether the resulting undo entry may coalesce with neighbors. Rule edits
-    /// are usually discrete undo steps, so this defaults to `false`.
+    /// 結果の undo エントリを隣接エントリと合成してよいか。
+    /// ルール編集は通常個別の undo ステップのため、デフォルトは `false`。
     public var allowCoalescing: Bool
 
     public init(change: TextChange, selection: Selection, allowCoalescing: Bool = false) {
@@ -18,17 +18,16 @@ public struct RuleTransform: Equatable, Sendable {
     }
 }
 
-/// A rule that can rewrite a user's text input — Markdown autoformatting.
+/// ユーザーのテキスト入力を書き換えるルール — Markdown オートフォーマット。
 ///
-/// Modeled on ProseMirror's input rules: given the state and the text about to
-/// be inserted over `range`, a rule may return a ``RuleTransform`` to apply
-/// instead. Rules are pure functions of their inputs, which keeps the whole
-/// autoformatting layer unit-testable without a text view.
+/// ProseMirror の input rules をモデルにしている。状態と `range` に挿入しようとしているテキストを受け取り、
+/// ルールは代わりに適用する ``RuleTransform`` を返せる。
+/// ルールは入力の純粋関数のため、オートフォーマット層全体をテキストビューなしでユニットテストできる。
 public protocol InputRule: Sendable {
     /// - Parameters:
-    ///   - state: The state *before* the insertion.
-    ///   - text: The text the user is inserting (a typed char, a newline, a paste).
-    ///   - range: The range the insertion replaces (empty at a caret).
-    /// - Returns: A transform to apply instead, or `nil` to not handle this input.
+    ///   - state: 挿入 *前* の状態。
+    ///   - text: ユーザーが挿入するテキスト（タイプした文字・改行・ペースト）。
+    ///   - range: 挿入が置換する範囲（キャレット位置では空）。
+    /// - Returns: 代わりに適用する変換。このルールで処理しない場合は `nil`。
     func transform(state: EditorState, inserting text: String, replacing range: TextSpan) -> RuleTransform?
 }

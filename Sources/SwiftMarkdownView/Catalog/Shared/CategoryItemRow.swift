@@ -1,18 +1,18 @@
 import SwiftUI
 import DesignSystem
 
-/// A row for displaying a catalog item in a list.
+/// リスト内でカタログアイテムを表示する行。
 struct CategoryItemRow: View {
 
-    /// The catalog item to display.
+    /// 表示するカタログアイテム。
     let item: MarkdownCatalogItem
 
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.spacingScale) private var spacing
 
-    /// Creates a new category item row.
+    /// カテゴリアイテム行を作成する。
     ///
-    /// - Parameter item: The catalog item to display.
+    /// - Parameter item: 表示するカタログアイテム。
     init(item: MarkdownCatalogItem) {
         self.item = item
     }

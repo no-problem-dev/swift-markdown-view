@@ -1,9 +1,9 @@
 import SwiftUI
 import DesignSystem
 
-/// A split-view catalog for regular layouts.
+/// レギュラーレイアウト向けのスプリットビューカタログ。
 ///
-/// Uses custom plain list style instead of system list styles.
+/// システムリストスタイルではなくカスタムのプレーンスタイルを使用する。
 struct MarkdownCatalogSplitView: View {
 
     @State private var selectedCategory: MarkdownCatalogCategory? = .blockElements

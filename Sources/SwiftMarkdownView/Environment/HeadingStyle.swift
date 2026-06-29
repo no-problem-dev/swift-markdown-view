@@ -3,10 +3,10 @@ import DesignSystem
 
 // MARK: - HeadingStyle Protocol
 
-/// A protocol that defines the visual styling for headings.
+/// 見出しの外観スタイルを定義するプロトコル。
 ///
-/// Implement this protocol to customize the typography, colors, and spacing
-/// of heading elements (H1-H6) in your Markdown content.
+/// このプロトコルを実装することで、Markdownコンテンツ内の
+/// 見出し要素（H1〜H6）のタイポグラフィ・カラー・スペーシングをカスタマイズできる。
 ///
 /// ## Example
 ///
@@ -30,54 +30,54 @@ import DesignSystem
 /// ```
 public protocol HeadingStyle: Sendable {
 
-    /// Returns the typography token for the given heading level.
+    /// 指定した見出しレベルに対応するタイポグラフィトークンを返す。
     ///
-    /// - Parameter level: The heading level (1-6).
-    /// - Returns: The typography token to use.
+    /// - Parameter level: 見出しレベル（1〜6）。
+    /// - Returns: 使用するタイポグラフィトークン。
     func typography(for level: Int) -> Typography
 
-    /// Returns the text color for the given heading level.
+    /// 指定した見出しレベルに対応するテキストカラーを返す。
     ///
     /// - Parameters:
-    ///   - level: The heading level (1-6).
-    ///   - palette: The current color palette from the environment.
-    /// - Returns: The text color for this heading level.
+    ///   - level: 見出しレベル（1〜6）。
+    ///   - palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: この見出しレベルのテキストカラー。
     func color(for level: Int, palette: any ColorPalette) -> Color
 
-    /// Returns the top padding for the given heading level.
+    /// 指定した見出しレベルに対応する上部パディングを返す。
     ///
     /// - Parameters:
-    ///   - level: The heading level (1-6).
-    ///   - spacing: The current spacing scale from the environment.
-    /// - Returns: The top padding in points.
+    ///   - level: 見出しレベル（1〜6）。
+    ///   - spacing: 環境から取得した現在のスペーシングスケール。
+    /// - Returns: 上部パディング（ポイント）。
     func topPadding(for level: Int, spacing: any SpacingScale) -> CGFloat
 
-    /// Returns the bottom padding for the given heading level.
+    /// 指定した見出しレベルに対応する下部パディングを返す。
     ///
     /// - Parameters:
-    ///   - level: The heading level (1-6).
-    ///   - spacing: The current spacing scale from the environment.
-    /// - Returns: The bottom padding in points.
+    ///   - level: 見出しレベル（1〜6）。
+    ///   - spacing: 環境から取得した現在のスペーシングスケール。
+    /// - Returns: 下部パディング（ポイント）。
     func bottomPadding(for level: Int, spacing: any SpacingScale) -> CGFloat
 
-    /// Whether to show a divider below the heading.
+    /// 見出し下にディバイダーを表示するかどうか。
     ///
-    /// - Parameter level: The heading level (1-6).
-    /// - Returns: `true` if a divider should be shown.
+    /// - Parameter level: 見出しレベル（1〜6）。
+    /// - Returns: ディバイダーを表示する場合は `true`。
     func showDivider(for level: Int) -> Bool
 
-    /// The color of the divider below the heading.
+    /// 見出し下のディバイダーカラー。
     ///
     /// - Parameters:
-    ///   - level: The heading level (1-6).
-    ///   - palette: The current color palette from the environment.
-    /// - Returns: The divider color.
+    ///   - level: 見出しレベル（1〜6）。
+    ///   - palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: ディバイダーカラー。
     func dividerColor(for level: Int, palette: any ColorPalette) -> Color
 }
 
 // MARK: - Default Implementation
 
-/// Provides default implementations for optional protocol methods.
+/// プロトコルのオプションメソッドにデフォルト実装を提供する。
 extension HeadingStyle {
 
     public func bottomPadding(for level: Int, spacing: any SpacingScale) -> CGFloat {
@@ -95,10 +95,9 @@ extension HeadingStyle {
 
 // MARK: - DefaultHeadingStyle
 
-/// The default heading style using DesignSystem typography tokens.
+/// DesignSystem タイポグラフィトークンを使用するデフォルト見出しスタイル。
 ///
-/// This style maps heading levels to appropriate typography tokens
-/// and provides consistent spacing.
+/// 見出しレベルを適切なタイポグラフィトークンにマッピングし、一貫したスペーシングを提供する。
 public struct DefaultHeadingStyle: HeadingStyle, Sendable {
 
     public init() {}
@@ -130,10 +129,9 @@ public struct DefaultHeadingStyle: HeadingStyle, Sendable {
 
 // MARK: - CompactHeadingStyle
 
-/// A compact heading style with reduced typography scale.
+/// タイポグラフィスケールを縮小したコンパクト見出しスタイル。
 ///
-/// This style is suitable for sidebars, cards, or other
-/// constrained spaces where smaller headings are preferred.
+/// サイドバー・カードなど、小さい見出しが望ましい制約のある領域に適する。
 public struct CompactHeadingStyle: HeadingStyle, Sendable {
 
     public init() {}
@@ -165,10 +163,9 @@ public struct CompactHeadingStyle: HeadingStyle, Sendable {
 
 // MARK: - ColoredHeadingStyle
 
-/// A heading style with colored primary headings.
+/// 上位見出しに彩色を加えた見出しスタイル。
 ///
-/// H1 and H2 headings use the primary color,
-/// while other levels use the default on-surface color.
+/// H1 はプライマリカラー、H2 はセカンダリカラーを使用し、その他のレベルはデフォルトの on-surface カラーを使用する。
 public struct ColoredHeadingStyle: HeadingStyle, Sendable {
 
     public init() {}
@@ -192,10 +189,9 @@ public struct ColoredHeadingStyle: HeadingStyle, Sendable {
 
 // MARK: - DividedHeadingStyle
 
-/// A heading style with dividers below H1 and H2 headings.
+/// H1・H2 の下にディバイダーを追加する見出しスタイル。
 ///
-/// This style adds visual separation for top-level headings,
-/// similar to documentation sites.
+/// ドキュメントサイト風に上位見出しに視覚的な区切りを加える。
 public struct DividedHeadingStyle: HeadingStyle, Sendable {
 
     public init() {}
@@ -229,9 +225,9 @@ private struct HeadingStyleKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// The style used for rendering headings.
+    /// 見出しのレンダリングに使用するスタイル。
     ///
-    /// Use the ``SwiftUICore/View/headingStyle(_:)`` modifier to set this value.
+    /// この値を設定するには ``SwiftUICore/View/headingStyle(_:)`` モディファイアを使用する。
     public var headingStyle: any HeadingStyle {
         get { self[HeadingStyleKey.self] }
         set { self[HeadingStyleKey.self] = newValue }
@@ -242,10 +238,10 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Sets a custom heading style for this view hierarchy.
+    /// このビュー階層に見出しのカスタムスタイルを設定する。
     ///
-    /// Use this modifier to customize the appearance of headings
-    /// rendered by ``MarkdownView``.
+    /// ``MarkdownView`` がレンダリングする見出しの外観をカスタマイズするには
+    /// このモディファイアを使用する。
     ///
     /// ## Example
     ///
@@ -258,8 +254,8 @@ extension View {
     /// .headingStyle(ColoredHeadingStyle())
     /// ```
     ///
-    /// - Parameter style: The heading style to use.
-    /// - Returns: A view with the heading style applied.
+    /// - Parameter style: 使用する見出しスタイル。
+    /// - Returns: 見出しスタイルが適用されたビュー。
     public func headingStyle(_ style: some HeadingStyle) -> some View {
         environment(\.headingStyle, style)
     }

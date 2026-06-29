@@ -1,23 +1,22 @@
 import SwiftUI
 import DesignSystem
 
-/// A single-line text view that typesets embedded math inline.
+/// 埋め込み数式をインラインで組版するシングルラインテキストビュー。
 ///
-/// Unlike ``MarkdownView``, no block structure is parsed: the source is
-/// split into text and math segments only, so the result stays a
-/// `Text` composition that inherits the caller's font. Use for headings,
-/// labels, and other places where Markdown body layout is unwanted but
-/// LLM output may still contain `$...$` / `$$...$$` delimiters:
+/// ``MarkdownView`` と異なり、ブロック構造を解析しない。ソースはテキストと
+/// 数式セグメントのみに分割されるため、呼び出し元のフォントを継承した
+/// `Text` コンポジションが返る。Markdown ボディレイアウトが不要だが
+/// LLM 出力に `$...$` / `$$...$$` デリミタが含まれる可能性がある
+/// 見出し・ラベルなどで使用する:
 ///
 /// ```swift
 /// MathText("答え: $$-6$$", mathFontSize: 22)
 ///     .font(.title2)
 /// ```
 ///
-/// Display math (`$$...$$`, `\[...\]`) is typeset in inline mode, since a
-/// single line offers no block layout. Math is rendered through the
-/// environment's ``MathRenderer``; without an injected renderer the LaTeX
-/// source is shown as monospaced text.
+/// ディスプレイ数式（`$$...$$`、`\[...\]`）はシングルラインにブロックレイアウトがないため、
+/// インラインモードで組版する。数式は環境の ``MathRenderer`` 経由でレンダリングされ、
+/// レンダラーが注入されない場合は LaTeX ソースを等幅テキストで表示する。
 public struct MathText: View {
 
     private let source: String
@@ -28,9 +27,9 @@ public struct MathText: View {
     @Environment(\.markdownRenderingOptions) private var options
 
     /// - Parameters:
-    ///   - source: Text that may contain math delimiters.
-    ///   - mathFontSize: Point size for math segments, typically the
-    ///     surrounding font's size. `nil` uses the renderer's default.
+    ///   - source: 数式デリミタを含む可能性があるテキスト。
+    ///   - mathFontSize: 数式セグメントのポイントサイズ。通常は周囲のフォントのサイズを指定する。
+    ///     `nil` の場合はレンダラーのデフォルトを使用する。
     public init(_ source: String, mathFontSize: CGFloat? = nil) {
         self.source = source
         self.mathFontSize = mathFontSize

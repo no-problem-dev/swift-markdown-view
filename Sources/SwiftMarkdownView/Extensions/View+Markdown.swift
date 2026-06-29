@@ -5,18 +5,18 @@ import DesignSystem
 
 public extension View {
 
-    /// Applies a DesignSystem theme to the MarkdownView and its contents.
+    /// MarkdownView とそのコンテンツに DesignSystem テーマを適用する。
     ///
-    /// This modifier ensures that all Markdown elements use the appropriate
-    /// typography, colors, and spacing from the DesignSystem theme.
+    /// このモディファイアにより、すべての Markdown 要素が DesignSystem テーマの
+    /// タイポグラフィ・カラー・スペーシングを使用する。
     ///
     /// ```swift
     /// MarkdownView(source)
     ///     .markdownTheme(themeProvider)
     /// ```
     ///
-    /// - Parameter provider: The ThemeProvider containing the theme configuration.
-    /// - Returns: A view with the theme applied.
+    /// - Parameter provider: テーマ設定を保持する ThemeProvider。
+    /// - Returns: テーマが適用されたビュー。
     func markdownTheme(_ provider: ThemeProvider) -> some View {
         self.theme(provider)
     }

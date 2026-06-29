@@ -1,22 +1,21 @@
 import Foundation
 
-/// The controller that ties ``EditorState`` together with ``EditorHistory``.
+/// ``EditorState`` と ``EditorHistory`` を結びつけるコントローラ。
 ///
-/// This is the object the UI layer drives: it owns the current state, records
-/// undo history as edits are applied, and exposes undo/redo. It deliberately
-/// depends only on Foundation (no UIKit/SwiftUI) so the entire edit pipeline can
-/// be unit-tested without a running text view; the TextKit layer observes it and
-/// mirrors changes into the platform text view.
+/// UI 層が操作するオブジェクトで、現在の状態を保持し、編集のたびに undo 履歴を記録し、
+/// undo/redo を公開する。Foundation のみに依存し（UIKit/SwiftUI 不要）、
+/// テキストビューなしで編集パイプライン全体をユニットテストできる。
+/// TextKit 層はこれを監視してプラットフォームテキストビューに変更を反映する。
 public final class MarkdownEditorEngine {
 
-    /// The current editor state.
+    /// 現在のエディタ状態。
     public private(set) var state: EditorState
 
-    /// The undo/redo history.
+    /// undo/redo 履歴。
     public private(set) var history: EditorHistory
 
-    /// Called after `state` changes for any reason (edit, undo, redo, external
-    /// set). The UI layer uses this to re-sync the text view.
+    /// `state` が変更されるたびに呼ばれる（編集・undo・redo・外部セット）。
+    /// UI 層はこれを使ってテキストビューを再同期する。
     public var onStateChange: ((EditorState) -> Void)?
 
     public init(state: EditorState = EditorState(text: "")) {
@@ -35,14 +34,13 @@ public final class MarkdownEditorEngine {
 
     // MARK: - Editing
 
-    /// Applies a change, recording it in history.
+    /// 変更を適用し、履歴に記録する。
     ///
     /// - Parameters:
-    ///   - change: The edit to apply.
-    ///   - selection: The selection for the resulting state. When `nil`, the
-    ///     current selection is mapped across the change.
-    ///   - allowCoalescing: Whether this edit may merge with the previous undo
-    ///     entry (typing). Pass `false` for rule transforms, paste, etc.
+    ///   - change: 適用する編集。
+    ///   - selection: 結果の状態のセレクション。`nil` のとき現在のセレクションを変更にマッピングする。
+    ///   - allowCoalescing: この編集を前の undo エントリと合成してよいか（タイプ入力）。
+    ///     ルール変換・ペーストなどは `false` を渡す。
     @discardableResult
     public func apply(
         _ change: TextChange,
@@ -67,7 +65,7 @@ public final class MarkdownEditorEngine {
         return next
     }
 
-    /// Replaces the current selection with `text`, placing the caret after it.
+    /// 現在のセレクションを `text` で置換し、キャレットをその後ろに置く。
     @discardableResult
     public func replaceSelection(with text: String, allowCoalescing: Bool = true) -> EditorState {
         let range = state.selection.range
@@ -96,15 +94,15 @@ public final class MarkdownEditorEngine {
 
     // MARK: - External updates
 
-    /// Replaces the whole document (e.g. a binding set from outside) without
-    /// recording undo history. The selection is clamped into the new text.
+    /// ドキュメント全体を置換する（例：外部からのバインディングセット）。undo 履歴は記録しない。
+    /// セレクションは新しいテキストの範囲内にクランプされる。
     public func setText(_ newText: String) {
         guard newText != state.text else { return }
         let clamped = clampSelection(state.selection, to: newText.utf16Length)
         setState(EditorState(text: newText, selection: clamped))
     }
 
-    /// Updates just the selection (e.g. the user moved the caret in the view).
+    /// セレクションのみ更新する（例：ユーザーがビュー内でキャレットを移動した場合）。
     public func setSelection(_ selection: Selection) {
         guard selection != state.selection else { return }
         var next = state

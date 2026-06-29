@@ -1,28 +1,27 @@
 import Foundation
 
-/// UTF-16 offset conversion helpers shared by the editor core.
+/// エディタコアが共有する UTF-16 オフセット変換ヘルパー。
 ///
-/// The whole editor model addresses text by UTF-16 code unit offset (see
-/// ``TextSpan``). Swift `String` mutation works on `String.Index`, so these
-/// helpers translate between the two safely, clamping out-of-range offsets to
-/// the buffer bounds rather than trapping.
+/// エディタモデル全体は UTF-16 コードユニットオフセット（``TextSpan`` 参照）でテキストを扱う。
+/// Swift の `String` 変更は `String.Index` で動作するため、
+/// これらのヘルパーは範囲外オフセットをバッファ境界にクランプしながら安全に変換する。
 public extension String {
 
-    /// The total length of the string in UTF-16 code units.
+    /// 文字列の UTF-16 コードユニット数。
     var utf16Length: Int { utf16.count }
 
-    /// Returns the `String.Index` for a UTF-16 offset, clamped to valid bounds.
+    /// UTF-16 オフセットに対応する `String.Index` を返す。有効境界にクランプする。
     func index(utf16Offset offset: Int) -> String.Index {
         let clamped = Swift.max(0, Swift.min(offset, utf16Length))
         return String.Index(utf16Offset: clamped, in: self)
     }
 
-    /// Returns the `Range<String.Index>` for a ``TextSpan``, clamped to bounds.
+    /// ``TextSpan`` に対応する `Range<String.Index>` を返す。境界にクランプする。
     func range(for textRange: TextSpan) -> Range<String.Index> {
         index(utf16Offset: textRange.lowerBound) ..< index(utf16Offset: textRange.upperBound)
     }
 
-    /// Returns the substring covered by a ``TextSpan``.
+    /// ``TextSpan`` が示す部分文字列を返す。
     func substring(in textRange: TextSpan) -> String {
         String(self[range(for: textRange)])
     }

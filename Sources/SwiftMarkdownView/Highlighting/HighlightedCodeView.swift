@@ -1,28 +1,27 @@
 import SwiftUI
 import DesignSystem
 
-/// A SwiftUI view that renders syntax-highlighted code asynchronously.
+/// シンタックスハイライトを非同期で適用してコードをレンダリングする SwiftUI ビュー。
 ///
-/// This view uses the injected `SyntaxHighlighter` from the environment
-/// to highlight code and display the result. It handles loading and
-/// error states gracefully.
+/// 環境から注入した `SyntaxHighlighter` を使用してコードをハイライトし結果を表示する。
+/// ローディング状態とエラー状態を適切に処理する。
 ///
 /// Example:
 /// ```swift
 /// HighlightedCodeView(code: swiftCode, language: "swift")
 /// ```
 ///
-/// To use a custom highlighter:
+/// カスタムハイライターを使用する場合:
 /// ```swift
 /// HighlightedCodeView(code: swiftCode, language: "swift")
 ///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
 /// ```
 public struct HighlightedCodeView: View {
 
-    /// The source code to highlight.
+    /// ハイライト対象のソースコード。
     public let code: String
 
-    /// The programming language for syntax rules.
+    /// シンタックスルールに使用するプログラミング言語。
     public let language: String?
 
     @Environment(\.syntaxHighlighter) private var highlighter
@@ -30,11 +29,11 @@ public struct HighlightedCodeView: View {
 
     @State private var state: HighlightState = .idle
 
-    /// Creates a highlighted code view.
+    /// ハイライト済みコードビューを生成する。
     ///
     /// - Parameters:
-    ///   - code: The source code to highlight.
-    ///   - language: The programming language (e.g., "swift", "python").
+    ///   - code: ハイライト対象のソースコード。
+    ///   - language: プログラミング言語（例: "swift"、"python"）。
     public init(code: String, language: String?) {
         self.code = code
         self.language = language
@@ -84,7 +83,7 @@ public struct HighlightedCodeView: View {
 // MARK: - Task Identifier
 
 extension HighlightedCodeView {
-    /// Hashable identifier for task invalidation.
+    /// タスク無効化のための Hashable 識別子。
     private struct TaskIdentifier: Hashable {
         let code: String
         let language: String?

@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for paragraph elements.
+/// 段落要素のカタログ View。
 public struct ParagraphCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

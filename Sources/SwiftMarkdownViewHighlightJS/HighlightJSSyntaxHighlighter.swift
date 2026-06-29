@@ -2,16 +2,15 @@ import SwiftUI
 import SwiftMarkdownView
 @preconcurrency import HighlightSwift
 
-/// A syntax highlighter powered by highlight.js for accurate, multi-language support.
+/// highlight.js を使用した、多言語対応の高精度シンタックスハイライター。
 ///
-/// This highlighter uses the [HighlightSwift](https://github.com/appstefan/HighlightSwift)
-/// library which provides:
-/// - 50+ language support
-/// - 30+ built-in themes (light/dark)
-/// - Automatic language detection
-/// - SwiftUI integration with `AttributedString` output
+/// [HighlightSwift](https://github.com/appstefan/HighlightSwift) ライブラリを使用し、
+/// 以下の機能を提供する:
+/// - 50 以上の言語に対応
+/// - 30 以上のビルトインテーマ（ライト/ダーク）
+/// - 言語の自動検出
+/// - `AttributedString` 出力による SwiftUI 統合
 ///
-/// Example usage:
 /// ```swift
 /// import SwiftMarkdownViewHighlightJS
 ///
@@ -19,33 +18,33 @@ import SwiftMarkdownView
 ///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
 /// ```
 ///
-/// With a custom theme:
+/// カスタムテーマを使用する場合:
 /// ```swift
 /// MarkdownView(source)
 ///     .syntaxHighlighter(HighlightJSSyntaxHighlighter(theme: .xcode, colorMode: .light))
 /// ```
 public struct HighlightJSSyntaxHighlighter: SyntaxHighlighter, Sendable {
 
-    /// The highlight.js theme to use.
+    /// 使用する highlight.js テーマ。
     public let theme: HighlightTheme
 
-    /// Whether to use light or dark colors.
+    /// ライトカラーまたはダークカラーのどちらを使用するか。
     public let colorMode: ColorMode
 
-    /// The highlight engine instance.
+    /// ハイライトエンジンのインスタンス。
     private let highlight: Highlight
 
-    /// Color mode for syntax highlighting.
+    /// シンタックスハイライトのカラーモード。
     public enum ColorMode: Sendable {
         case light
         case dark
     }
 
-    /// Creates a highlight.js-based syntax highlighter.
+    /// highlight.js ベースのシンタックスハイライターを生成する。
     ///
     /// - Parameters:
-    ///   - theme: The color theme to use. Defaults to `.xcode`.
-    ///   - colorMode: Whether to use light or dark colors. Defaults to `.light`.
+    ///   - theme: 使用するカラーテーマ。デフォルトは `.xcode`。
+    ///   - colorMode: ライトまたはダークカラーを使用するか。デフォルトは `.light`。
     public init(theme: HighlightTheme = .xcode, colorMode: ColorMode = .light) {
         self.theme = theme
         self.colorMode = colorMode
@@ -64,10 +63,10 @@ public struct HighlightJSSyntaxHighlighter: SyntaxHighlighter, Sendable {
         }
 
         if let language = language, !language.isEmpty {
-            // Use specified language
+            // 指定言語を使用
             return try await highlight.attributedText(code, language: language, colors: colors)
         } else {
-            // Auto-detect language
+            // 言語を自動検出
             return try await highlight.attributedText(code, colors: colors)
         }
     }
@@ -77,47 +76,47 @@ public struct HighlightJSSyntaxHighlighter: SyntaxHighlighter, Sendable {
 
 extension HighlightJSSyntaxHighlighter {
 
-    /// Xcode light theme.
-    /// - Warning: This theme has issues with plain text not having explicit colors.
-    ///   Consider using `a11yLight` or `githubLight` for better visibility.
+    /// Xcode ライトテーマ。
+    /// - Warning: このテーマはプレーンテキストに明示的なカラーが設定されていないことがある。
+    ///   視認性を高めるには `a11yLight` または `githubLight` の使用を検討する。
     public static let xcodeLight = HighlightJSSyntaxHighlighter(theme: .xcode, colorMode: .light)
 
-    /// Xcode dark theme.
+    /// Xcode ダークテーマ。
     public static let xcodeDark = HighlightJSSyntaxHighlighter(theme: .xcode, colorMode: .dark)
 
-    /// GitHub light theme - good contrast for light backgrounds.
+    /// GitHub ライトテーマ。ライト背景に対するコントラストが良好。
     public static let githubLight = HighlightJSSyntaxHighlighter(theme: .github, colorMode: .light)
 
-    /// GitHub dark theme.
+    /// GitHub ダークテーマ。
     public static let githubDark = HighlightJSSyntaxHighlighter(theme: .github, colorMode: .dark)
 
-    /// Atom One light theme.
+    /// Atom One ライトテーマ。
     public static let atomOneLight = HighlightJSSyntaxHighlighter(theme: .atomOne, colorMode: .light)
 
-    /// Atom One dark theme.
+    /// Atom One ダークテーマ。
     public static let atomOneDark = HighlightJSSyntaxHighlighter(theme: .atomOne, colorMode: .dark)
 
-    /// Solarized light theme.
+    /// Solarized ライトテーマ。
     public static let solarizedLight = HighlightJSSyntaxHighlighter(theme: .solarized, colorMode: .light)
 
-    /// Solarized dark theme.
+    /// Solarized ダークテーマ。
     public static let solarizedDark = HighlightJSSyntaxHighlighter(theme: .solarized, colorMode: .dark)
 
-    /// Tokyo Night dark theme.
+    /// Tokyo Night ダークテーマ。
     public static let tokyoNightDark = HighlightJSSyntaxHighlighter(theme: .tokyoNight, colorMode: .dark)
 
-    /// A11y (Accessibility) light theme - high contrast, recommended for light backgrounds.
+    /// A11y（アクセシビリティ）ライトテーマ。高コントラストでライト背景に推奨。
     public static let a11yLight = HighlightJSSyntaxHighlighter(theme: .a11y, colorMode: .light)
 
-    /// A11y (Accessibility) dark theme - high contrast for dark backgrounds.
+    /// A11y（アクセシビリティ）ダークテーマ。ダーク背景向けの高コントラスト。
     public static let a11yDark = HighlightJSSyntaxHighlighter(theme: .a11y, colorMode: .dark)
 
-    /// Creates a highlighter that matches the given SwiftUI ColorScheme.
+    /// 指定した SwiftUI ColorScheme に合わせたハイライターを生成する。
     ///
     /// - Parameters:
-    ///   - colorScheme: The SwiftUI color scheme (.light or .dark).
-    ///   - theme: The highlight.js theme to use. Defaults to `.a11y` for best contrast.
-    /// - Returns: A highlighter configured for the color scheme.
+    ///   - colorScheme: SwiftUI のカラースキーム（.light または .dark）。
+    ///   - theme: 使用する highlight.js テーマ。コントラスト最適化のデフォルトは `.a11y`。
+    /// - Returns: カラースキームに設定されたハイライター。
     public static func forColorScheme(
         _ colorScheme: ColorScheme,
         theme: HighlightTheme = .a11y
@@ -131,10 +130,10 @@ extension HighlightJSSyntaxHighlighter {
 
 public extension View {
 
-    /// Applies syntax highlighting that automatically adapts to the color scheme.
+    /// カラースキームに自動対応するシンタックスハイライトを適用する。
     ///
-    /// This modifier reads the current `colorScheme` from the environment and
-    /// configures an appropriate `HighlightJSSyntaxHighlighter`.
+    /// このモディファイアは環境から現在の `colorScheme` を読み取り、
+    /// 適切な `HighlightJSSyntaxHighlighter` を設定する。
     ///
     /// ```swift
     /// import SwiftMarkdownViewHighlightJS
@@ -144,15 +143,15 @@ public extension View {
     ///     .adaptiveSyntaxHighlighting()
     /// ```
     ///
-    /// With a custom theme:
+    /// カスタムテーマを使用する場合:
     /// ```swift
     /// MarkdownCatalogView()
     ///     .theme(ThemeProvider())
     ///     .adaptiveSyntaxHighlighting(theme: .github)
     /// ```
     ///
-    /// - Parameter theme: The highlight.js theme to use. Defaults to `.a11y` for best contrast.
-    /// - Returns: A view with adaptive syntax highlighting applied.
+    /// - Parameter theme: 使用する highlight.js テーマ。コントラスト最適化のデフォルトは `.a11y`。
+    /// - Returns: アダプティブシンタックスハイライトが適用されたビュー。
     func adaptiveSyntaxHighlighting(theme: HighlightTheme = .a11y) -> some View {
         modifier(AdaptiveSyntaxHighlightingModifier(theme: theme))
     }
@@ -160,7 +159,7 @@ public extension View {
 
 // MARK: - Adaptive Syntax Highlighting Modifier
 
-/// A view modifier that sets up syntax highlighting based on the current color scheme.
+/// 現在のカラースキームに基づいてシンタックスハイライトを設定するビューモディファイア。
 private struct AdaptiveSyntaxHighlightingModifier: ViewModifier {
 
     let theme: HighlightTheme

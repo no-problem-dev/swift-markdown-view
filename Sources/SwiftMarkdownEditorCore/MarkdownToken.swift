@@ -1,44 +1,43 @@
 import Foundation
 
-/// A syntactic token in Markdown source, used to drive source-side syntax
-/// highlighting.
+/// ソース側のシンタックスハイライトに使用する Markdown ソースの構文トークン。
 ///
-/// Tokens carry a ``TextSpan`` (UTF-16 offsets) and a ``Kind``. The TextKit
-/// layer maps each kind to text attributes. Tokens never overlap, so they can be
-/// applied to an `NSAttributedString` in a single left-to-right pass.
+/// トークンは ``TextSpan``（UTF-16 オフセット）と ``Kind`` を保持する。
+/// TextKit 層は各 kind をテキスト属性にマッピングする。
+/// トークンは重複しないため、`NSAttributedString` に左から右への単一パスで適用できる。
 public struct MarkdownToken: Equatable, Sendable {
 
-    /// The category of a token. The set is intentionally small and source-mode
-    /// oriented (tint the markers, color spans) — full inline matching is a
-    /// live-preview concern handled later.
+    /// トークンのカテゴリ。
+    /// セットは意図的に小さく、ソースモード向け（マーカーを着色・範囲に色付け）。
+    /// 完全なインラインマッチングはライブプレビューで扱う。
     public enum Kind: Equatable, Hashable, Sendable, CaseIterable {
-        /// The `#` run that opens an ATX heading.
+        /// ATX 見出しを開く `#` ラン。
         case headingMarker
-        /// The text of a heading line (after the marker).
+        /// 見出し行のテキスト（マーカーの後）。
         case heading
-        /// A run of `*`/`_` of length 1 (emphasis delimiters).
+        /// 長さ 1 の `*`/`_` ラン（emphasis デリミタ）。
         case emphasis
-        /// A run of `*`/`_` of length >= 2 (strong delimiters).
+        /// 長さ 2 以上の `*`/`_` ラン（strong デリミタ）。
         case strong
-        /// A `~~` run (strikethrough delimiters).
+        /// `~~` ラン（取り消し線デリミタ）。
         case strikethrough
-        /// An inline code span, including its backticks.
+        /// インラインコードスパン（バッククォートを含む）。
         case inlineCode
-        /// A fenced code block delimiter line (```` ``` ```` / `~~~`).
+        /// フェンスコードブロックのデリミタ行（```` ``` ```` / `~~~`）。
         case codeFence
-        /// A line of content inside a fenced code block.
+        /// フェンスコードブロック内のコンテンツ行。
         case codeBlock
-        /// A list bullet/number marker (`-`, `*`, `+`, `1.`).
+        /// リストの箇条書き・番号マーカー（`-`・`*`・`+`・`1.`）。
         case listMarker
-        /// A task list checkbox (`[ ]` / `[x]`).
+        /// タスクリストのチェックボックス（`[ ]` / `[x]`）。
         case taskMarker
-        /// A blockquote `>` marker run.
+        /// blockquote の `>` マーカーラン。
         case blockquote
-        /// A thematic break line (`---`, `***`, `___`).
+        /// 水平線（`---`・`***`・`___`）。
         case thematicBreak
-        /// The bracketed text of a link/image (`[text]`, `![alt]`).
+        /// リンク・画像のブラケットテキスト（`[text]`・`![alt]`）。
         case linkText
-        /// The parenthesized destination of a link/image (`(url)`).
+        /// リンク・画像の括弧付き宛先（`(url)`）。
         case linkURL
     }
 

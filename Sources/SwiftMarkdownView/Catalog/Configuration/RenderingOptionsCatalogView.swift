@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for MarkdownRenderingOptions configuration.
+/// MarkdownRenderingOptions 設定のカタログ View。
 public struct RenderingOptionsCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

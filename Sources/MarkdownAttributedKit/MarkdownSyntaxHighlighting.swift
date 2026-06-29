@@ -5,16 +5,21 @@ import UIKit
 import AppKit
 #endif
 
-/// Produces syntax-highlighted attributes for a code string. Async because real
-/// highlighters (e.g. Highlight.js via JavaScriptCore) are off the main actor.
-/// Returns `nil` to leave the code as-is. UI-free: the result is a Foundation
-/// `AttributedString` whose foreground colors are transplanted onto the storage.
+/// コード文字列のシンタックスハイライト属性を生成する内部プロトコル。
+///
+/// 実際のハイライター（例: JavaScriptCore 経由の Highlight.js）はメインアクター外で動くため非同期。
+/// `nil` を返した場合、コードはカラー書式なしのプレーンテキストとして表示する。
+/// UI 非依存: 結果は Foundation の `AttributedString` で、前景色をストレージに移植する。
+///
+/// > Note: ユーザー向けの公開 API は ``SyntaxHighlighter`` プロトコルを使用すること。
+/// > `MarkdownCodeHighlighting` はレンダリングパイプライン内部の低レベルインタフェースであり、
+/// > `throws` なし・`Optional` 返り値という制約を持つ。`SyntaxHighlighter` は `throws` に対応し、
+/// > `.syntaxHighlighter(_:)` モディファイア経由で注入する。
 public protocol MarkdownCodeHighlighting: Sendable {
     func highlightedCode(_ code: String, language: String?) async -> AttributedString?
 }
 
-/// A code region located in a built attributed string by its
-/// ``NSAttributedString/Key/markdownCodeLanguage`` tag.
+/// 構築済み属性文字列内で ``NSAttributedString/Key/markdownCodeLanguage`` タグによって特定されるコード領域。
 public struct MarkdownCodeRegion: Equatable {
     public let range: NSRange
     public let language: String?
@@ -23,8 +28,7 @@ public struct MarkdownCodeRegion: Equatable {
 
 public enum MarkdownSyntaxHighlighting {
 
-    /// All code regions in document order. The range covers only the code text
-    /// (not the block separator), so a highlighter's output aligns 1:1.
+    /// ドキュメント順にすべてのコード領域を返す。範囲はコードテキストのみ（ブロック区切りを含まない）のため、ハイライターの出力が 1:1 で対応する。
     public static func regions(in attributed: NSAttributedString) -> [MarkdownCodeRegion] {
         var result: [MarkdownCodeRegion] = []
         let full = NSRange(location: 0, length: attributed.length)
@@ -40,10 +44,7 @@ public enum MarkdownSyntaxHighlighting {
         return result
     }
 
-    /// Transplants the foreground colors from a highlighter's `AttributedString`
-    /// onto `storage` at `range`, preserving the monospaced font, paragraph
-    /// style, and block decoration already there. No-op on a length mismatch
-    /// (the highlighter must return the same characters).
+    /// ハイライター生成の `AttributedString` から前景色を `storage` の `range` に移植し、等幅フォント・段落スタイル・ブロックデコレーションを保持する。文字数不一致の場合は何もしない（ハイライターは同一文字を返さなければならない）。
     @discardableResult
     public static func applyForegroundColors(
         from highlighted: AttributedString,

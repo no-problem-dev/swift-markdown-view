@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for heading elements (H1-H6).
+/// H1〜H6 の見出し要素のカタログ View。
 public struct HeadingCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

@@ -3,43 +3,41 @@ import DesignSystem
 
 // MARK: - MathRenderer Protocol
 
-/// A renderer for math expressions found in Markdown content.
+/// Markdownコンテンツ内の数式をレンダリングする型。
 ///
-/// The core module ships ``PlainMathRenderer``, which shows LaTeX source
-/// without typesetting. Add the `SwiftMarkdownViewLaTeX` module and inject
-/// its `LaTeXMathRenderer` for real typesetting:
+/// コアモジュールは LaTeX ソースを組版なしで表示する ``PlainMathRenderer`` を同梱する。
+/// 本格的な組版を行うには `SwiftMarkdownViewLaTeX` モジュールを追加して
+/// `LaTeXMathRenderer` を注入する:
 ///
 /// ```swift
 /// MarkdownView(source)
 ///     .mathRenderer(LaTeXMathRenderer())
 /// ```
 ///
-/// This mirrors the ``SyntaxHighlighter`` pattern: the core stays
-/// dependency-free and the implementation is injected via the environment.
+/// ``SyntaxHighlighter`` パターンを踏襲し、コアは依存なしのままで
+/// 実装を環境経由で注入する設計。
 public protocol MathRenderer: Sendable {
 
-    /// Renders inline math as a `Text` segment.
+    /// インライン数式を `Text` セグメントとしてレンダリングする。
     ///
-    /// The result is concatenated with the surrounding paragraph text, so
-    /// it must be a `Text` (images can participate via `Text(Image)`
-    /// interpolation with a baseline offset).
+    /// 結果は周囲の段落テキストと連結されるため、`Text` である必要がある
+    ///（画像はベースラインオフセット付きの `Text(Image)` 補間で参加できる）。
     ///
     /// - Parameters:
-    ///   - latex: The LaTeX source without delimiters.
-    ///   - palette: The current color palette from the environment.
+    ///   - latex: デリミタなしの LaTeX ソース。
+    ///   - palette: 環境から取得した現在のカラーパレット。
     @MainActor func inlineMath(_ latex: String, palette: any ColorPalette) -> Text
 
-    /// Renders inline math at a specific font size.
+    /// 特定のフォントサイズでインライン数式をレンダリングする。
     ///
-    /// Used where math is embedded in non-body text (headings, labels —
-    /// see ``MathText``) and must match the surrounding font. The default
-    /// implementation ignores the size and falls back to
-    /// ``inlineMath(_:palette:)``.
+    /// 見出しやラベルなど非ボディテキストに埋め込まれた数式（``MathText`` 参照）に使用し、
+    /// 周囲のフォントに合わせる。デフォルト実装はサイズを無視して
+    /// ``inlineMath(_:palette:)`` にフォールバックする。
     @MainActor func inlineMath(_ latex: String, fontSize: CGFloat, palette: any ColorPalette) -> Text
 
-    /// Renders display math as a block view.
+    /// ディスプレイ数式をブロックビューとしてレンダリングする。
     ///
-    /// - Parameter latex: The LaTeX source without delimiters.
+    /// - Parameter latex: デリミタなしの LaTeX ソース。
     @MainActor func displayMath(_ latex: String) -> AnyView
 }
 
@@ -53,11 +51,10 @@ extension MathRenderer {
 
 // MARK: - PlainMathRenderer
 
-/// The default math renderer: shows LaTeX source without typesetting.
+/// 組版なしで LaTeX ソースを表示するデフォルト数式レンダラー。
 ///
-/// Inline math appears as monospaced `$...$` text; display math appears
-/// as a `math` code block. This keeps the core module dependency-free
-/// while degrading gracefully.
+/// インライン数式は等幅の `$...$` テキスト、ディスプレイ数式は `math` コードブロックとして表示する。
+/// コアモジュールを依存なしに保ちつつ、グレースフルなデグレードを実現する。
 public struct PlainMathRenderer: MathRenderer {
 
     public init() {}
@@ -83,9 +80,9 @@ private struct MathRendererKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// The renderer used for math expressions.
+    /// 数式のレンダリングに使用するレンダラー。
     ///
-    /// Use the ``SwiftUICore/View/mathRenderer(_:)`` modifier to set this value.
+    /// この値を設定するには ``SwiftUICore/View/mathRenderer(_:)`` モディファイアを使用する。
     public var mathRenderer: any MathRenderer {
         get { self[MathRendererKey.self] }
         set { self[MathRendererKey.self] = newValue }
@@ -96,7 +93,7 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Sets a custom math renderer for this view hierarchy.
+    /// このビュー階層にカスタム数式レンダラーを設定する。
     ///
     /// ## Example
     ///
@@ -105,8 +102,8 @@ extension View {
     ///     .mathRenderer(LaTeXMathRenderer())
     /// ```
     ///
-    /// - Parameter renderer: The math renderer to use.
-    /// - Returns: A view with the math renderer applied.
+    /// - Parameter renderer: 使用する数式レンダラー。
+    /// - Returns: 数式レンダラーが適用されたビュー。
     public func mathRenderer(_ renderer: some MathRenderer) -> some View {
         environment(\.mathRenderer, renderer)
     }
@@ -114,7 +111,7 @@ extension View {
 
 // MARK: - MathBlockView
 
-/// Renders a display math block via the environment's math renderer.
+/// 環境の数式レンダラーを使用してディスプレイ数式ブロックをレンダリングする。
 struct MathBlockView: View {
     let latex: String
 

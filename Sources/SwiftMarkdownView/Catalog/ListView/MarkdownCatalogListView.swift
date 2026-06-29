@@ -1,9 +1,9 @@
 import SwiftUI
 import DesignSystem
 
-/// A list-based catalog view for compact layouts.
+/// コンパクトレイアウト向けのリストベースカタログ View。
 ///
-/// Uses a custom plain style instead of system list styles.
+/// システムリストスタイルではなくカスタムのプレーンスタイルを使用する。
 struct MarkdownCatalogListView: View {
 
     @Environment(\.colorPalette) private var colorPalette
@@ -27,7 +27,7 @@ struct MarkdownCatalogListView: View {
     }
 }
 
-/// A section containing a category header and its items.
+/// カテゴリヘッダーとそのアイテムを含むセクション。
 private struct CategorySection: View {
 
     let category: MarkdownCatalogCategory
@@ -60,7 +60,7 @@ private struct CategorySection: View {
     }
 }
 
-/// Plain style item row for custom list.
+/// カスタムリスト用のプレーンスタイルアイテム行。
 private struct CategoryItemRowPlain: View {
 
     let item: MarkdownCatalogItem
@@ -102,7 +102,7 @@ private struct CategoryItemRowPlain: View {
     }
 }
 
-/// Header view for a category section.
+/// カテゴリセクションのヘッダー View。
 struct CategorySectionHeader: View {
 
     let category: MarkdownCatalogCategory

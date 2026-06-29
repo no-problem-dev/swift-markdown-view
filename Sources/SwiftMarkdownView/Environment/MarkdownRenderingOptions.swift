@@ -2,10 +2,10 @@ import SwiftUI
 
 // MARK: - MarkdownRenderingOptions
 
-/// Options for controlling Markdown rendering behavior.
+/// Markdown レンダリング動作を制御するオプション。
 ///
-/// Use this struct to enable or disable specific Markdown features,
-/// such as Mermaid diagrams, images, tables, and asides.
+/// Mermaid ダイアグラム・画像・テーブル・Aside など
+/// 特定の Markdown 機能の有効/無効を制御するために使用する。
 ///
 /// ## Example
 ///
@@ -13,73 +13,73 @@ import SwiftUI
 /// MarkdownView(source)
 ///     .markdownRenderingOptions(
 ///         MarkdownRenderingOptions(
-///             renderMermaid: false,  // Disable Mermaid diagrams
-///             maxImageHeight: 300    // Limit image height
+///             renderMermaid: false,  // Mermaid ダイアグラムを無効化
+///             maxImageHeight: 300    // 画像の高さを制限
 ///         )
 ///     )
 /// ```
 public struct MarkdownRenderingOptions: Sendable, Equatable {
 
-    /// Whether to render Mermaid diagrams.
+    /// Mermaid ダイアグラムをレンダリングするかどうか。
     ///
-    /// When `false`, Mermaid code blocks are rendered as regular code blocks.
-    /// Defaults to `true`.
+    /// `false` の場合、Mermaid コードブロックは通常のコードブロックとしてレンダリングされる。
+    /// デフォルトは `true`。
     public var renderMermaid: Bool
 
-    /// Whether to render images.
+    /// 画像をレンダリングするかどうか。
     ///
-    /// When `false`, images are replaced with alt text placeholders.
-    /// Defaults to `true`.
+    /// `false` の場合、画像は alt テキストのプレースホルダーに置き換えられる。
+    /// デフォルトは `true`。
     public var renderImages: Bool
 
-    /// Whether to render tables.
+    /// テーブルをレンダリングするかどうか。
     ///
-    /// When `false`, tables are rendered as plain text.
-    /// Defaults to `true`.
+    /// `false` の場合、テーブルはプレーンテキストとしてレンダリングされる。
+    /// デフォルトは `true`。
     public var renderTables: Bool
 
-    /// Whether to render aside blocks (callouts/admonitions).
+    /// Aside ブロック（コールアウト/警告）をレンダリングするかどうか。
     ///
-    /// When `false`, asides are rendered as regular blockquotes.
-    /// Defaults to `true`.
+    /// `false` の場合、Aside は通常のブロッククォートとしてレンダリングされる。
+    /// デフォルトは `true`。
     public var renderAsides: Bool
 
-    /// Maximum height for images in points.
+    /// 画像の最大高さ（ポイント）。
     ///
-    /// When set, images taller than this value are scaled down.
-    /// Set to `nil` for no limit. Defaults to `nil`.
+    /// 設定した場合、この値を超える高さの画像は縮小される。
+    /// 制限なしにするには `nil` を指定する。デフォルトは `nil`。
     public var maxImageHeight: CGFloat?
 
-    /// Maximum width for images in points.
+    /// 画像の最大幅（ポイント）。
     ///
-    /// When set, images wider than this value are scaled down.
-    /// Set to `nil` for no limit. Defaults to `nil`.
+    /// 設定した場合、この値を超える幅の画像は縮小される。
+    /// 制限なしにするには `nil` を指定する。デフォルトは `nil`。
     public var maxImageWidth: CGFloat?
 
-    /// Whether to enable syntax highlighting for code blocks.
+    /// コードブロックのシンタックスハイライトを有効にするかどうか。
     ///
-    /// When `false`, code blocks are rendered without highlighting.
-    /// Defaults to `true`.
+    /// `false` の場合、コードブロックはハイライトなしでレンダリングされる。
+    /// デフォルトは `true`。
     public var enableSyntaxHighlighting: Bool
 
-    /// Whether to render math expressions via the ``MathRenderer``.
+    /// ``MathRenderer`` を経由して数式をレンダリングするかどうか。
     ///
-    /// When `false`, display math is rendered as a `math` code block and
-    /// inline math as monospaced source text.
-    /// Defaults to `true`.
+    /// `false` の場合、ディスプレイ数式は `math` コードブロックとして、
+    /// インライン数式は等幅のソーステキストとしてレンダリングされる。
+    /// デフォルトは `true`。
     public var renderMath: Bool
 
-    /// Creates a new rendering options configuration.
+    /// レンダリングオプションを生成する。
     ///
     /// - Parameters:
-    ///   - renderMermaid: Whether to render Mermaid diagrams. Defaults to `true`.
-    ///   - renderImages: Whether to render images. Defaults to `true`.
-    ///   - renderTables: Whether to render tables. Defaults to `true`.
-    ///   - renderAsides: Whether to render aside blocks. Defaults to `true`.
-    ///   - maxImageHeight: Maximum image height in points. Defaults to `nil`.
-    ///   - maxImageWidth: Maximum image width in points. Defaults to `nil`.
-    ///   - enableSyntaxHighlighting: Whether to enable syntax highlighting. Defaults to `true`.
-    ///   - renderMath: Whether to render math expressions. Defaults to `true`.
+    ///   - renderMermaid: Mermaid ダイアグラムをレンダリングするかどうか。デフォルトは `true`。
+    ///   - renderImages: 画像をレンダリングするかどうか。デフォルトは `true`。
+    ///   - renderTables: テーブルをレンダリングするかどうか。デフォルトは `true`。
+    ///   - renderAsides: Aside ブロックをレンダリングするかどうか。デフォルトは `true`。
+    ///   - maxImageHeight: 画像の最大高さ（ポイント）。デフォルトは `nil`。
+    ///   - maxImageWidth: 画像の最大幅（ポイント）。デフォルトは `nil`。
+    ///   - enableSyntaxHighlighting: シンタックスハイライトを有効にするかどうか。デフォルトは `true`。
+    ///   - renderMath: 数式をレンダリングするかどうか。デフォルトは `true`。
     public init(
         renderMermaid: Bool = true,
         renderImages: Bool = true,
@@ -100,21 +100,21 @@ public struct MarkdownRenderingOptions: Sendable, Equatable {
         self.renderMath = renderMath
     }
 
-    /// The default rendering options with all features enabled.
+    /// すべての機能を有効にしたデフォルトのレンダリングオプション。
     public static let `default` = MarkdownRenderingOptions()
 
-    /// Rendering options optimized for compact display.
+    /// コンパクト表示に最適化されたレンダリングオプション。
     ///
-    /// Disables Mermaid diagrams and limits image size.
+    /// Mermaid ダイアグラムを無効化し、画像サイズを制限する。
     public static let compact = MarkdownRenderingOptions(
         renderMermaid: false,
         maxImageHeight: 200,
         maxImageWidth: 300
     )
 
-    /// Rendering options for plain text-like display.
+    /// プレーンテキスト風表示向けのレンダリングオプション。
     ///
-    /// Disables complex elements like Mermaid, images, and tables.
+    /// Mermaid・画像・テーブルなど複雑な要素を無効化する。
     public static let plainText = MarkdownRenderingOptions(
         renderMermaid: false,
         renderImages: false,
@@ -132,9 +132,9 @@ private struct MarkdownRenderingOptionsKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// The rendering options for Markdown content.
+    /// Markdown コンテンツのレンダリングオプション。
     ///
-    /// Use the ``SwiftUICore/View/markdownRenderingOptions(_:)`` modifier to set this value.
+    /// この値を設定するには ``SwiftUICore/View/markdownRenderingOptions(_:)`` モディファイアを使用する。
     public var markdownRenderingOptions: MarkdownRenderingOptions {
         get { self[MarkdownRenderingOptionsKey.self] }
         set { self[MarkdownRenderingOptionsKey.self] = newValue }
@@ -145,10 +145,10 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Sets the rendering options for Markdown content in this view hierarchy.
+    /// このビュー階層の Markdown コンテンツにレンダリングオプションを設定する。
     ///
-    /// Use this modifier to control which Markdown features are rendered
-    /// and how they appear.
+    /// どの Markdown 機能をレンダリングするか、またその外観を制御するには
+    /// このモディファイアを使用する。
     ///
     /// ## Example
     ///
@@ -164,8 +164,8 @@ extension View {
     /// .markdownRenderingOptions(.compact)
     /// ```
     ///
-    /// - Parameter options: The rendering options to use.
-    /// - Returns: A view with the rendering options applied.
+    /// - Parameter options: 使用するレンダリングオプション。
+    /// - Returns: レンダリングオプションが適用されたビュー。
     public func markdownRenderingOptions(_ options: MarkdownRenderingOptions) -> some View {
         environment(\.markdownRenderingOptions, options)
     }

@@ -1,7 +1,7 @@
 import Foundation
 import SwiftMarkdownEditorCore
 
-/// Runs an ordered list of ``InputRule``s and returns the first match.
+/// ``InputRule`` の順序付きリストを実行し、最初にマッチしたものを返す。
 public struct InputRuleProcessor: Sendable {
 
     public var rules: [any InputRule]
@@ -10,7 +10,7 @@ public struct InputRuleProcessor: Sendable {
         self.rules = rules
     }
 
-    /// The default Phase 1 rule set: list continuation + smart wrapping.
+    /// デフォルトの Phase 1 ルールセット：リスト継続＋スマートラッピング。
     public static var standard: InputRuleProcessor {
         InputRuleProcessor(rules: [
             ListContinuationRule(),
@@ -18,7 +18,7 @@ public struct InputRuleProcessor: Sendable {
         ])
     }
 
-    /// Returns the transform of the first rule that handles this input, if any.
+    /// この入力を処理する最初のルールの変換を返す。該当するルールがない場合は `nil`。
     public func transform(
         state: EditorState,
         inserting text: String,

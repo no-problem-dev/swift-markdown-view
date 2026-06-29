@@ -1,11 +1,11 @@
 # シンタックスハイライト
 
-コードブロックのシンタックスハイライトをカスタマイズする方法を学びます。
+コードブロックのシンタックスハイライトをカスタマイズする方法を学ぶ。
 
 ## Overview
 
-SwiftMarkdownViewはデフォルトで``PlainTextHighlighter``を使用し、コードブロックに色付けは行いません。
-50+言語に対応したシンタックスハイライトを有効にするには、オプションの`SwiftMarkdownViewHighlightJS`モジュールを使用します。
+SwiftMarkdownViewはデフォルトで``PlainTextHighlighter``を使用し、コードブロックに色付けは行わない。
+50+言語に対応したシンタックスハイライトを有効にするには、オプションの`SwiftMarkdownViewHighlightJS`モジュールを使用する。
 
 ## クイックスタート
 
@@ -18,11 +18,11 @@ MarkdownView(source)
     .adaptiveSyntaxHighlighting()
 ```
 
-これにより、ライト/ダークモードに自動対応し、アクセシビリティに配慮したa11yテーマが適用されます。
+これにより、ライト/ダークモードに自動対応し、アクセシビリティに配慮したa11yテーマが適用される。
 
 ## HighlightJSの使用
 
-`SwiftMarkdownViewHighlightJS`モジュールは50+言語に対応した正確なハイライトを提供します：
+`SwiftMarkdownViewHighlightJS`モジュールは50+言語に対応した正確なハイライトを提供する：
 
 ```swift
 import SwiftMarkdownViewHighlightJS
@@ -68,7 +68,7 @@ HighlightJSSyntaxHighlighter.a11yDark
 
 ## カスタムハイライター
 
-独自のシンタックスハイライトを実装するには、``SyntaxHighlighter``プロトコルに準拠したハイライターを作成します：
+独自のシンタックスハイライトを実装するには、``SyntaxHighlighter``プロトコルに準拠したハイライターを作成する：
 
 ```swift
 struct MyCustomHighlighter: SyntaxHighlighter {
@@ -85,7 +85,7 @@ MarkdownView(source)
 
 ## シンタックスハイライトの無効化
 
-デフォルトではシンタックスハイライトは適用されません。明示的にプレーンテキストを使用するには：
+デフォルトではシンタックスハイライトは適用されない。明示的にプレーンテキストを使用するには：
 
 ```swift
 // デフォルト動作 - ハイライトなし

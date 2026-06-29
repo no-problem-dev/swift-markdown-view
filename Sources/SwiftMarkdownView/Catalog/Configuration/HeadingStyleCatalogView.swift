@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for HeadingStyle configuration.
+/// HeadingStyle 設定のカタログ View。
 public struct HeadingStyleCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

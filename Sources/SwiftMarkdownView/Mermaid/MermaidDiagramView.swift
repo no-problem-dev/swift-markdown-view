@@ -2,10 +2,10 @@ import SwiftUI
 import WebKit
 import DesignSystem
 
-/// A view that renders Mermaid diagrams using WebKit.
+/// WebKit を使用して Mermaid ダイアグラムをレンダリングするビュー。
 ///
-/// This view uses Mermaid.js to render diagrams from Mermaid syntax.
-/// The script source can be customized via the environment.
+/// Mermaid.js を使用して Mermaid 構文からダイアグラムをレンダリングする。
+/// スクリプトソースは環境でカスタマイズできる。
 ///
 /// ```swift
 /// MermaidDiagramView("""
@@ -14,11 +14,11 @@ import DesignSystem
 /// """)
 /// ```
 ///
-/// - Note: Requires iOS 26+ for native SwiftUI WebView support.
+/// - Note: ネイティブ SwiftUI WebView サポートには iOS 26 以降が必要。
 @available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *)
 public struct MermaidDiagramView: View {
 
-    /// The Mermaid diagram code to render.
+    /// レンダリングする Mermaid ダイアグラムコード。
     public let code: String
 
     @Environment(\.colorPalette) private var colorPalette
@@ -27,9 +27,9 @@ public struct MermaidDiagramView: View {
 
     @State private var page = WebPage()
 
-    /// Creates a Mermaid diagram view.
+    /// Mermaid ダイアグラムビューを生成する。
     ///
-    /// - Parameter code: The Mermaid diagram syntax to render.
+    /// - Parameter code: レンダリングする Mermaid ダイアグラム構文。
     public init(_ code: String) {
         self.code = code
     }
@@ -55,19 +55,19 @@ public struct MermaidDiagramView: View {
 
     // MARK: - HTML Generation
 
-    /// Mermaid theme based on current color scheme.
+    /// 現在のカラースキームに基づく Mermaid テーマ。
     private var mermaidTheme: String {
         colorScheme == .dark ? "dark" : "default"
     }
 
-    /// Background color based on current color scheme.
+    /// 現在のカラースキームに基づく背景色。
     private var backgroundColor: String {
         colorScheme == .dark ? "#1c1c1e" : "#ffffff"
     }
 
-    /// Error text color based on current color scheme.
+    /// 現在のカラースキームに基づくエラーテキストカラー。
     private var errorColor: String {
-        // Using semantic error colors that work well in both themes
+        // 両テーマで機能するセマンティックなエラーカラーを使用
         colorScheme == .dark ? "#ff6b6b" : "#dc3545"
     }
 
@@ -170,13 +170,12 @@ public struct MermaidDiagramView: View {
 
 // MARK: - Fallback View for older OS versions
 
-/// A placeholder view for Mermaid diagrams on older OS versions.
+/// 旧 OS バージョン向けの Mermaid ダイアグラムプレースホルダービュー。
 ///
-/// This view displays the raw Mermaid code when the native WebView
-/// is not available (iOS < 26).
+/// ネイティブ WebView が利用できない（iOS 26 未満）場合に、Mermaid コードをそのまま表示する。
 public struct MermaidFallbackView: View {
 
-    /// The Mermaid diagram code.
+    /// Mermaid ダイアグラムコード。
     public let code: String
 
     @Environment(\.colorPalette) private var colorPalette
@@ -212,7 +211,7 @@ public struct MermaidFallbackView: View {
 
 // MARK: - Adaptive Mermaid View
 
-/// An adaptive view that uses native WebView on iOS 26+ or falls back to code display.
+/// iOS 26 以降でネイティブ WebView を使用し、それ以前はコード表示にフォールバックするアダプティブビュー。
 public struct AdaptiveMermaidView: View {
 
     public let code: String

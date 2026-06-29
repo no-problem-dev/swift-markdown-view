@@ -7,12 +7,11 @@ import UIKit
 import AppKit
 #endif
 
-/// Bridges a SwiftUI toolbar to the active platform text view.
+/// SwiftUI ツールバーをアクティブなプラットフォームテキストビューに橋渡しする。
 ///
-/// The SwiftUI editor creates one of these, hands it to ``MarkdownSourceTextView``
-/// via `onMakeTextView`, and wires toolbar buttons to its commands. Each command
-/// computes a pure ``EditTransform`` (``MarkdownFormatting``) and applies it to
-/// the text view through native editing APIs so the system undo stack is used.
+/// SwiftUI エディタがこのオブジェクトを作成し、`onMakeTextView` 経由で ``MarkdownSourceTextView`` に渡し、
+/// ツールバーボタンをコマンドに接続する。各コマンドは純粋な ``EditTransform``（``MarkdownFormatting``）を
+/// 計算し、ネイティブ編集 API を通じてテキストビューに適用するため、システムの undo スタックが使われる。
 @MainActor
 public final class MarkdownEditorController: ObservableObject {
 
@@ -20,8 +19,8 @@ public final class MarkdownEditorController: ObservableObject {
 
     public init() {}
 
-    /// Registers the platform text view this controller drives. Called by the
-    /// editor view when the text view is created.
+    /// このコントローラが操作するプラットフォームテキストビューを登録する。
+    /// テキストビューの作成時にエディタビューから呼ばれる。
     public func bind(_ textView: PlatformTextView) {
         self.textView = textView
     }

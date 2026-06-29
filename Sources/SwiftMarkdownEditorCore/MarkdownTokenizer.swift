@@ -1,17 +1,14 @@
 import Foundation
 
-/// A lightweight, single-pass Markdown tokenizer for source-side highlighting.
+/// ソース側ハイライト用の軽量シングルパス Markdown トークナイザ。
 ///
-/// This is deliberately *not* a CommonMark parser — rendering structure is the
-/// job of `SwiftMarkdownView`'s parser. This scanner only needs to locate the
-/// syntactic markers a source editor tints (heading `#`, emphasis `*`, code
-/// spans, fences, list bullets, links, …), which the strategy doc calls out as
-/// the pragmatic Phase 1 approach.
+/// CommonMark パーサでは意図的になく、レンダリング構造の解析は `SwiftMarkdownView` のパーサの役割。
+/// このスキャナはソースエディタが着色する構文マーカー（`#`・`*`・コードスパン・フェンス・リスト箇条書き・リンクなど）の
+/// 位置を特定するだけでよい（Phase 1 の実用的アプローチ）。
 ///
-/// It operates on the UTF-16 code units of the source. Every Markdown delimiter
-/// is ASCII (one code unit), so emitted ranges are exact UTF-16 offsets that map
-/// straight onto `NSAttributedString`; non-ASCII content (emoji, CJK) is simply
-/// treated as opaque text.
+/// ソースの UTF-16 コードユニット上で動作する。Markdown のデリミタはすべて ASCII（1 コードユニット）のため、
+/// 出力範囲は `NSAttributedString` に直接マッピングできる正確な UTF-16 オフセット。
+/// 非 ASCII コンテンツ（絵文字・CJK）は不透明なテキストとして扱う。
 public enum MarkdownTokenizer {
 
     // ASCII code units we test against.
@@ -46,7 +43,7 @@ public enum MarkdownTokenizer {
             || u > 0x7F                 // treat non-ASCII as "word" to avoid intraword false positives
     }
 
-    /// Tokenizes Markdown source into non-overlapping highlight tokens.
+    /// Markdown ソースを重複しないハイライトトークン列にトークナイズする。
     public static func tokenize(_ source: String) -> [MarkdownToken] {
         let units = Array(source.utf16)
         var tokens: [MarkdownToken] = []
@@ -204,7 +201,7 @@ public enum MarkdownTokenizer {
         return i
     }
 
-    /// A run of >= 3 backticks or tildes starting at `start`.
+    /// `start` から始まる 3 個以上のバッククォートまたはチルダのラン。
     private static func leadingFenceRun(_ u: [UInt16], _ start: Int, _ end: Int) -> (char: UInt16, length: Int, endIndex: Int)? {
         guard start < end, u[start] == C.backtick || u[start] == C.tilde else { return nil }
         let c = u[start]
@@ -229,7 +226,7 @@ public enum MarkdownTokenizer {
         return count >= 3
     }
 
-    /// Returns the end index of an ATX heading's `#` marker run, or `nil`.
+    /// ATX 見出しの `#` マーカーランの終端インデックスを返す。該当しない場合は `nil`。
     private static func atxHeading(_ u: [UInt16], _ start: Int, _ end: Int) -> Int? {
         guard start < end, u[start] == C.hash else { return nil }
         let e = runEnd(u, start, end, of: C.hash)
@@ -240,7 +237,7 @@ public enum MarkdownTokenizer {
         return e
     }
 
-    /// Returns the end index of a list marker (after `.`/`)`/bullet), or `nil`.
+    /// リストマーカー（`.`/`)`/箇条書き文字の直後）の終端インデックスを返す。該当しない場合は `nil`。
     private static func listMarker(_ u: [UInt16], _ start: Int, _ end: Int) -> Int? {
         guard start < end else { return nil }
         let c = u[start]
@@ -273,7 +270,7 @@ public enum MarkdownTokenizer {
         return start + 3
     }
 
-    /// Matches a backtick code span starting at `start`; returns the end index.
+    /// `start` から始まるバッククォートコードスパンにマッチする。終端インデックスを返す。
     private static func codeSpan(_ u: [UInt16], _ start: Int, _ end: Int) -> Int? {
         let openEnd = runEnd(u, start, end, of: C.backtick)
         let fenceLen = openEnd - start
@@ -299,7 +296,7 @@ public enum MarkdownTokenizer {
         var urlEnd: Int
     }
 
-    /// Matches `[text](url)` or `![alt](url)` starting at `start`.
+    /// `start` から始まる `[text](url)` または `![alt](url)` にマッチする。
     private static func linkOrImage(_ u: [UInt16], _ start: Int, _ end: Int) -> LinkMatch? {
         var i = start
         let textStart = i
@@ -319,8 +316,7 @@ public enum MarkdownTokenizer {
         return LinkMatch(textStart: textStart, textEnd: textEnd, urlStart: textEnd, urlEnd: urlEnd)
     }
 
-    /// Whether an `_` run is surrounded by word characters on both sides (so it
-    /// should not be treated as emphasis, e.g. `snake_case`).
+    /// `_` ランの両側に単語文字があるかどうか（`snake_case` のように emphasis とみなさない場合）。
     private static func isIntraword(_ u: [UInt16], _ runStart: Int, _ runEnd: Int, _ end: Int) -> Bool {
         let before = runStart - 1
         let after = runEnd

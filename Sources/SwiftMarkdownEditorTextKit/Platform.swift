@@ -1,7 +1,7 @@
 #if canImport(UIKit)
 import UIKit
 
-/// Cross-platform aliases so the TextKit bridge can be written once.
+/// TextKit ブリッジを一度だけ実装するためのクロスプラットフォームエイリアス。
 public typealias PlatformColor = UIColor
 public typealias PlatformFont = UIFont
 public typealias PlatformView = UIView

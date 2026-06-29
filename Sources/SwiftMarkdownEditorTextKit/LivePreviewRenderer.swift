@@ -7,18 +7,18 @@ import UIKit
 import AppKit
 #endif
 
-/// Applies live-preview styling to an `NSTextStorage`: content gets font traits,
-/// and delimiter markers are concealed using the **clear color + tiny font +
-/// negative kern** technique (verified against `nodes-app/swift-markdown-engine`'s
-/// `MarkdownStyler`). The source text is never modified — only its attributes.
+/// `NSTextStorage` にライブプレビュースタイルを適用する。コンテンツにフォントトレイトを付与し、
+/// デリミタマーカーを **クリアカラー＋極小フォント＋負カーニング** で非表示にする
+/// （`nodes-app/swift-markdown-engine` の `MarkdownStyler` で検証済み）。
+/// ソーステキストは変更せず、属性のみ変更する。
 public enum LivePreviewRenderer {
 
-    /// Tiny font size that collapses a concealed marker's glyphs to near-zero;
-    /// the negative kern removes the residual advance. Matches
-    /// `swift-markdown-engine`'s `hiddenMarkerFontSize` default (0.1).
+    /// 非表示マーカーのグリフをほぼゼロに縮小する極小フォントサイズ。
+    /// 負カーニングが残留アドバンスを除去する。
+    /// `swift-markdown-engine` の `hiddenMarkerFontSize` デフォルト（0.1）に合わせる。
     static let concealFontSize: CGFloat = 0.1
 
-    /// Re-applies live-preview attributes for the whole document.
+    /// ドキュメント全体のライブプレビュー属性を再適用する。
     public static func apply(
         text: String,
         selection: Selection?,
@@ -70,7 +70,7 @@ public enum LivePreviewRenderer {
 
     // MARK: - Heading sizing
 
-    /// Point size for an ATX heading line, scaled off the base font size.
+    /// ATX 見出し行のポイントサイズ。ベースフォントサイズからスケールする。
     static func headingSize(level: Int, base: CGFloat) -> CGFloat {
         switch level {
         case 1: return base * 1.7
@@ -84,8 +84,8 @@ public enum LivePreviewRenderer {
 
     // MARK: - Font trait merge
 
-    /// Adds a symbolic trait to whatever font already covers `range`, so bold and
-    /// italic compose (e.g. emphasis nested in strong becomes bold-italic).
+    /// `range` を覆うフォントにシンボリックトレイトを追加し、bold と italic を合成する
+    /// （例：strong の中の emphasis は bold-italic になる）。
     private static func mergeTrait(_ trait: EditorFontTrait, in range: NSRange, storage: NSTextStorage, baseSize: CGFloat) {
         storage.enumerateAttribute(.font, in: range, options: []) { value, subRange, _ in
             let base = (value as? PlatformFont) ?? MarkdownSyntaxHighlighter.font(size: baseSize)
@@ -96,7 +96,7 @@ public enum LivePreviewRenderer {
     }
 }
 
-/// Composable font traits for live-preview styling.
+/// ライブプレビュースタイリング用の合成可能なフォントトレイト。
 enum EditorFontTrait { case bold, italic }
 
 private extension PlatformFont {

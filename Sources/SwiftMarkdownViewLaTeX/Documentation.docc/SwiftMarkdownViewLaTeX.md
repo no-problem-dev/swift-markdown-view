@@ -1,6 +1,6 @@
 # ``SwiftMarkdownViewLaTeX``
 
-LaTeX math typesetting for `SwiftMarkdownView`, powered by SwiftLaTeXView.
+SwiftLaTeXView による `SwiftMarkdownView` の LaTeX 数式組版モジュール。
 
 @Metadata {
     @PageColor(purple)
@@ -8,11 +8,11 @@ LaTeX math typesetting for `SwiftMarkdownView`, powered by SwiftLaTeXView.
 
 ## Overview
 
-`SwiftMarkdownViewLaTeX` is an optional add-on for `SwiftMarkdownView` that upgrades math expressions from plain source display to proper LaTeX typesetting. It provides `LaTeXMathRenderer`, a `MathRenderer` implementation that delegates rendering to SwiftLaTeXView — a lightweight wrapper around the SwiftMath engine that renders LaTeX directly into Core Text glyphs without a WebView.
+`SwiftMarkdownViewLaTeX` は `SwiftMarkdownView` のオプションアドオンで、数式をプレーンなソース表示から本格的な LaTeX 組版にアップグレードする。`LaTeXMathRenderer`（SwiftLaTeXView にレンダリングを委譲する `MathRenderer` 実装）を提供する。SwiftLaTeXView は WebView を使わず、SwiftMath エンジンで LaTeX を直接 Core Text グリフにレンダリングする軽量ラッパーだ。
 
-Both inline math (`$...$`) and display math (`$$...$$`) in Markdown source are supported. Inline expressions flow inside the surrounding `Text` run; display math renders as a full-width block view. In the TextKit 2 path used by `MarkdownView`, display math is rasterised as a device-scale image attachment so it renders crisply inside the continuous text view.
+Markdown ソース内のインライン数式（`$...$`）とディスプレイ数式（`$$...$$`）の両方をサポートする。インライン表現は周囲の `Text` 行内にフローし、ディスプレイ数式は全幅ブロックビューとしてレンダリングされる。`MarkdownView` が使用する TextKit 2 パスでは、ディスプレイ数式はデバイス解像度の画像アタッチメントとしてラスタライズされ、連続テキストビュー内で鮮明に表示される。
 
-To enable math typesetting, add `SwiftMarkdownViewLaTeX` to your target's dependencies and inject the renderer into the view hierarchy:
+数式組版を有効にするには、ターゲットの依存関係に `SwiftMarkdownViewLaTeX` を追加し、レンダラーをビュー階層に注入する:
 
 ```swift
 import SwiftMarkdownView
@@ -26,10 +26,10 @@ $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
 .mathRenderer(LaTeXMathRenderer())
 ```
 
-The renderer's visual style — font family, font sizes, and text colour — derives from the `swift-design-system` theme in the SwiftUI environment. Pass a custom `MathStyle` to the initialiser when you need to override the defaults.
+レンダラーのビジュアルスタイル（フォントファミリー・フォントサイズ・テキストカラー）は SwiftUI 環境の `swift-design-system` テーマから導出される。デフォルトを上書きするには、イニシャライザにカスタム `MathStyle` を渡す。
 
 ## Topics
 
-### Math Renderer
+### 数式レンダラー
 
 - ``LaTeXMathRenderer``

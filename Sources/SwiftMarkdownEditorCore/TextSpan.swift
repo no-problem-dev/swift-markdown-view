@@ -1,27 +1,25 @@
 import Foundation
 
-/// A range over a text buffer, expressed in **UTF-16 code unit offsets**.
+/// テキストバッファ上の範囲を **UTF-16 コードユニットオフセット** で表す。
 ///
-/// Offsets are UTF-16 code units (not `Character`s, not Unicode scalars) so that
-/// ranges produced in this UI-independent layer map directly onto
-/// `NSAttributedString`, `NSRange`, and `UITextView`/`NSTextView` selection APIs
-/// without any re-measuring in the TextKit layer.
+/// オフセットは UTF-16 コードユニット（`Character` でも Unicode スカラでもない）であるため、
+/// この UI 非依存層で生成した範囲が `NSAttributedString`・`NSRange`・
+/// `UITextView`/`NSTextView` のセレクション API に TextKit 層で再計測なしに直接マッピングできる。
 ///
-/// This mirrors the document-model conventions of authoritative editors
-/// (CodeMirror's `EditorState`, ProseMirror's integer positions): a position is
-/// a plain integer offset into the buffer, which keeps selection and decoration
-/// math to simple arithmetic.
+/// 権威あるエディタのドキュメントモデル規約
+/// （CodeMirror の `EditorState`・ProseMirror の整数位置）を踏襲する。
+/// 位置はバッファへの単純な整数オフセットのため、セレクションとデコレーションの計算が単純な算術になる。
 public struct TextSpan: Equatable, Hashable, Sendable {
 
-    /// The inclusive start offset (UTF-16 code units).
+    /// 含む側の開始オフセット（UTF-16 コードユニット）。
     public var lowerBound: Int
 
-    /// The exclusive end offset (UTF-16 code units).
+    /// 含まない側の終了オフセット（UTF-16 コードユニット）。
     public var upperBound: Int
 
-    /// Creates a range from explicit bounds.
+    /// 明示的な境界値から範囲を作成する。
     ///
-    /// - Precondition: `lowerBound <= upperBound` and both are non-negative.
+    /// - Precondition: `lowerBound <= upperBound` かつ両者が非負。
     public init(lowerBound: Int, upperBound: Int) {
         precondition(lowerBound >= 0, "lowerBound must be non-negative")
         precondition(lowerBound <= upperBound, "lowerBound must not exceed upperBound")
@@ -29,33 +27,33 @@ public struct TextSpan: Equatable, Hashable, Sendable {
         self.upperBound = upperBound
     }
 
-    /// Creates a range from a location and length (NSRange-style).
+    /// 位置と長さから範囲を作成する（NSRange スタイル）。
     public init(location: Int, length: Int) {
         self.init(lowerBound: location, upperBound: location + length)
     }
 
-    /// An empty (caret) range at the given offset.
+    /// 指定オフセット位置の空（キャレット）範囲を作成する。
     public init(caret offset: Int) {
         self.init(lowerBound: offset, upperBound: offset)
     }
 
-    /// The length of the range in UTF-16 code units.
+    /// 範囲の長さ（UTF-16 コードユニット数）。
     public var length: Int { upperBound - lowerBound }
 
-    /// Whether the range is empty (a caret position).
+    /// 範囲が空（キャレット位置）かどうか。
     public var isEmpty: Bool { lowerBound == upperBound }
 
-    /// Whether `offset` falls within `[lowerBound, upperBound)`.
+    /// `offset` が `[lowerBound, upperBound)` 内に収まるかどうか。
     public func contains(_ offset: Int) -> Bool {
         offset >= lowerBound && offset < upperBound
     }
 
-    /// Whether this range shares any offset with `other`.
+    /// この範囲が `other` と共有するオフセットを持つかどうか。
     ///
-    /// Two empty ranges, or an empty range touching a non-empty one, count as
-    /// overlapping only when the caret sits strictly inside the other range or
-    /// at a shared boundary — this is the predicate used for cursor-aware
-    /// "reveal" in live preview, so touching boundaries must count.
+    /// 2 つの空範囲、または空範囲と非空範囲が接する場合は、
+    /// キャレットが相手の範囲の厳密な内部にあるか境界を共有するときだけ重複とみなす。
+    /// これはライブプレビューのカーソル対応「表示」に使う述語のため、
+    /// 境界の接触はカウントされなければならない。
     public func overlaps(_ other: TextSpan) -> Bool {
         lowerBound <= other.upperBound && other.lowerBound <= upperBound
     }
@@ -63,10 +61,10 @@ public struct TextSpan: Equatable, Hashable, Sendable {
 
 public extension TextSpan {
 
-    /// Bridges to a Foundation `NSRange` for use in the TextKit layer.
+    /// TextKit 層で使用するために Foundation の `NSRange` へ変換する。
     var nsRange: NSRange { NSRange(location: lowerBound, length: length) }
 
-    /// Creates a range from a Foundation `NSRange`.
+    /// Foundation の `NSRange` から範囲を作成する。
     init(_ nsRange: NSRange) {
         self.init(location: nsRange.location, length: nsRange.length)
     }

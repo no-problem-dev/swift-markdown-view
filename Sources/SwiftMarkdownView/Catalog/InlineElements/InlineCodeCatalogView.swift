@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for inline code elements.
+/// インラインコード要素のカタログ View。
 public struct InlineCodeCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

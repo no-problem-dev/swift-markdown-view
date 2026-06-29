@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for CodeBlockStyle configuration.
+/// CodeBlockStyle 設定のカタログ View。
 public struct CodeBlockStyleCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

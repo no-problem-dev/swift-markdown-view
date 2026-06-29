@@ -8,9 +8,9 @@ HighlightJSを使用した50+言語対応のシンタックスハイライトモ
 
 ## Overview
 
-SwiftMarkdownViewHighlightJSは、SwiftMarkdownViewのオプションモジュールです。
+SwiftMarkdownViewHighlightJSは、SwiftMarkdownViewのオプションモジュールだ。
 [HighlightSwift](https://github.com/appstefan/HighlightSwift)ライブラリを使用して、
-50以上の言語に対応した正確なシンタックスハイライトを提供します。
+50以上の言語に対応した正確なシンタックスハイライトを提供する。
 
 ### 特徴
 
@@ -54,4 +54,4 @@ MarkdownView(source)
 
 ## 関連モジュール
 
-このモジュールは**SwiftMarkdownView**（Markdownレンダリングのコアモジュール）と併用して使用します。
+このモジュールは**SwiftMarkdownView**（Markdownレンダリングのコアモジュール）と併用して使用する。

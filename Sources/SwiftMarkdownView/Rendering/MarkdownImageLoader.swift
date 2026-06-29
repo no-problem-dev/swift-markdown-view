@@ -8,8 +8,8 @@ import UIKit
 import AppKit
 #endif
 
-/// Loads a Markdown image source into a platform image: remote over HTTP(S),
-/// otherwise a local file path or bundle resource name.
+/// Markdown 画像ソースをプラットフォーム画像に読み込む。HTTP(S) はリモート、
+/// それ以外はローカルファイルパスまたはバンドルリソース名として扱う。
 enum MarkdownImageLoader {
 
     static func load(_ source: String) async -> PlatformImage? {

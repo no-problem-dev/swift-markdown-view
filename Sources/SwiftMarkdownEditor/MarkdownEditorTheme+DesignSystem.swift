@@ -4,8 +4,8 @@ import SwiftMarkdownEditorTextKit
 
 public extension MarkdownEditorTheme {
 
-    /// Builds an editor theme from a design-system color palette, so the source
-    /// editor's tints stay in lock-step with the app theme.
+    /// デザインシステムのカラーパレットからエディタテーマを構築する。
+    /// これによりソースエディタの着色がアプリテーマと常に同期する。
     static func fromDesignSystem(
         palette: any ColorPalette,
         baseFontSize: CGFloat = 16

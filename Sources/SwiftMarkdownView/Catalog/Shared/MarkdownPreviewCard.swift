@@ -1,18 +1,18 @@
 import SwiftUI
 import DesignSystem
 
-/// A card that displays Markdown source and its rendered preview.
+/// Markdown ソースとそのレンダリング結果を並べて表示するカード。
 ///
-/// Use this component to demonstrate how Markdown syntax is rendered.
+/// Markdown 構文がどのようにレンダリングされるかを示す際に使用する。
 public struct MarkdownPreviewCard: View {
 
-    /// The title for this preview card.
+    /// このプレビューカードのタイトル。
     public let title: String
 
-    /// Optional description text.
+    /// オプションの説明テキスト。
     public let description: String?
 
-    /// The Markdown source to display.
+    /// 表示する Markdown ソース。
     public let markdownSource: String
 
     @Environment(\.colorPalette) private var colorPalette
@@ -21,12 +21,12 @@ public struct MarkdownPreviewCard: View {
 
     @State private var showSource = false
 
-    /// Creates a new Markdown preview card.
+    /// Markdown プレビューカードを作成する。
     ///
     /// - Parameters:
-    ///   - title: The title for the card.
-    ///   - description: Optional description text.
-    ///   - markdownSource: The Markdown source to render.
+    ///   - title: カードのタイトル。
+    ///   - description: オプションの説明テキスト。
+    ///   - markdownSource: レンダリングする Markdown ソース。
     public init(
         title: String,
         description: String? = nil,

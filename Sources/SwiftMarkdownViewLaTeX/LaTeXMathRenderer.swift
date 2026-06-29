@@ -3,10 +3,10 @@ import DesignSystem
 import SwiftMarkdownView
 import SwiftLaTeXView
 
-/// A ``MathRenderer`` that typesets math via SwiftLaTeXView.
+/// SwiftLaTeXView で数式を組版する ``MathRenderer`` 実装。
 ///
-/// Inject into the view hierarchy to upgrade Markdown math from plain
-/// source display to real typesetting:
+/// ビュー階層に注入することで、Markdown の数式をプレーンなソース表示から
+/// 本格的な組版にアップグレードする:
 ///
 /// ```swift
 /// MarkdownView("""
@@ -18,11 +18,10 @@ import SwiftLaTeXView
 /// ```
 public struct LaTeXMathRenderer: MathRenderer {
 
-    /// The math style used for typesetting.
+    /// 組版に使用する数式スタイル。
     ///
-    /// The style is fixed at renderer construction (renderer methods run
-    /// outside the view hierarchy, so the `mathStyle` environment value
-    /// does not propagate here).
+    /// スタイルはレンダラー生成時に固定される（レンダラーメソッドはビュー階層外で実行されるため、
+    /// `mathStyle` 環境値はここには伝播しない）。
     public let style: any MathStyle
 
     public init(style: any MathStyle = DefaultMathStyle()) {
@@ -58,9 +57,8 @@ public struct LaTeXMathRenderer: MathRenderer {
 
 // MARK: - TextKit attachment rendering
 
-/// A fixed-color math style so the rasterized image matches the surrounding
-/// Markdown text color (the attachment renders outside the view hierarchy, so
-/// the palette-based color resolution doesn't apply).
+/// ラスタライズ画像が周囲の Markdown テキストカラーと一致するよう固定カラーを使用する数式スタイル。
+/// アタッチメントはビュー階層外でレンダリングされるため、パレットベースのカラー解決が適用されない。
 private struct FixedColorMathStyle: MathStyle {
     var color: Color
     var inline: CGFloat
@@ -73,9 +71,9 @@ private struct FixedColorMathStyle: MathStyle {
 
 extension LaTeXMathRenderer: MarkdownAttachmentRendering {
 
-    /// Rasterizes math to a crisp (device-scale) image for embedding as an
-    /// `NSTextAttachment` in the TextKit renderer. SwiftMath typesets vector
-    /// glyphs, so a high-DPI raster is sharp at normal sizes.
+    /// 数式をデバイス解像度のシャープな画像にラスタライズし、TextKit レンダラーの
+    /// `NSTextAttachment` として埋め込む。SwiftMath はベクターグリフを組版するため、
+    /// 高 DPI ラスターは通常サイズでも鮮明に表示される。
     public func renderedImage(for kind: MarkdownAttachment.Kind, theme: MarkdownTextTheme) -> MarkdownRenderedImage? {
         let latex: String
         let mode: MathMode
@@ -101,8 +99,8 @@ extension LaTeXMathRenderer: MarkdownAttachmentRendering {
             guard let image = renderer.nsImage else { return nil }
             #endif
             let size = image.size
-            // Inline math sits on the text baseline; drop it slightly so the
-            // typeset descenders align with surrounding text.
+            // インライン数式はテキストベースラインに配置する。組版のディセンダーが
+            // 周囲テキストと揃うよう、わずかに下に下げる。
             let baselineOffset: CGFloat = mode == .inline ? -(size.height * 0.18) : 0
             return MarkdownRenderedImage(image: image, size: size, baselineOffset: baselineOffset)
         }

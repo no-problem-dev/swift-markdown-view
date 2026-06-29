@@ -3,10 +3,10 @@ import DesignSystem
 
 // MARK: - LinkStyle Protocol
 
-/// A protocol that defines the visual styling for links.
+/// リンクの外観スタイルを定義するプロトコル。
 ///
-/// Implement this protocol to customize the appearance of links
-/// in your Markdown content.
+/// このプロトコルを実装することで、Markdownコンテンツ内の
+/// リンクの外観をカスタマイズできる。
 ///
 /// ## Example
 ///
@@ -24,39 +24,39 @@ import DesignSystem
 /// ```
 public protocol LinkStyle: Sendable {
 
-    /// Whether to show an underline for links.
+    /// リンクに下線を表示するかどうか。
     var showUnderline: Bool { get }
 
-    /// The underline style for links.
+    /// リンクの下線スタイル。
     ///
-    /// Only used when `showUnderline` is `true`.
+    /// `showUnderline` が `true` の場合のみ使用される。
     var underlineStyle: Text.LineStyle { get }
 
-    /// The text color for links.
+    /// リンクのテキストカラー。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The link color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: リンクカラー。
     func color(_ palette: any ColorPalette) -> Color
 
-    /// The text color for visited links (if tracking is enabled).
+    /// 訪問済みリンクのテキストカラー（追跡が有効な場合）。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The visited link color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: 訪問済みリンクカラー。
     func visitedColor(_ palette: any ColorPalette) -> Color
 
-    /// The text color for hovered links.
+    /// ホバー時のリンクテキストカラー。
     ///
-    /// - Parameter palette: The current color palette from the environment.
-    /// - Returns: The hover color.
+    /// - Parameter palette: 環境から取得した現在のカラーパレット。
+    /// - Returns: ホバーカラー。
     func hoverColor(_ palette: any ColorPalette) -> Color
 
-    /// The font weight for links.
+    /// リンクのフォントウェイト。
     var fontWeight: Font.Weight? { get }
 }
 
 // MARK: - Default Implementation
 
-/// Provides default implementations for optional protocol methods.
+/// プロトコルのオプションメソッドにデフォルト実装を提供する。
 extension LinkStyle {
 
     public var underlineStyle: Text.LineStyle {
@@ -78,14 +78,14 @@ extension LinkStyle {
 
 // MARK: - DefaultLinkStyle
 
-/// The default link style using the primary color with underline.
+/// プライマリカラーと下線を使用するデフォルトリンクスタイル。
 public struct DefaultLinkStyle: LinkStyle, Sendable {
 
     public var showUnderline: Bool
 
-    /// Creates a new default link style.
+    /// デフォルトリンクスタイルを生成する。
     ///
-    /// - Parameter showUnderline: Whether to show an underline. Defaults to `true`.
+    /// - Parameter showUnderline: 下線を表示するかどうか。デフォルトは `true`。
     public init(showUnderline: Bool = true) {
         self.showUnderline = showUnderline
     }
@@ -97,9 +97,9 @@ public struct DefaultLinkStyle: LinkStyle, Sendable {
 
 // MARK: - SubtleLinkStyle
 
-/// A subtle link style without underline.
+/// 下線なしのサブトルなリンクスタイル。
 ///
-/// Links are distinguished only by color, providing a cleaner appearance.
+/// リンクをカラーのみで区別し、クリーンな外観を提供する。
 public struct SubtleLinkStyle: LinkStyle, Sendable {
 
     public var showUnderline: Bool { false }
@@ -113,9 +113,9 @@ public struct SubtleLinkStyle: LinkStyle, Sendable {
 
 // MARK: - BoldLinkStyle
 
-/// A bold link style with emphasis.
+/// 強調を加えたボールドリンクスタイル。
 ///
-/// Links are displayed in bold with the secondary color.
+/// セカンダリカラーでボールド表示する。
 public struct BoldLinkStyle: LinkStyle, Sendable {
 
     public var showUnderline: Bool { false }
@@ -131,9 +131,9 @@ public struct BoldLinkStyle: LinkStyle, Sendable {
 
 // MARK: - ClassicLinkStyle
 
-/// A classic web-style link appearance.
+/// クラシックなウェブスタイルのリンク外観。
 ///
-/// Blue color with underline, similar to traditional web links.
+/// 従来のウェブリンクに似た青色と下線を使用する。
 public struct ClassicLinkStyle: LinkStyle, Sendable {
 
     public var showUnderline: Bool { true }
@@ -151,9 +151,9 @@ public struct ClassicLinkStyle: LinkStyle, Sendable {
 
 // MARK: - MonochromeLinkStyle
 
-/// A monochrome link style that blends with the text.
+/// テキストに溶け込むモノクロームリンクスタイル。
 ///
-/// Links are underlined but use the same color as regular text.
+/// 下線付きだが、通常テキストと同じカラーを使用する。
 public struct MonochromeLinkStyle: LinkStyle, Sendable {
 
     public var showUnderline: Bool { true }
@@ -177,9 +177,9 @@ private struct LinkStyleKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// The style used for rendering links.
+    /// リンクのレンダリングに使用するスタイル。
     ///
-    /// Use the ``SwiftUICore/View/markdownLinkStyle(_:)`` modifier to set this value.
+    /// この値を設定するには ``SwiftUICore/View/markdownLinkStyle(_:)`` モディファイアを使用する。
     public var markdownLinkStyle: any LinkStyle {
         get { self[LinkStyleKey.self] }
         set { self[LinkStyleKey.self] = newValue }
@@ -190,23 +190,22 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Sets a custom link style for Markdown links in this view hierarchy.
+    /// このビュー階層の Markdown リンクにカスタムリンクスタイルを設定する。
     ///
-    /// Use this modifier to customize the appearance of links
-    /// rendered by ``MarkdownView``.
+    /// ``MarkdownView`` がレンダリングするリンクの外観をカスタマイズするには
+    /// このモディファイアを使用する。
     ///
     /// ## Example
     ///
     /// ```swift
     /// MarkdownView("""
-    /// Check out [SwiftUI](https://developer.apple.com/xcode/swiftui/)
-    /// for more information.
+    /// [SwiftUI](https://developer.apple.com/xcode/swiftui/) を参照。
     /// """)
     /// .markdownLinkStyle(ClassicLinkStyle())
     /// ```
     ///
-    /// - Parameter style: The link style to use.
-    /// - Returns: A view with the link style applied.
+    /// - Parameter style: 使用するリンクスタイル。
+    /// - Returns: リンクスタイルが適用されたビュー。
     public func markdownLinkStyle(_ style: some LinkStyle) -> some View {
         environment(\.markdownLinkStyle, style)
     }

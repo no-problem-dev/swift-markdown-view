@@ -7,16 +7,16 @@ import AppKit
 import UIKit
 #endif
 
-/// Renders block-level Markdown elements as SwiftUI Views.
+/// ブロックレベルの Markdown 要素を SwiftUI ビューとしてレンダリングする。
 ///
-/// This renderer converts `MarkdownBlock` elements into appropriate SwiftUI views,
-/// using DesignSystem tokens for consistent styling.
+/// `MarkdownBlock` 要素を適切な SwiftUI ビューに変換し、
+/// DesignSystem トークンで一貫したスタイルを適用する。
 enum BlockRenderer {
 
-    /// Renders an array of blocks as a vertically stacked view.
+    /// ブロック配列を垂直スタックビューとしてレンダリングする。
     ///
-    /// - Parameter blocks: The blocks to render.
-    /// - Returns: A view containing all rendered blocks.
+    /// - Parameter blocks: レンダリングするブロック。
+    /// - Returns: すべてのレンダリング済みブロックを含むビュー。
     @ViewBuilder
     static func render(_ blocks: [MarkdownBlock]) -> some View {
         BlockContainerView(blocks: blocks)
@@ -25,7 +25,7 @@ enum BlockRenderer {
 
 // MARK: - Container View
 
-/// Container view that provides DesignSystem environment access.
+/// DesignSystem 環境アクセスを提供するコンテナビュー。
 struct BlockContainerView: View {
     let blocks: [MarkdownBlock]
 
@@ -40,7 +40,7 @@ struct BlockContainerView: View {
     }
 }
 
-/// Renders a single block with environment access.
+/// 環境アクセス付きで単一ブロックをレンダリングする。
 struct BlockView: View {
     let block: MarkdownBlock
 
@@ -81,8 +81,8 @@ struct BlockView: View {
 
 // MARK: - Block Views
 
-/// Renders a paragraph block.
-/// If the paragraph contains only an image, renders it as a block-level image.
+/// 段落ブロックをレンダリングする。
+/// 段落が画像のみを含む場合、ブロックレベル画像としてレンダリングする。
 struct ParagraphView: View {
     let inlines: [MarkdownInline]
 
@@ -111,7 +111,7 @@ struct ParagraphView: View {
         }
     }
 
-    /// Extracts a single image if the paragraph contains only an image (with optional whitespace).
+    /// 段落が画像のみ（任意の空白を含む）を含む場合、その画像を抽出する。
     private func extractSingleImage() -> (source: String, alt: String, title: String?)? {
         let nonWhitespace = inlines.filter { inline in
             switch inline {
@@ -133,7 +133,7 @@ struct ParagraphView: View {
     }
 }
 
-/// Renders a block-level image with AsyncImage for remote URLs.
+/// リモート URL には AsyncImage を使用してブロックレベル画像をレンダリングする。
 struct MarkdownImageView: View {
     let source: String
     let alt: String
@@ -245,7 +245,7 @@ struct MarkdownImageView: View {
     }
 }
 
-/// Renders a heading block with appropriate typography.
+/// 適切なタイポグラフィで見出しブロックをレンダリングする。
 struct HeadingView: View {
     let level: Int
     let content: [MarkdownInline]
@@ -270,7 +270,7 @@ struct HeadingView: View {
     }
 }
 
-/// Renders a fenced or indented code block with syntax highlighting.
+/// シンタックスハイライト付きでフェンスまたはインデントコードブロックをレンダリングする。
 struct CodeBlockView: View {
     let language: String?
     let code: String
@@ -305,11 +305,11 @@ struct CodeBlockView: View {
     }
 }
 
-/// Renders an aside (callout/admonition) block.
+/// Aside（コールアウト/警告）ブロックをレンダリングする。
 ///
-/// Asides are rendered with an icon, title, and content.
-/// The visual styling is controlled by the ``AsideStyle`` protocol,
-/// which can be customized using the ``SwiftUICore/View/asideStyle(_:)`` modifier.
+/// Aside はアイコン・タイトル・コンテンツ付きでレンダリングされる。
+/// 外観スタイルは ``AsideStyle`` プロトコルで制御し、
+/// ``SwiftUICore/View/asideStyle(_:)`` モディファイアでカスタマイズできる。
 struct AsideView: View {
     let kind: AsideKind
     let content: [MarkdownBlock]
@@ -355,7 +355,7 @@ struct AsideView: View {
     }
 }
 
-/// Renders an unordered (bulleted) list.
+/// 順序なし（箇条書き）リストをレンダリングする。
 struct UnorderedListView: View {
     let items: [ListItem]
 
@@ -370,7 +370,7 @@ struct UnorderedListView: View {
     }
 }
 
-/// Renders an ordered (numbered) list.
+/// 順序付き（番号付き）リストをレンダリングする。
 struct OrderedListView: View {
     let start: Int
     let items: [ListItem]
@@ -386,7 +386,7 @@ struct OrderedListView: View {
     }
 }
 
-/// Renders a single list item.
+/// 単一のリストアイテムをレンダリングする。
 struct ListItemView: View {
     let bullet: String
     let item: ListItem
@@ -416,7 +416,7 @@ struct ListItemView: View {
     }
 }
 
-/// Renders a thematic break (horizontal rule).
+/// 区切り線（水平ルール）をレンダリングする。
 struct ThematicBreakView: View {
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.spacingScale) private var spacing
@@ -428,7 +428,7 @@ struct ThematicBreakView: View {
     }
 }
 
-/// Renders a table.
+/// テーブルをレンダリングする。
 struct TableView: View {
     let data: TableData
 
@@ -475,7 +475,7 @@ struct TableView: View {
     }
 }
 
-/// Renders a single table row.
+/// 単一のテーブル行をレンダリングする。
 struct TableRowView: View {
     let cells: [[MarkdownInline]]
     let alignments: [TableAlignment]
@@ -505,7 +505,7 @@ struct TableRowView: View {
     }
 }
 
-/// Renders a single table cell.
+/// 単一のテーブルセルをレンダリングする。
 struct TableCellView: View {
     let content: [MarkdownInline]
     let alignment: TableAlignment

@@ -2,11 +2,11 @@ import SwiftUI
 import DesignSystem
 import SwiftMarkdownEditorTextKit
 
-/// The formatting bar shown above the source editor.
+/// ソースエディタ上部に表示されるフォーマットバー。
 ///
-/// Built from design-system `IconButton`s so it inherits the app's theme. Each
-/// button calls a command on the ``MarkdownEditorController``, which applies a
-/// pure formatting transform to the active text view.
+/// デザインシステムの `IconButton` で構築されアプリテーマを継承する。
+/// 各ボタンは ``MarkdownEditorController`` のコマンドを呼び出し、
+/// アクティブなテキストビューに純粋なフォーマット変換を適用する。
 struct MarkdownFormattingToolbar: View {
 
     @ObservedObject var controller: MarkdownEditorController

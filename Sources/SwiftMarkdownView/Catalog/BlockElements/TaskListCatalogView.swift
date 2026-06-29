@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for task list (checkbox) elements.
+/// タスクリスト（チェックボックス）要素のカタログ View。
 public struct TaskListCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

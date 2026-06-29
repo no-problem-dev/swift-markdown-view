@@ -1,13 +1,12 @@
 import Foundation
 import SwiftMarkdownEditorCore
 
-/// Continues a Markdown list when Enter is pressed inside a list item.
+/// リストアイテム内で Enter を押したときに Markdown リストを継続する。
 ///
-/// - On a non-empty item, inserting a newline carries the marker down
-///   (incrementing the number for ordered lists, resetting task checkboxes to
-///   unchecked).
-/// - On an *empty* item (just the marker), Enter removes the marker and outdents
-///   — the universal "press Enter twice to leave the list" behavior.
+/// - 空でないアイテムでは改行を挿入し、マーカーを引き継ぐ
+///   （順序付きリストでは番号をインクリメントし、タスクチェックボックスは未チェックにリセット）。
+/// - *空* のアイテム（マーカーのみ）では Enter でマーカーを削除してアウトデント —
+///   「Enter を 2 回押してリストを抜ける」という普遍的な挙動。
 public struct ListContinuationRule: InputRule {
 
     public init() {}
@@ -50,7 +49,7 @@ public struct ListContinuationRule: InputRule {
     }
 }
 
-/// The parsed leading marker of a list item line.
+/// リストアイテム行の先頭マーカーのパース結果。
 struct ListPrefix {
 
     enum Kind {
@@ -61,10 +60,10 @@ struct ListPrefix {
     var indentation: String
     var kind: Kind
     var hasCheckbox: Bool
-    /// UTF-16 offset within the line where the item content begins.
+    /// アイテムコンテンツが始まる行内の UTF-16 オフセット。
     var contentStart: Int
 
-    /// Builds the marker to start the next item (incremented / reset checkbox).
+    /// 次のアイテムを開始するマーカーを構築する（番号インクリメント・チェックボックスリセット）。
     func nextMarker() -> String {
         var marker = indentation
         switch kind {
@@ -79,7 +78,7 @@ struct ListPrefix {
         return marker
     }
 
-    /// Parses a list marker at the start of `line`, or returns `nil`.
+    /// `line` の先頭のリストマーカーをパースする。該当しない場合は `nil`。
     static func parse(_ line: String) -> ListPrefix? {
         let u = Array(line.utf16)
         var i = 0

@@ -1,8 +1,7 @@
 #if canImport(UIKit)
 import UIKit
 
-/// Cross-platform aliases so the attributed-string builder and the TextKit view
-/// are written once. This layer is UIKit/AppKit-aware but **SwiftUI-free**.
+/// 属性文字列ビルダーと TextKit ビューを一度だけ書くためのクロスプラットフォームエイリアス。UIKit/AppKit に依存するが **SwiftUI-free**。
 public typealias PlatformFont = UIFont
 public typealias PlatformColor = UIColor
 public typealias PlatformImage = UIImage
@@ -18,13 +17,9 @@ public typealias PlatformImage = NSImage
 #if canImport(UIKit) || canImport(AppKit)
 public extension PlatformFont {
 
-    /// Returns this font with bold/italic applied.
+    /// 太字/斜体トレイトを適用したフォントを返す。
     ///
-    /// Uses the dedicated system-font constructors rather than descriptor
-    /// symbolic traits: the San Francisco system font carries a "UI usage"
-    /// attribute that overrides an italic trait applied via the descriptor, so
-    /// `withSymbolicTraits(.traitItalic)` silently produces upright text. The
-    /// `italicSystemFont`/`boldSystemFont` constructors are reliable.
+    /// シンボリックトレイトのディスクリプターではなく、専用のシステムフォントコンストラクターを使用する。San Francisco システムフォントは "UI usage" 属性を持ち、ディスクリプター経由で斜体トレイトを指定しても `withSymbolicTraits(.traitItalic)` が無効になる場合がある。`italicSystemFont`/`boldSystemFont` コンストラクターは確実に機能する。
     func withTraits(bold: Bool, italic: Bool) -> PlatformFont {
         guard bold || italic else { return self }
         let size = pointSize
@@ -53,7 +48,7 @@ public extension PlatformFont {
         #endif
     }
 
-    /// A monospaced font at the given size and weight, for code spans/blocks.
+    /// コードスパン/ブロック用の等幅フォント。
     static func monospaced(size: CGFloat, weight: PlatformFont.Weight = .regular) -> PlatformFont {
         #if canImport(UIKit)
         return UIFont.monospacedSystemFont(ofSize: size, weight: weight)
@@ -62,12 +57,9 @@ public extension PlatformFont {
         #endif
     }
 
-    /// A plain system font at the given size and weight.
+    /// 指定サイズとウェイトのプレーンシステムフォント。
     ///
-    /// For the regular weight the un-weighted `systemFont(ofSize:)` is used on
-    /// purpose: a system font created with an explicit weight does not reliably
-    /// round-trip the italic symbolic trait, so `withTraits(italic:)` would
-    /// silently fail to produce italics.
+    /// ウェイトが `.regular` の場合はウェイト指定なしの `systemFont(ofSize:)` を意図的に使用する。明示ウェイトで生成したシステムフォントは斜体シンボリックトレイトのラウンドトリップが信頼できず、`withTraits(italic:)` が無音で失敗する可能性がある。
     static func system(size: CGFloat, weight: PlatformFont.Weight = .regular) -> PlatformFont {
         #if canImport(UIKit)
         return weight == .regular ? UIFont.systemFont(ofSize: size) : UIFont.systemFont(ofSize: size, weight: weight)

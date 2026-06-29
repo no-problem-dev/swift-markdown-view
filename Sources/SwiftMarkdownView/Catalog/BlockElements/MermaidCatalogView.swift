@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for Mermaid diagram elements.
+/// Mermaid ダイアグラム要素のカタログ View。
 public struct MermaidCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

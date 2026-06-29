@@ -1,30 +1,30 @@
 import SwiftUI
 import DesignSystem
 
-/// A section card for organizing catalog content.
+/// カタログコンテンツを整理するセクションカード。
 ///
-/// Use this to group related content within a catalog view.
+/// カタログ View 内で関連コンテンツをグループ化する際に使用する。
 public struct CatalogSectionCard<Content: View>: View {
 
-    /// The title of the section.
+    /// セクションのタイトル。
     public let title: String
 
-    /// Optional subtitle text.
+    /// オプションのサブタイトルテキスト。
     public let subtitle: String?
 
-    /// The content of the section.
+    /// セクションのコンテンツ。
     @ViewBuilder public let content: () -> Content
 
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.spacingScale) private var spacing
     @Environment(\.radiusScale) private var radius
 
-    /// Creates a new section card.
+    /// セクションカードを作成する。
     ///
     /// - Parameters:
-    ///   - title: The section title.
-    ///   - subtitle: Optional subtitle text.
-    ///   - content: The section content.
+    ///   - title: セクションのタイトル。
+    ///   - subtitle: オプションのサブタイトルテキスト。
+    ///   - content: セクションのコンテンツ。
     public init(
         title: String,
         subtitle: String? = nil,

@@ -1,14 +1,12 @@
 import Foundation
 
-/// A matched inline span: a styled run of text together with the delimiter
-/// (marker) ranges that produced it.
+/// マッチしたインラインスパン：スタイル適用対象のテキスト範囲と、それを生成したデリミタ（マーカー）範囲のペア。
 ///
-/// Phase 1's ``MarkdownToken`` scanner emits *flat* delimiter runs for source
-/// highlighting. Live preview needs more: to render `**bold**` as **bold** with
-/// the `**` hidden, it must know both the *content* range (to style) and the
-/// *marker* ranges (to conceal). ``InlineSpan`` pairs the delimiters and carries
-/// exact UTF-16 offsets so the TextKit layer can apply attributes without any
-/// re-measuring.
+/// Phase 1 の ``MarkdownToken`` スキャナはソースハイライト用にフラットなデリミタランを出力する。
+/// ライブプレビューはさらに多くを必要とする：`**bold**` を **bold** としてレンダリングし `**` を隠すには、
+/// *コンテンツ* 範囲（スタイル適用対象）と *マーカー* 範囲（非表示対象）の両方が必要。
+/// ``InlineSpan`` はデリミタをペアにし、正確な UTF-16 オフセットを保持するため、
+/// TextKit 層は再計測なしに属性を適用できる。
 public struct InlineSpan: Equatable, Sendable {
 
     public enum Kind: Equatable, Hashable, Sendable {
@@ -19,11 +17,11 @@ public struct InlineSpan: Equatable, Sendable {
     }
 
     public var kind: Kind
-    /// The whole span including markers.
+    /// マーカーを含むスパン全体の範囲。
     public var fullRange: TextSpan
-    /// The content between the markers (what gets styled).
+    /// マーカー間のコンテンツ範囲（スタイルが適用される部分）。
     public var contentRange: TextSpan
-    /// The delimiter ranges (opening then closing) — what gets concealed.
+    /// デリミタ範囲（開きマーカー・閉じマーカーの順）— 非表示対象。
     public var markerRanges: [TextSpan]
 
     public init(kind: Kind, fullRange: TextSpan, contentRange: TextSpan, markerRanges: [TextSpan]) {

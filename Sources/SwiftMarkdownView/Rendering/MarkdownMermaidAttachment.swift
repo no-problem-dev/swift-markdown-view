@@ -11,16 +11,15 @@ import AppKit
 typealias MermaidPlatformView = NSView
 #endif
 
-/// A text attachment that hosts a live, scrollable `WKWebView` rendering a Mermaid
-/// diagram. It occupies a fixed-height box at the container's width; the diagram
-/// scrolls inside if it's larger (so a big diagram never blows up the layout and
-/// a small one still has a sensible box).
+/// Mermaid ダイアグラムをライブかつスクロール可能な `WKWebView` でレンダリングするテキストアタッチメント。
+/// コンテナ幅で固定高のボックスを占有し、ダイアグラムが大きい場合はボックス内でスクロールする
+///（大きなダイアグラムでもレイアウトを崩さず、小さいダイアグラムも適切なボックスに収まる）。
 final class MarkdownMermaidAttachment: NSTextAttachment {
 
     let source: String
     let scriptURL: URL
     let isDark: Bool
-    /// Fixed display height of the diagram box, in points.
+    /// ダイアグラムボックスの固定表示高さ（ポイント）。
     let displayHeight: CGFloat
 
     init(source: String, scriptURL: URL, isDark: Bool, displayHeight: CGFloat) {

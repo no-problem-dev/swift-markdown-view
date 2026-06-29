@@ -1,7 +1,7 @@
 import SwiftUI
 import DesignSystem
 
-/// Catalog view for SyntaxHighlighter configuration.
+/// SyntaxHighlighter 設定のカタログ View。
 public struct SyntaxHighlighterCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

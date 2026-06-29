@@ -1,20 +1,19 @@
 import SwiftUI
 
-/// The state of a syntax highlighting operation.
+/// シンタックスハイライト処理の状態。
 ///
-/// Used by views that perform asynchronous syntax highlighting
-/// to track the current state of the operation.
+/// 非同期シンタックスハイライトを実行するビューが処理の現在状態を追跡するために使用する。
 public enum HighlightState: Sendable {
-    /// No highlighting has been requested yet.
+    /// ハイライトがまだ要求されていない状態。
     case idle
 
-    /// Highlighting is in progress.
+    /// ハイライト処理中。
     case loading
 
-    /// Highlighting completed successfully.
+    /// ハイライトが正常に完了した状態。
     case success(AttributedString)
 
-    /// Highlighting failed with an error.
+    /// ハイライトがエラーで失敗した状態。
     case failure(any Error)
 }
 
@@ -30,7 +29,7 @@ extension HighlightState: Equatable {
         case let (.success(lhsResult), .success(rhsResult)):
             return lhsResult == rhsResult
         case (.failure, .failure):
-            // Errors are considered equal for state comparison purposes
+            // 状態比較の目的ではエラーを等しいとみなす
             return true
         default:
             return false
@@ -41,19 +40,19 @@ extension HighlightState: Equatable {
 // MARK: - Convenience Properties
 
 extension HighlightState {
-    /// Whether the state is currently loading.
+    /// 現在ローディング中かどうか。
     public var isLoading: Bool {
         if case .loading = self { return true }
         return false
     }
 
-    /// The highlighted result if available.
+    /// ハイライト結果（利用可能な場合）。
     public var result: AttributedString? {
         if case let .success(result) = self { return result }
         return nil
     }
 
-    /// The error if highlighting failed.
+    /// ハイライトが失敗した場合のエラー。
     public var error: (any Error)? {
         if case let .failure(error) = self { return error }
         return nil
