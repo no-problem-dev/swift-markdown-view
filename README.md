@@ -4,7 +4,7 @@ English | [日本語](./README.ja.md)
 
 A SwiftUI-native Markdown rendering library. Integrates with DesignSystem for beautiful Markdown display.
 
-![Swift 6.0+](https://img.shields.io/badge/Swift-6.0+-orange.svg)
+![Swift 6.2+](https://img.shields.io/badge/Swift-6.2+-orange.svg)
 ![iOS 17+](https://img.shields.io/badge/iOS-17+-blue.svg)
 ![macOS 14+](https://img.shields.io/badge/macOS-14+-purple.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
@@ -50,7 +50,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/no-problem-dev/swift-markdown-view.git", from: "1.4.3")
+    .package(url: "https://github.com/no-problem-dev/swift-markdown-view.git", from: "3.0.0")
 ]
 ```
 
@@ -184,10 +184,28 @@ graph TD
 
 ## DesignSystem Theme
 
+Apply a theme to the view hierarchy with `ThemeProvider`. Every design token
+(colors, typography, spacing) resolves from it:
+
+```swift
+import DesignSystem
+import SwiftMarkdownView
+
+struct ContentView: View {
+    @State private var theme = ThemeProvider(initialMode: .dark)
+
+    var body: some View {
+        MarkdownView("# Themed Markdown")
+            .theme(theme)
+    }
+}
+```
+
+To override a single token instead of the whole theme, inject a concrete type:
+
 ```swift
 MarkdownView("# Themed Markdown")
-    .environment(\.colorPalette, .dark)
-    .environment(\.typographyScale, .large)
+    .environment(\.colorPalette, DarkColorPalette())
 ```
 
 ## Module Structure
@@ -205,7 +223,7 @@ MarkdownView("# Themed Markdown")
 |---------|---------|----------|
 | [swift-markdown](https://github.com/swiftlang/swift-markdown) | Markdown parsing | Yes |
 | [swift-design-system](https://github.com/no-problem-dev/swift-design-system) | Design tokens | Yes |
-| [HighlightSwift](https://github.com/nicklockwood/HighlightSwift) | Syntax highlighting | Optional |
+| [HighlightSwift](https://github.com/appstefan/HighlightSwift) | Syntax highlighting | Optional |
 
 ## Documentation
 

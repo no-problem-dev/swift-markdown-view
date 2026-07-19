@@ -4,7 +4,7 @@
 
 SwiftUI ネイティブな Markdown レンダリングライブラリ。DesignSystem と統合し、美しい Markdown 表示を実現する。
 
-![Swift 6.0+](https://img.shields.io/badge/Swift-6.0+-orange.svg)
+![Swift 6.2+](https://img.shields.io/badge/Swift-6.2+-orange.svg)
 ![iOS 17+](https://img.shields.io/badge/iOS-17+-blue.svg)
 ![macOS 14+](https://img.shields.io/badge/macOS-14+-purple.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
@@ -50,7 +50,7 @@ struct ContentView: View {
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/no-problem-dev/swift-markdown-view.git", from: "1.4.3")
+    .package(url: "https://github.com/no-problem-dev/swift-markdown-view.git", from: "3.0.0")
 ]
 ```
 
@@ -184,10 +184,28 @@ graph TD
 
 ## DesignSystem テーマの適用
 
+`ThemeProvider` を View 階層に適用すると、カラー・タイポグラフィ・スペーシングの
+全デザイントークンがそこから解決される。
+
+```swift
+import DesignSystem
+import SwiftMarkdownView
+
+struct ContentView: View {
+    @State private var theme = ThemeProvider(initialMode: .dark)
+
+    var body: some View {
+        MarkdownView("# Themed Markdown")
+            .theme(theme)
+    }
+}
+```
+
+テーマ全体ではなく単一のトークンだけ差し替えたい場合は、具象型を注入する。
+
 ```swift
 MarkdownView("# Themed Markdown")
-    .environment(\.colorPalette, .dark)
-    .environment(\.typographyScale, .large)
+    .environment(\.colorPalette, DarkColorPalette())
 ```
 
 ## モジュール構成
@@ -205,7 +223,7 @@ MarkdownView("# Themed Markdown")
 |-----------|------|------|
 | [swift-markdown](https://github.com/swiftlang/swift-markdown) | Markdown パーシング | ✅ |
 | [swift-design-system](https://github.com/no-problem-dev/swift-design-system) | デザイントークン | ✅ |
-| [HighlightSwift](https://github.com/nicklockwood/HighlightSwift) | シンタックスハイライト | オプション |
+| [HighlightSwift](https://github.com/appstefan/HighlightSwift) | シンタックスハイライト | オプション |
 
 ## ドキュメント
 

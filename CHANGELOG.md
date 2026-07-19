@@ -7,6 +7,49 @@
 
 ## [未リリース]
 
+## [3.0.0] - 2026-07-19
+
+依存の世代を繰り上げただけのリリース。ライブラリ自身の API 変更はない。
+依存に破壊的変更を含むため major とした。
+
+### 変更
+
+- `swift-design-system` のピンを 1.x から `2.0.1` 以上へ繰り上げ
+- `swift-latex-view` のピンを 0.1 系から `0.2.0` 以上へ繰り上げ
+
+### 移行
+
+利用側のコード変更は不要。ただし `swift-design-system` を併用している場合は
+2.x へ揃える必要がある（1.x のままでは依存解決が衝突する）。
+
+## [2.0.0] - 2026-07-19
+
+デモ用カタログとレンダリング内部の型を公開 API から外した。
+公開面を実際の利用対象だけに絞るのが目的。
+
+### 破壊的変更
+
+- カタログ（デモ画面）の型を internal 化: `MarkdownCatalogCategory` /
+  `BlockElementItem` / `InlineElementItem` / `ConfigurationItem` /
+  `DesignSystemItem` / `MarkdownCatalogItem` / `MarkdownCatalogRouter` /
+  `MarkdownCatalogListView` / `MarkdownCatalogSplitView` / `CategoryItemRow`
+- レンダリング内部の定数を internal 化: `MarkdownColors` / `MarkdownSpacing` /
+  `MarkdownRadius` / `MarkdownTypographyMapping`
+- `MarkdownView.init(_:theme:)` を削除。この初期化子は `theme` 引数を受け取りながら
+  何も適用せず `init(_:)` に委譲するだけで、テーマが効かない状態を黙って作っていた
+
+### 変更
+
+- doc コメントと DocC を日本語へ全面リライト、README を英日二本立てに統一
+
+### 移行
+
+- カタログ画面は開発用デモであり、ライブラリの機能ではない。参照していた場合は
+  `Examples/MarkdownPlayground` を参考に利用側で実装する
+- `MarkdownView(source, theme: provider)` を使っていた場合は
+  `MarkdownView(source).theme(provider)` に置き換える。以前は引数が無視されていたため、
+  この変更で初めてテーマが実際に適用される点に注意
+
 ## [1.4.3] - 2026-06-13
 
 ### 追加・改善
