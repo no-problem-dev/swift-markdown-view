@@ -47,6 +47,13 @@ let package = Package(
             ]
         ),
 
+        .testTarget(
+            name: "MarkdownModelTests",
+            dependencies: [
+                "MarkdownModel"
+            ]
+        ),
+
         // クロスプラットフォーム（UIKit/AppKit）だが SwiftUI 非依存。意味モデルを単一の
         // NSAttributedString へ合成する「描画済みの読めるテキスト」ビルダーと、semantic 属性キー、
         // 装飾記述子、ハイライト/数式の TextKit 用拡張プロトコル。連続選択・コピーの正しさは
