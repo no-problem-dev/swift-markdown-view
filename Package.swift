@@ -29,12 +29,12 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/no-problem-dev/swift-design-system.git", .upToNextMajor(from: "1.4.0")),
+        .package(url: "https://github.com/no-problem-dev/swift-design-system.git", from: "2.0.1"),
         .package(url: "https://github.com/swiftlang/swift-markdown.git", .upToNextMajor(from: "0.7.3")),
         .package(url: "https://github.com/no-problem-dev/swift-visual-testing.git", .upToNextMajor(from: "2.0.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin.git", .upToNextMajor(from: "1.4.0")),
         .package(url: "https://github.com/appstefan/HighlightSwift.git", .upToNextMajor(from: "1.0.0")),
-        .package(url: "https://github.com/no-problem-dev/swift-latex-view.git", .upToNextMajor(from: "0.1.0"))
+        .package(url: "https://github.com/no-problem-dev/swift-latex-view.git", from: "0.2.0")
     ],
     targets: [
         // UI 非依存の意味モデル層。swift-markdown AST → ドメイン型（Block/Inline/Content）と
