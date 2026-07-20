@@ -25,6 +25,8 @@ public struct MarkdownSelectableText {
     var attachmentRenderer: (any MarkdownAttachmentRendering)?
     var mermaidConfig: (scriptURL: URL, isDark: Bool)?
 
+    @Environment(\.markdownImagePolicy) private var imagePolicy
+
     public init(_ content: MarkdownContent, theme: MarkdownTextTheme = .default) {
         self.content = content
         self.theme = theme
@@ -105,14 +107,28 @@ public struct MarkdownSelectableText {
         /// 各画像アタッチメントのソースをメインアクター外でロードし、
         /// ストレージに画像とアスペクトフィットのバウンドを設定する。進行中のパスはキャンセルする。
         @MainActor
-        func startImageLoading(in storage: NSTextStorage, width: @escaping () -> CGFloat, invalidate: @escaping () -> Void) {
+        func startImageLoading(
+            in storage: NSTextStorage,
+            policy: MarkdownImagePolicy,
+            width: @escaping () -> CGFloat,
+            invalidate: @escaping () -> Void
+        ) {
             imageTask?.cancel()
             let requests = MarkdownImageAttachments.requests(in: storage)
             guard !requests.isEmpty else { return }
             imageTask = Task { @MainActor in
                 for request in requests {
                     if Task.isCancelled { return }
-                    guard let image = await MarkdownImageLoader.load(request.source) else { continue }
+                    let image: PlatformImage
+                    switch await MarkdownImageLoader.load(request.source, policy: policy) {
+                    case .success(let loaded):
+                        image = loaded
+                    case .failure(let failure):
+                        // 読み込めなかった画像は描画されない。原因が分からないと
+                        // 「なぜ出ないのか」を追えないので、握りつぶさず理由を出す。
+                        MarkdownImageLoader.report(failure, source: request.source)
+                        continue
+                    }
                     if Task.isCancelled { return }
                     storage.beginEditing()
                     request.attachment.image = image
@@ -169,6 +185,7 @@ extension MarkdownSelectableText: UIViewRepresentable {
         context.coordinator.startHighlighting(highlighter, in: textView.textStorage)
         context.coordinator.startImageLoading(
             in: textView.textStorage,
+            policy: imagePolicy,
             width: { [weak textView] in
                 let width = textView?.textContainer.size.width ?? 0
                 return width > 0 ? width : (textView?.bounds.width ?? 0)
@@ -210,6 +227,7 @@ extension MarkdownSelectableText: NSViewRepresentable {
             context.coordinator.startHighlighting(highlighter, in: storage)
             context.coordinator.startImageLoading(
                 in: storage,
+                policy: imagePolicy,
                 width: { [weak textView] in textView?.textContainer?.size.width ?? textView?.bounds.width ?? 0 },
                 invalidate: { [weak textView] in textView?.invalidateIntrinsicContentSize() }
             )

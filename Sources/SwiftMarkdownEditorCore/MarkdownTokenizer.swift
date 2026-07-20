@@ -14,6 +14,7 @@ public enum MarkdownTokenizer {
     // ASCII code units we test against.
     private enum C {
         static let newline: UInt16 = 0x0A
+        static let carriageReturn: UInt16 = 0x0D
         static let space: UInt16 = 0x20
         static let tab: UInt16 = 0x09
         static let hash: UInt16 = 0x23      // #
@@ -54,7 +55,13 @@ public enum MarkdownTokenizer {
         while lineStart <= n {
             var lineEnd = lineStart
             while lineEnd < n && units[lineEnd] != C.newline { lineEnd += 1 }
-            scanLine(units, lineStart, lineEnd, fence: &fence, into: &tokens)
+            // CRLF の \r は行の内容ではない。含めたままスキャンすると、行末まで伸びる
+            // トークン（見出し本文・コードブロック等）が 1 コードユニット余計に色づく。
+            var contentEnd = lineEnd
+            if contentEnd > lineStart && units[contentEnd - 1] == C.carriageReturn {
+                contentEnd -= 1
+            }
+            scanLine(units, lineStart, contentEnd, fence: &fence, into: &tokens)
             if lineEnd == n { break }
             lineStart = lineEnd + 1
         }
@@ -74,7 +81,11 @@ public enum MarkdownTokenizer {
 
         // Inside a fenced code block: everything is code until the closing fence.
         if let active = fence {
-            if let fenceRun = leadingFenceRun(u, start, end), fenceRun.char == active.char, fenceRun.length >= active.length, onlyWhitespaceAfter(u, fenceRun.endIndex, end) {
+            // 閉じフェンスもインデントを許す。開きフェンス（下の contentStart 経由）と
+            // 揃えていないと、リスト項目の中など字下げされた閉じフェンスを認識できず、
+            // 以降のドキュメント全体がコードとして着色され続ける。
+            let fenceStart = skipLeadingWhitespace(u, start, end)
+            if let fenceRun = leadingFenceRun(u, fenceStart, end), fenceRun.char == active.char, fenceRun.length >= active.length, onlyWhitespaceAfter(u, fenceRun.endIndex, end) {
                 tokens.append(MarkdownToken(range: TextSpan(lowerBound: start, upperBound: end), kind: .codeFence))
                 fence = nil
             } else {
