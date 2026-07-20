@@ -8,6 +8,9 @@ enum MathPreprocessor {
     struct Capture: Equatable {
         let latex: String
         let isDisplay: Bool
+        /// デリミターを含む元のソース断片。数式になり得ない位置（リンク宛先など）に
+        /// トークンが落ちた場合に、原文をそのまま書き戻すために使う。
+        let raw: String
     }
 
     struct Extraction {
@@ -32,9 +35,9 @@ enum MathPreprocessor {
             switch part {
             case .text(let text):
                 processed += text
-            case .math(let latex, let isDisplay):
+            case .math(let latex, let isDisplay, let raw):
                 let token = "\(tokenStart)\(captures.count)\(tokenEnd)"
-                captures.append(Capture(latex: latex, isDisplay: isDisplay))
+                captures.append(Capture(latex: latex, isDisplay: isDisplay, raw: raw))
                 // Display math becomes its own block; blank lines force a
                 // standalone paragraph in the Markdown structure.
                 processed += isDisplay ? "\n\n\(token)\n\n" : token
@@ -110,15 +113,51 @@ enum MathPreprocessor {
                 return [.strong(restoreInlines(children, captures: captures))]
 
             case .link(let destination, let title, let content):
-                return [.link(destination: destination, title: title, content: restoreInlines(content, captures: captures))]
+                return [.link(
+                    destination: restoreRawText(destination, captures: captures),
+                    title: title.map { restoreRawText($0, captures: captures) },
+                    content: restoreInlines(content, captures: captures)
+                )]
+
+            case .image(let source, let alt, let title):
+                return [.image(
+                    source: restoreRawText(source, captures: captures),
+                    alt: restoreRawText(alt, captures: captures),
+                    title: title.map { restoreRawText($0, captures: captures) }
+                )]
 
             case .strikethrough(let children):
                 return [.strikethrough(restoreInlines(children, captures: captures))]
 
-            case .code, .image, .softBreak, .hardBreak, .inlineMath:
+            case .code, .softBreak, .hardBreak, .inlineMath:
                 return [inline]
             }
         }
+    }
+
+    /// 数式になり得ない位置に落ちたトークンを、デリミター込みの原文へ書き戻す。
+    ///
+    /// スキャナは構文木を持たないため、リンク宛先や画像ソースの中の `$...$` も一律に
+    /// 数式として拾う。そこを復元しないと、表示されているリンクと実際に開く先が食い違う。
+    private static func restoreRawText(_ text: String, captures: [Capture]) -> String {
+        guard text.contains(tokenStart) else { return text }
+
+        var result = ""
+        var index = text.startIndex
+        while index < text.endIndex {
+            let character = text[index]
+            if character == tokenStart,
+               let endIndex = text[index...].firstIndex(of: tokenEnd),
+               let captureIndex = Int(text[text.index(after: index)..<endIndex]),
+               captures.indices.contains(captureIndex) {
+                result += captures[captureIndex].raw
+                index = text.index(after: endIndex)
+            } else {
+                result.append(character)
+                index = text.index(after: index)
+            }
+        }
+        return result
     }
 
     /// テキストランをプレースホルダートークンで分割し、テキストと数式インラインに変換する。

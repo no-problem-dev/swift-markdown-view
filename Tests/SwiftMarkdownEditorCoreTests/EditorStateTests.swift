@@ -1,5 +1,4 @@
 import Testing
-import SwiftMarkdownView
 @testable import SwiftMarkdownEditorCore
 
 struct EditorStateTests {

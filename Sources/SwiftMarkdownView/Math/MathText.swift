@@ -46,7 +46,7 @@ public struct MathText: View {
             switch part {
             case .text(let text):
                 output = output + Text(text)
-            case .math(let latex, _):
+            case .math(let latex, _, _):
                 if let mathFontSize {
                     output = output + renderer.inlineMath(latex, fontSize: mathFontSize, palette: colorPalette)
                 } else {

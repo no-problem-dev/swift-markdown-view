@@ -10,14 +10,14 @@ struct MathTextTests {
 
     @Test("Scalar display math is a single math part")
     func scalarDisplayMath() {
-        #expect(MathScanner.parts(in: "$$-6$$") == [.math(latex: "-6", isDisplay: true)])
+        #expect(MathScanner.parts(in: "$$-6$$") == [.math(latex: "-6", isDisplay: true, raw: "$$-6$$")])
     }
 
     @Test("Heading text with trailing inline math")
     func headingWithInlineMath() {
         #expect(MathScanner.parts(in: "答え: $x = 3$") == [
             .text("答え: "),
-            .math(latex: "x = 3", isDisplay: false),
+            .math(latex: "x = 3", isDisplay: false, raw: "$x = 3$"),
         ])
     }
 
@@ -33,7 +33,7 @@ struct MathTextTests {
     func backslashParen() {
         #expect(MathScanner.parts(in: #"条件: \(a \neq 0\)"#) == [
             .text("条件: "),
-            .math(latex: #"a \neq 0"#, isDisplay: false),
+            .math(latex: #"a \neq 0"#, isDisplay: false, raw: #"\(a \neq 0\)"#),
         ])
     }
 }

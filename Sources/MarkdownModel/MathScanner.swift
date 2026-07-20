@@ -20,7 +20,12 @@ public enum MathScanner {
         /// ソーステキスト。そのまま保持する。
         case text(String)
         /// デリミターを除去した数式領域。
-        case math(latex: String, isDisplay: Bool)
+        ///
+        /// `raw` はデリミターを含む元のソース断片。スキャンは構文木を持たないため、
+        /// リンク宛先のようにドキュメント構造上は数式になり得ない位置も一律に拾う。
+        /// そうした位置では `latex` ではなく `raw` を書き戻して原文を復元する必要がある
+        /// （`latex` だけでは `$x$` と `\(x\)` を区別できず、URL が別物になる）。
+        case math(latex: String, isDisplay: Bool, raw: String)
     }
 
     public static func parts(in source: String) -> [Part] {
@@ -39,6 +44,8 @@ private struct Scanner {
     /// インデントコードブロックの継続中か。空行では解除されない（CommonMark 4.4）ため、
     /// 行単位のスキャンでは状態として持つ必要がある。
     var inIndentedCode = false
+    /// 走査済みで、ソース内に 1 つも存在しないと判明した `\]` / `\)` の閉じ文字。
+    var exhaustedBackslashClosers: Set<Character> = []
 
     mutating func run() -> [MathScanner.Part] {
         while i < chars.count {
@@ -71,7 +78,7 @@ private struct Scanner {
 
     private mutating func emitMath(_ latex: String, isDisplay: Bool, from start: Int, to end: Int) {
         flushText(upTo: start)
-        parts.append(.math(latex: latex, isDisplay: isDisplay))
+        parts.append(.math(latex: latex, isDisplay: isDisplay, raw: String(chars[start..<end])))
         textStart = end
         i = end
     }
@@ -94,6 +101,14 @@ private struct Scanner {
     }
 
     private mutating func matchBackslashDelimited(closer: Character, isDisplay: Bool) {
+        // 閉じデリミターが 1 つも無いことが既に分かっているなら、走査し直さない。
+        // 下の while は必ず末尾まで走るので、一度失敗した closer は以降どの開始位置からも
+        // 見つからない。これを覚えないと `\(` の連続で走査が O(n^2) に膨らむ。
+        guard !exhaustedBackslashClosers.contains(closer) else {
+            i += 2
+            return
+        }
+
         let start = i
         let contentStart = i + 2
         var j = contentStart
@@ -113,6 +128,7 @@ private struct Scanner {
                 j += 1
             }
         }
+        exhaustedBackslashClosers.insert(closer)
         i = start + 2
     }
 
@@ -157,6 +173,13 @@ private struct Scanner {
             return
         }
         var j = contentStart
+        // 数式が「自分で開いていない括弧」を閉じたら、Markdown の構造を跨いだ証拠として打ち切る。
+        // このスキャナはパース前に生ソースを走るため、`[a](url$x)` の `)` のような構造文字が
+        // 数式の内側に入りうる。飲み込むとリンクそのものがプレースホルダーに消え、復元では
+        // 構造を戻せない（Pandoc は先にリンクを消費するのでこの問題が起きない）。
+        // `$f(x)$` のような均衡した括弧は数式として正しいので、深さで区別する。
+        var parenDepth = 0
+        var bracketDepth = 0
         while j < chars.count {
             let c = chars[j]
             if c == "\n" { break }
@@ -167,6 +190,17 @@ private struct Scanner {
             if c == "\\" {
                 j += 2
                 continue
+            }
+            if c == "(" {
+                parenDepth += 1
+            } else if c == "[" {
+                bracketDepth += 1
+            } else if c == ")" {
+                if parenDepth == 0 { break }
+                parenDepth -= 1
+            } else if c == "]" {
+                if bracketDepth == 0 { break }
+                bracketDepth -= 1
             }
             if c == "$" {
                 // Pandoc rule: content may not contain an unescaped `$`,
