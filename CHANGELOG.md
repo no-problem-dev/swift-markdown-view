@@ -87,6 +87,41 @@
   `MarkdownRenderedImage` / `MarkdownAttachmentRendering` の 4 型で、いずれも
   自作アタッチメントレンダラを書くのに必要
 
+- **`BundledMermaidScriptProvider` を failable にした。** リソースが見つからない場合は
+  `nil` を返す。従来はデバッグビルドで `assertionFailure` を出しつつ、リリースでは
+  無言で CDN にフォールバックしていた。**移行**: `if let` か `??` で受ける。
+  `bundle` / `filename` プロパティは解決済みの `url` に置き換わった
+
+  ```swift
+  // 見つからなければ Mermaid を描画しない
+  if let provider = BundledMermaidScriptProvider() {
+      view.markdownMermaidScriptProvider(provider)
+  }
+  // 明示的に CDN へ倒す判断も、利用者が書く
+  let provider = BundledMermaidScriptProvider() ?? CDNMermaidScriptProvider()
+  ```
+
+- **グローバル定数 `defaultMermaidScriptProvider` を削除した。**
+  **移行**: `.markdownMermaidScriptProvider(.cdn)` を使う。あわせて同 modifier の
+  引数を `any MermaidScriptProvider` から `some MermaidScriptProvider` に変えた
+  （実存パラメータだと先頭ドット構文の推論が効かないため）
+
+- **旧 modifier 名の deprecated エイリアスを削除した。**
+  `syntaxHighlighter` / `mermaidScriptProvider` / `mathRenderer` の 3 件。
+  **移行**: `markdown` prefix 付きの名前に置き換える
+  （残り 3 件の `headingStyle` / `codeBlockStyle` / `asideStyle` は本体ごと廃止済み）
+
+- **`MarkdownEditorController` のコマンド名を実挙動に合わせた。** いずれも
+  適用済みなら解除する toggle なのに、`toggleHeading` / `toggleQuote` だけが
+  toggle を名乗っていた。**移行**:
+  - `bold()` → `toggleBold()`
+  - `italic()` → `toggleItalic()`
+  - `code()` → `toggleInlineCode()`
+  - `strikethrough()` → `toggleStrikethrough()`
+  - `bulletList()` → `toggleBulletList()`
+  - `wrap(_:)` → `toggleWrap(_:)`
+  - `linePrefix(_:)` → `toggleLinePrefix(_:)`
+
 - **`PlatformColor` / `PlatformFont` の二重定義を解消した。**
   `MarkdownAttributedKit` と `SwiftMarkdownEditorTextKit` が同名の public typealias を
   別々に宣言しており、両方を import した利用者のスコープで曖昧になっていた。

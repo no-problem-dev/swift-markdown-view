@@ -21,19 +21,19 @@ struct MarkdownFormattingToolbar: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Metrics.itemSpacing) {
                 group {
-                    button("bold", label: "太字", key: "b") { controller.bold() }
-                    button("italic", label: "斜体", key: "i") { controller.italic() }
+                    button("bold", label: "太字", key: "b") { controller.toggleBold() }
+                    button("italic", label: "斜体", key: "i") { controller.toggleItalic() }
                     button("strikethrough", label: "取り消し線", key: "x", modifiers: [.command, .shift]) {
-                        controller.strikethrough()
+                        controller.toggleStrikethrough()
                     }
-                    button("curlybraces", label: "インラインコード", key: "e") { controller.code() }
+                    button("curlybraces", label: "インラインコード", key: "e") { controller.toggleInlineCode() }
                 }
 
                 Divider().frame(height: 20)
 
                 group {
                     button("number", label: "見出し") { controller.toggleHeading() }
-                    button("list.bullet", label: "箇条書き") { controller.bulletList() }
+                    button("list.bullet", label: "箇条書き") { controller.toggleBulletList() }
                     button("text.quote", label: "引用") { controller.toggleQuote() }
                     button("link", label: "リンクを挿入", key: "k") { controller.insertLink() }
                 }

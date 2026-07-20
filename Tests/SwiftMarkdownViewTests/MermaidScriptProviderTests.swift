@@ -37,31 +37,37 @@ struct MermaidScriptProviderTests {
 
     // MARK: - BundledMermaidScriptProvider
 
-    @Test("既定のバンドルとファイル名")
-    func bundledProviderUsesDefaults() {
-        let provider = BundledMermaidScriptProvider()
-        #expect(provider.bundle == Bundle.main)
-        #expect(provider.filename == "mermaid.min")
-    }
-
-    @Test("指定したバンドルとファイル名が保持される")
-    func bundledProviderUsesSpecifiedValues() {
+    /// 以前はバンドルにスクリプトが無いと無言で CDN にフォールバックしていた。
+    /// オフライン動作を期待した利用者のアプリから、気づかないまま外部通信が飛ぶ。
+    /// 生成時に失敗させることで、入れ忘れが利用者側の分岐として現れる。
+    @Test("リソースが無ければ生成に失敗する。CDN には落ちない")
+    func bundledProviderFailsWhenResourceIsMissing() {
         let testBundle = Bundle(for: BundleToken.self)
-        let provider = BundledMermaidScriptProvider(bundle: testBundle, filename: "custom-mermaid")
-        #expect(provider.bundle == testBundle)
-        #expect(provider.filename == "custom-mermaid")
+
+        #expect(BundledMermaidScriptProvider(bundle: testBundle, filename: "absent-mermaid") == nil)
+        #expect(BundledMermaidScriptProvider(bundle: testBundle) == nil)
     }
 
-    // バンドル欠落時に CDN へ落ちる経路はここでは検証しない。
-    // その挙動は「オフライン動作を期待した利用者のアプリから無言で外部通信が飛ぶ」
-    // 欠陥として扱うことにし、デバッグビルドでは assertionFailure で停止させている。
-    // 次のメジャーで failable / throwing 化して型で表現する予定。
+    @Test("生成できたときはそのファイルを指す")
+    func bundledProviderPointsAtResolvedFile() throws {
+        let directory = URL.temporaryDirectory.appending(path: "mermaid-bundle-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let script = directory.appending(path: "mermaid.min.js")
+        try "/* mermaid */".write(to: script, atomically: true, encoding: .utf8)
+
+        let bundle = try #require(Bundle(url: directory) ?? Bundle(path: directory.path))
+        let provider = try #require(BundledMermaidScriptProvider(bundle: bundle))
+
+        #expect(provider.scriptSource == .localFile(provider.url))
+        #expect(provider.url.lastPathComponent == "mermaid.min.js")
+    }
 
     // MARK: - 既定プロバイダー
 
     @Test("既定プロバイダーは CDN ベース")
     func defaultProviderIsCDNBased() {
-        guard case .url(let url) = defaultMermaidScriptProvider.scriptSource else {
+        guard case .url(let url) = CDNMermaidScriptProvider.cdn.scriptSource else {
             Issue.record("URL ソースが得られなかった")
             return
         }

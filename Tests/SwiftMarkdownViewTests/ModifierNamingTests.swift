@@ -52,13 +52,11 @@ struct ModifierNamingTests {
         _ = view.markdownMathRenderer(PlainMathRenderer())
     }
 
-    /// 旧名は deprecated だが削除ではない。利用者のコードが動き続けることを保証する。
-    @Test("旧名も引き続き呼び出せる")
-    @available(*, deprecated)
-    func deprecatedAliasesStillCallable() {
+    /// プロバイダーは先頭ドットで書ける。`any` を受ける実存パラメータだと
+    /// 静的メンバの推論が効かないので、`some` で受けていることをコンパイルで保証する。
+    @Test("プロバイダーを先頭ドットで指定できる")
+    func providersUseLeadingDotSyntax() {
         let view = Color.clear
-        _ = view.syntaxHighlighter(PlainTextHighlighter())
-        _ = view.mermaidScriptProvider(CDNMermaidScriptProvider())
-        _ = view.mathRenderer(PlainMathRenderer())
+        _ = view.markdownMermaidScriptProvider(.cdn)
     }
 }

@@ -64,60 +64,53 @@ public struct CDNMermaidScriptProvider: MermaidScriptProvider {
     }
 }
 
-// MARK: - Bundled Provider (Placeholder)
+// MARK: - Bundled Provider
 
 /// アプリバンドルから読み込む Mermaid スクリプトプロバイダー。
 ///
-/// オフラインサポートにはこのプロバイダーを使用する。アプリのバンドルに `mermaid.min.js` を
-/// 含める必要がある。
+/// オフラインで動かす場合に使う。アプリのバンドルに `mermaid.min.js` を含める必要がある
+/// （https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js からダウンロードできる）。
+///
+/// **リソースが見つからない場合は `nil` を返す。** 以前は無言で CDN にフォールバックしており、
+/// オフライン動作を期待した利用者のアプリから気づかないまま外部通信が飛んでいた。
+/// 生成時に失敗させることで、入れ忘れがコンパイル時の分岐として現れる:
 ///
 /// ```swift
-/// MarkdownView(source)
-///     .markdownMermaidScriptProvider(BundledMermaidScriptProvider())
+/// // 見つからなければ Mermaid を描画しない
+/// if let provider = BundledMermaidScriptProvider() {
+///     view.markdownMermaidScriptProvider(provider)
+/// }
+///
+/// // 明示的に CDN へ倒す判断も、利用者が書く
+/// let provider = BundledMermaidScriptProvider() ?? CDNMermaidScriptProvider()
 /// ```
-///
-/// - Note: アプリターゲットのリソースに `mermaid.min.js` を追加する必要がある。
-///   https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js からダウンロードできる。
-///
-/// - Important: バンドルにスクリプトが無い場合は CDN にフォールバックする。これは
-///   オフライン動作を期待した利用者にとって**外部通信が発生する**という性質の変化なので、
-///   デバッグビルドでは `assertionFailure` で停止させ、リソースの入れ忘れを出荷前に露見させる。
 public struct BundledMermaidScriptProvider: MermaidScriptProvider {
 
-    /// Mermaid.js ファイルを含むバンドル。
-    public let bundle: Bundle
+    /// 解決済みの Mermaid.js ファイルの場所。
+    public let url: URL
 
-    /// Mermaid.js ファイルのファイル名。
-    public let filename: String
-
-    /// バンドルプロバイダーを生成する。
+    /// バンドルプロバイダーを生成する。リソースが見つからない場合は `nil`。
     ///
     /// - Parameters:
     ///   - bundle: スクリプトを含むバンドル。デフォルトは `.main`。
-    ///   - filename: スクリプトのファイル名。デフォルトは "mermaid.min"。
-    public init(bundle: Bundle = .main, filename: String = "mermaid.min") {
-        self.bundle = bundle
-        self.filename = filename
+    ///   - filename: スクリプトのファイル名（拡張子なし）。デフォルトは "mermaid.min"。
+    public init?(bundle: Bundle = .main, filename: String = "mermaid.min") {
+        guard let url = bundle.url(forResource: filename, withExtension: "js") else { return nil }
+        self.url = url
     }
 
-    public var scriptSource: MermaidScriptSource {
-        if let url = bundle.url(forResource: filename, withExtension: "js") {
-            return .localFile(url)
-        }
-        // バンドル欠落はプログラマエラー。黙って CDN に落ちると、オフライン動作を
-        // 期待した利用者のアプリから気づかないまま外部通信が飛ぶ。
-        assertionFailure(
-            """
-            BundledMermaidScriptProvider: \(bundle.bundleIdentifier ?? "(unknown bundle)") に \
-            \(filename).js が見つかりません。CDN にフォールバックするため外部通信が発生します。\
-            アプリターゲットのリソースに追加するか、CDNMermaidScriptProvider を明示的に指定してください。
-            """
-        )
-        return CDNMermaidScriptProvider().scriptSource
-    }
+    public var scriptSource: MermaidScriptSource { .localFile(url) }
 }
 
 // MARK: - Default Provider
 
-/// デフォルトの Mermaid スクリプトプロバイダー（CDN ベース）。
-public let defaultMermaidScriptProvider: any MermaidScriptProvider = CDNMermaidScriptProvider()
+public extension MermaidScriptProvider where Self == CDNMermaidScriptProvider {
+
+    /// jsDelivr CDN から読み込む既定のプロバイダー。
+    ///
+    /// ```swift
+    /// MarkdownView(source)
+    ///     .markdownMermaidScriptProvider(.cdn)
+    /// ```
+    static var cdn: CDNMermaidScriptProvider { CDNMermaidScriptProvider() }
+}

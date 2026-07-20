@@ -327,7 +327,7 @@ public struct SyntaxHighlighterCatalogView: View {
 
                     // 手動でカラーモード指定
                     MarkdownView(source)
-                        .syntaxHighlighter(
+                        .markdownSyntaxHighlighter(
                             HighlightJSSyntaxHighlighter(
                                 theme: .atomOne,
                                 colorMode: .dark
@@ -397,7 +397,7 @@ public struct SyntaxHighlighterCatalogView: View {
 
                     // 明示的にプレーンテキスト指定
                     MarkdownView(source)
-                        .syntaxHighlighter(PlainTextHighlighter())
+                        .markdownSyntaxHighlighter(PlainTextHighlighter())
                     """,
                     language: "swift"
                 )

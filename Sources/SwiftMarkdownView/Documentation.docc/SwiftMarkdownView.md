@@ -32,7 +32,7 @@ struct ArticleView: View {
 
 `SwiftMarkdownViewHighlightJS` は HighlightSwift を使用した 50 以上のプログラミング言語に対応する高精度シンタックスハイライトを追加する。Xcode・GitHub・Atom One・Solarized・Tokyo Night・アクセシブルな `a11y` シリーズなど豊富なライト/ダークテーマを内蔵し、`.adaptiveSyntaxHighlighting()` でシステムのカラースキームと自動連動する。Markdown にコードブロックが含まれる可能性があり、プレーンな等幅出力では不十分な場合にインポートする。
 
-`SwiftMarkdownViewLaTeX` はインライン `$...$` とブロック `$$...$$` の数式をプレーンなソーステキストから SwiftMath エンジンによる本格的な LaTeX 組版にアップグレードする。インライン数式は周囲の `Text` 行内に自然にフローし、ディスプレイ数式は全幅ブロックとしてレンダリングされる。ビュー階層に `.mathRenderer(LaTeXMathRenderer())` を注入することで有効化する。Markdown に数式表記が含まれる可能性がある場合にインポートする。
+`SwiftMarkdownViewLaTeX` はインライン `$...$` とブロック `$$...$$` の数式をプレーンなソーステキストから SwiftMath エンジンによる本格的な LaTeX 組版にアップグレードする。インライン数式は周囲の `Text` 行内に自然にフローし、ディスプレイ数式は全幅ブロックとしてレンダリングされる。ビュー階層に `.markdownMathRenderer(LaTeXMathRenderer())` を注入することで有効化する。Markdown に数式表記が含まれる可能性がある場合にインポートする。
 
 `SwiftMarkdownEditor` は完全な Markdown 執筆体験を提供する。`MarkdownEditor` はリアルタイムシンタックスハイライト・スクロール可能なフォーマットツールバー・内部で `MarkdownView` を再利用するオプションのサイドバイサイドプレビューペインを備えた TextKit 2 ソースエディタをラップする。プレーンな Markdown 文字列が常に唯一の信頼できる情報源となる。レンダリングに加えて執筆機能を追加する場合にインポートする。
 

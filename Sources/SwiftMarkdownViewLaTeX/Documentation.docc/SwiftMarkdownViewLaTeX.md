@@ -23,7 +23,7 @@ The quadratic formula: $ax^2 + bx + c = 0$
 
 $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
 """)
-.mathRenderer(LaTeXMathRenderer())
+.markdownMathRenderer(LaTeXMathRenderer())
 ```
 
 レンダラーのビジュアルスタイル（フォントファミリー・フォントサイズ・テキストカラー）は SwiftUI 環境の `swift-design-system` テーマから導出される。デフォルトを上書きするには、イニシャライザにカスタム `MathStyle` を渡す。

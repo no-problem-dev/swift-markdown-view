@@ -37,7 +37,7 @@ MarkdownView(source)
 
 // 手動設定
 MarkdownView(source)
-    .syntaxHighlighter(
+    .markdownSyntaxHighlighter(
         HighlightJSSyntaxHighlighter(theme: .atomOne, colorMode: .dark)
     )
 ```
@@ -80,7 +80,7 @@ struct MyCustomHighlighter: SyntaxHighlighter {
 }
 
 MarkdownView(source)
-    .syntaxHighlighter(MyCustomHighlighter())
+    .markdownSyntaxHighlighter(MyCustomHighlighter())
 ```
 
 ## シンタックスハイライトの無効化
@@ -93,7 +93,7 @@ MarkdownView(source)
 
 // 明示的にPlainTextHighlighterを使用
 MarkdownView(source)
-    .syntaxHighlighter(PlainTextHighlighter())
+    .markdownSyntaxHighlighter(PlainTextHighlighter())
 ```
 
 ## アプリ全体への設定

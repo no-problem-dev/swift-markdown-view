@@ -27,21 +27,26 @@ public final class MarkdownEditorController: ObservableObject {
 
     // MARK: - Toolbar commands
 
-    public func bold() { wrap("**") }
-    public func italic() { wrap("*") }
-    public func code() { wrap("`") }
-    public func strikethrough() { wrap("~~") }
+    // 全て toggle。既に適用済みの選択範囲・行に対しては解除する。
+    // 以前は toggleHeading / toggleQuote だけが toggle を名乗り、同じ挙動の
+    // bold / italic / code / strikethrough / bulletList が動詞形だった。
+    public func toggleBold() { toggleWrap("**") }
+    public func toggleItalic() { toggleWrap("*") }
+    public func toggleInlineCode() { toggleWrap("`") }
+    public func toggleStrikethrough() { toggleWrap("~~") }
 
-    public func toggleHeading() { linePrefix("# ") }
-    public func toggleQuote() { linePrefix("> ") }
-    public func bulletList() { linePrefix("- ") }
+    public func toggleHeading() { toggleLinePrefix("# ") }
+    public func toggleQuote() { toggleLinePrefix("> ") }
+    public func toggleBulletList() { toggleLinePrefix("- ") }
 
-    public func wrap(_ delimiter: String) {
+    /// 選択範囲を区切り文字で囲む。既に囲まれていれば外す。
+    public func toggleWrap(_ delimiter: String) {
         guard let (text, selection) = readState() else { return }
         apply(MarkdownFormatting.wrap(text: text, selection: selection, delimiter: delimiter))
     }
 
-    public func linePrefix(_ prefix: String) {
+    /// 選択行に接頭辞を付ける。全行が既に持っていれば外す。
+    public func toggleLinePrefix(_ prefix: String) {
         guard let (text, selection) = readState() else { return }
         apply(MarkdownFormatting.toggleLinePrefix(text: text, selection: selection, prefix: prefix))
     }

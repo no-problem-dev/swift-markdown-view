@@ -73,8 +73,4 @@ extension View {
         environment(\.syntaxHighlighter, highlighter)
     }
 
-    @available(*, deprecated, renamed: "markdownSyntaxHighlighter(_:)")
-    public func syntaxHighlighter(_ highlighter: some SyntaxHighlighter) -> some View {
-        markdownSyntaxHighlighter(highlighter)
-    }
 }

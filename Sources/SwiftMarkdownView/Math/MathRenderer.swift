@@ -98,9 +98,4 @@ extension View {
     public func markdownMathRenderer(_ renderer: some MathRenderer) -> some View {
         environment(\.mathRenderer, renderer)
     }
-
-    @available(*, deprecated, renamed: "markdownMathRenderer(_:)")
-    public func mathRenderer(_ renderer: some MathRenderer) -> some View {
-        markdownMathRenderer(renderer)
-    }
 }
