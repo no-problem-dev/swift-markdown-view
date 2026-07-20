@@ -87,42 +87,8 @@ struct ArticleView: View {
 
 ### Aside コールアウト
 
-- ``AsideStyle``
-- ``DefaultAsideStyle``
 - ``AsideKind``
 - <doc:Asides>
-
-### コードブロックスタイル
-
-- ``CodeBlockStyle``
-- ``DefaultCodeBlockStyle``
-- ``MinimalCodeBlockStyle``
-- ``TerminalCodeBlockStyle``
-
-### 見出しスタイル
-
-- ``HeadingStyle``
-- ``DefaultHeadingStyle``
-- ``CompactHeadingStyle``
-- ``ColoredHeadingStyle``
-- ``DividedHeadingStyle``
-
-### リンクスタイル
-
-- ``LinkStyle``
-- ``DefaultLinkStyle``
-- ``SubtleLinkStyle``
-- ``BoldLinkStyle``
-- ``ClassicLinkStyle``
-- ``MonochromeLinkStyle``
-
-### テーブルスタイル
-
-- ``TableStyle``
-- ``DefaultTableStyle``
-- ``StripedTableStyle``
-- ``BorderlessTableStyle``
-- ``CardTableStyle``
 
 ### レンダリングオプション
 
@@ -139,8 +105,6 @@ struct ArticleView: View {
 - ``MermaidScriptSource``
 - ``CDNMermaidScriptProvider``
 - ``BundledMermaidScriptProvider``
-- ``AdaptiveMermaidView``
-- ``MermaidFallbackView``
 - <doc:MermaidDiagrams>
 
 ### ドメイン型

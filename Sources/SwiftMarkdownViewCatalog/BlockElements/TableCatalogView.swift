@@ -104,7 +104,6 @@ public struct TableCatalogView: View {
                         |-----|-----|
                         | A | B |
                         \"\"\")
-                        .markdownTableStyle(StripedTableStyle())
                         """,
                         language: "swift"
                     )

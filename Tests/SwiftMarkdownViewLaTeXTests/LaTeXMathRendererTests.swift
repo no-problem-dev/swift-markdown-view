@@ -33,14 +33,14 @@ struct LaTeXMathRendererTests {
         _ = renderer.inlineMath(latex, fontSize: 17, palette: palette)
     }
 
-    @Test("不正な LaTeX でもディスプレイ描画が返る", arguments: [
+    @Test("不正な LaTeX でもディスプレイ描画がクラッシュしない", arguments: [
         "",
         "\\frac{",
         "\\begin{matrix}",
         "x^{2"
     ])
     func displayMathSurvivesMalformedInput(latex: String) {
-        _ = renderer.displayMath(latex)
+        _ = renderer.renderedImage(for: .displayMath(latex: latex), theme: .default)
     }
 
     // MARK: アタッチメント描画

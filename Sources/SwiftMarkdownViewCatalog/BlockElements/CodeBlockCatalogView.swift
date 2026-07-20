@@ -122,7 +122,6 @@ public struct CodeBlockCatalogView: View {
                         let greeting = "Hello"
                         ```
                         \"\"\")
-                        .codeBlockStyle(TerminalCodeBlockStyle())
                         """,
                         language: "swift"
                     )

@@ -87,36 +87,16 @@ public struct ImageCatalogView: View {
                 }
 
                 // Image rendering options
-                CatalogSectionCard(title: "レンダリングオプション") {
+                CatalogSectionCard(title: "画像の読み込み方針") {
                     VStack(alignment: .leading, spacing: spacing.md) {
-                        Text("画像サイズを制限する:")
+                        Text("リモート画像の読み込みを禁じ、バンドル内の画像だけを許可する:")
                             .typography(.labelMedium)
                             .foregroundStyle(colorPalette.onSurfaceVariant)
 
                         CodeSnippetView(
                             code: """
                             MarkdownView(source)
-                                .markdownRenderingOptions(
-                                    .init(
-                                        maxImageHeight: 300,
-                                        maxImageWidth: 400
-                                    )
-                                )
-                            """,
-                            language: "swift"
-                        )
-
-                        Text("画像の表示を無効にする:")
-                            .typography(.labelMedium)
-                            .foregroundStyle(colorPalette.onSurfaceVariant)
-                            .padding(.top, spacing.md)
-
-                        CodeSnippetView(
-                            code: """
-                            MarkdownView(source)
-                                .markdownRenderingOptions(
-                                    .init(renderImages: false)
-                                )
+                                .markdownImagePolicy(.bundleOnly)
                             """,
                             language: "swift"
                         )

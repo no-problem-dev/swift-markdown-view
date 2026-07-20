@@ -34,11 +34,6 @@ public protocol MathRenderer: Sendable {
     /// 周囲のフォントに合わせる。デフォルト実装はサイズを無視して
     /// ``inlineMath(_:palette:)`` にフォールバックする。
     @MainActor func inlineMath(_ latex: String, fontSize: CGFloat, palette: any ColorPalette) -> Text
-
-    /// ディスプレイ数式をブロックビューとしてレンダリングする。
-    ///
-    /// - Parameter latex: デリミタなしの LaTeX ソース。
-    @MainActor func displayMath(_ latex: String) -> AnyView
 }
 
 extension MathRenderer {
@@ -53,7 +48,7 @@ extension MathRenderer {
 
 /// 組版なしで LaTeX ソースを表示するデフォルト数式レンダラー。
 ///
-/// インライン数式は等幅の `$...$` テキスト、ディスプレイ数式は `math` コードブロックとして表示する。
+/// 数式は等幅の `$...$` テキストとして表示する。
 /// コアモジュールを依存なしに保ちつつ、グレースフルなデグレードを実現する。
 public struct PlainMathRenderer: MathRenderer {
 
@@ -64,11 +59,6 @@ public struct PlainMathRenderer: MathRenderer {
         Text("$\(latex)$")
             .font(.system(.body, design: .monospaced))
             .foregroundStyle(MarkdownColors.inlineCodeText(palette))
-    }
-
-    @MainActor
-    public func displayMath(_ latex: String) -> AnyView {
-        AnyView(CodeBlockView(language: "math", code: latex))
     }
 }
 
@@ -111,23 +101,5 @@ extension View {
     @available(*, deprecated, renamed: "markdownMathRenderer(_:)")
     public func mathRenderer(_ renderer: some MathRenderer) -> some View {
         markdownMathRenderer(renderer)
-    }
-}
-
-// MARK: - MathBlockView
-
-/// 環境の数式レンダラーを使用してディスプレイ数式ブロックをレンダリングする。
-struct MathBlockView: View {
-    let latex: String
-
-    @Environment(\.mathRenderer) private var renderer
-    @Environment(\.markdownRenderingOptions) private var options
-
-    var body: some View {
-        if options.renderMath {
-            renderer.displayMath(latex)
-        } else {
-            CodeBlockView(language: "math", code: latex)
-        }
     }
 }

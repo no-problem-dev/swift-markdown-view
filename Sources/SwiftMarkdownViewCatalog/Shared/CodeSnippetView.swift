@@ -90,7 +90,7 @@ public struct CodeSnippetView: View {
     CodeSnippetView(
         code: """
         MarkdownView("# Hello World")
-            .headingStyle(ColoredHeadingStyle())
+            .markdownSyntaxHighlighter(HighlightJSSyntaxHighlighter())
         """,
         language: "swift"
     )

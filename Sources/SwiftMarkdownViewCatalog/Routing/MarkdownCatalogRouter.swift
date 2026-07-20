@@ -93,18 +93,6 @@ enum MarkdownCatalogRouter {
     private static func destinationForConfiguration(item: MarkdownCatalogItem) -> some View {
         if let configItem = ConfigurationItem.allCases.first(where: { $0.rawValue == item.name }) {
             switch configItem {
-            case .renderingOptions:
-                RenderingOptionsCatalogView()
-            case .asideStyle:
-                AsideStyleCatalogView()
-            case .codeBlockStyle:
-                CodeBlockStyleCatalogView()
-            case .headingStyle:
-                HeadingStyleCatalogView()
-            case .tableStyle:
-                TableStyleCatalogView()
-            case .linkStyle:
-                LinkStyleCatalogView()
             case .syntaxHighlighter:
                 SyntaxHighlighterCatalogView()
             }

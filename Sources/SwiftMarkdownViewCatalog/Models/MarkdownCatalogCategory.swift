@@ -179,12 +179,6 @@ internal enum InlineElementItem: String, CaseIterable, Identifiable, Sendable {
 
 /// カタログで使用する設定・スタイルオプションの種類。
 internal enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
-    case renderingOptions = "レンダリングオプション"
-    case asideStyle = "Asideスタイル"
-    case codeBlockStyle = "コードブロックスタイル"
-    case headingStyle = "見出しスタイル"
-    case tableStyle = "テーブルスタイル"
-    case linkStyle = "リンクスタイル"
     case syntaxHighlighter = "シンタックスハイライト"
 
     internal var id: String { rawValue }
@@ -199,24 +193,12 @@ internal enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
 
     internal var icon: String {
         switch self {
-        case .renderingOptions: return "gearshape.fill"
-        case .asideStyle: return "bubble.left.fill"
-        case .codeBlockStyle: return "chevron.left.forwardslash.chevron.right"
-        case .headingStyle: return "textformat.size"
-        case .tableStyle: return "tablecells"
-        case .linkStyle: return "link"
         case .syntaxHighlighter: return "paintbrush.fill"
         }
     }
 
     internal var description: String {
         switch self {
-        case .renderingOptions: return "Mermaid、画像、テーブルの有効/無効"
-        case .asideStyle: return "コールアウトの見た目をカスタマイズ"
-        case .codeBlockStyle: return "コードブロックのスタイル設定"
-        case .headingStyle: return "見出しのタイポグラフィと色"
-        case .tableStyle: return "テーブルのボーダーと色"
-        case .linkStyle: return "リンクの色と下線"
         case .syntaxHighlighter: return "コードハイライトのテーマ"
         }
     }

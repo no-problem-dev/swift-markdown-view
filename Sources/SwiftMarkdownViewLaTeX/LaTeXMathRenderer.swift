@@ -45,14 +45,6 @@ public struct LaTeXMathRenderer: MathRenderer {
             .font(.system(.body, design: .monospaced))
             .foregroundStyle(style.errorColor(palette))
     }
-
-    @MainActor
-    public func displayMath(_ latex: String) -> AnyView {
-        AnyView(
-            LaTeXView(latex, mode: .display)
-                .mathStyle(style)
-        )
-    }
 }
 
 // MARK: - TextKit attachment rendering

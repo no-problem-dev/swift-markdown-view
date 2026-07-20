@@ -5,9 +5,9 @@ import DesignSystem
 
 /// View modifier の命名と環境値の疎通。
 ///
-/// `View` の extension はグローバル名前空間なので、`headingStyle` や `codeBlockStyle` の
-/// ような一般名を占有すると利用者のアプリや他ライブラリと衝突しうる。全て `markdown`
-/// prefix に統一し、旧名は deprecated エイリアスとして残している。
+/// `View` の extension はグローバル名前空間なので、`syntaxHighlighter` のような一般名を
+/// 占有すると利用者のアプリや他ライブラリと衝突しうる。全て `markdown` prefix に統一し、
+/// 旧名は deprecated エイリアスとして残している。
 ///
 /// modifier が環境値に伝播する様子は、SwiftUI が実レンダリングなしに `body` を
 /// 評価しないためヘッドレスでは観測できない。そこでここでは
@@ -19,23 +19,6 @@ struct ModifierNamingTests {
 
     // MARK: 環境キーの読み書き
 
-    @Test("スタイルの環境キーが読み書きできる")
-    func styleEnvironmentKeysRoundTrip() {
-        var env = EnvironmentValues()
-
-        env.headingStyle = ColoredHeadingStyle()
-        env.codeBlockStyle = TerminalCodeBlockStyle()
-        env.asideStyle = DefaultAsideStyle()
-        env.markdownTableStyle = StripedTableStyle()
-        env.markdownLinkStyle = SubtleLinkStyle()
-
-        #expect(env.headingStyle is ColoredHeadingStyle)
-        #expect(env.codeBlockStyle is TerminalCodeBlockStyle)
-        #expect(env.asideStyle is DefaultAsideStyle)
-        #expect(env.markdownTableStyle is StripedTableStyle)
-        #expect(env.markdownLinkStyle is SubtleLinkStyle)
-    }
-
     @Test("画像方針の環境キーが読み書きできる")
     func imagePolicyEnvironmentKeyRoundTrips() {
         var env = EnvironmentValues()
@@ -46,6 +29,15 @@ struct ModifierNamingTests {
         #expect(env.markdownImagePolicy.allowsRemoteImages == false)
     }
 
+    @Test("レンダリングオプションの環境キーが読み書きできる")
+    func renderingOptionsEnvironmentKeyRoundTrips() {
+        var env = EnvironmentValues()
+        #expect(env.markdownRenderingOptions.renderMath)
+
+        env.markdownRenderingOptions = MarkdownRenderingOptions(renderMath: false)
+        #expect(env.markdownRenderingOptions.renderMath == false)
+    }
+
     // MARK: modifier の呼び出し可能性
 
     /// 新名がすべて現在の型で呼び出せることをコンパイルで保証する。
@@ -53,14 +45,11 @@ struct ModifierNamingTests {
     @Test("markdown prefix つきの新名が揃っている")
     func prefixedModifiersExist() {
         let view = Color.clear
-        _ = view.markdownHeadingStyle(ColoredHeadingStyle())
-        _ = view.markdownCodeBlockStyle(TerminalCodeBlockStyle())
-        _ = view.markdownAsideStyle(DefaultAsideStyle())
-        _ = view.markdownTableStyle(StripedTableStyle())
-        _ = view.markdownLinkStyle(SubtleLinkStyle())
         _ = view.markdownSyntaxHighlighter(PlainTextHighlighter())
         _ = view.markdownImagePolicy(.bundleOnly)
         _ = view.markdownMermaidScriptProvider(CDNMermaidScriptProvider())
+        _ = view.markdownRenderingOptions(.default)
+        _ = view.markdownMathRenderer(PlainMathRenderer())
     }
 
     /// 旧名は deprecated だが削除ではない。利用者のコードが動き続けることを保証する。
@@ -68,10 +57,8 @@ struct ModifierNamingTests {
     @available(*, deprecated)
     func deprecatedAliasesStillCallable() {
         let view = Color.clear
-        _ = view.headingStyle(ColoredHeadingStyle())
-        _ = view.codeBlockStyle(TerminalCodeBlockStyle())
-        _ = view.asideStyle(DefaultAsideStyle())
         _ = view.syntaxHighlighter(PlainTextHighlighter())
         _ = view.mermaidScriptProvider(CDNMermaidScriptProvider())
+        _ = view.mathRenderer(PlainMathRenderer())
     }
 }

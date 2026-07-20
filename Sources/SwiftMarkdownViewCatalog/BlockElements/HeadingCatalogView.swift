@@ -53,19 +53,6 @@ public struct HeadingCatalogView: View {
                             """,
                             language: "swift"
                         )
-
-                        Text("カスタムスタイルの適用")
-                            .typography(.titleSmall)
-                            .foregroundStyle(colorPalette.onSurface)
-                            .padding(.top, spacing.md)
-
-                        CodeSnippetView(
-                            code: """
-                            MarkdownView(source)
-                                .headingStyle(ColoredHeadingStyle())
-                            """,
-                            language: "swift"
-                        )
                     }
                 }
             }

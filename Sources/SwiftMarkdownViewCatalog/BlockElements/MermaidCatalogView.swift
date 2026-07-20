@@ -126,20 +126,6 @@ public struct MermaidCatalogView: View {
                             """,
                             language: "swift"
                         )
-
-                        Text("Mermaidを無効にする場合:")
-                            .typography(.labelMedium)
-                            .foregroundStyle(colorPalette.onSurfaceVariant)
-
-                        CodeSnippetView(
-                            code: """
-                            MarkdownView(source)
-                                .markdownRenderingOptions(
-                                    .init(renderMermaid: false)
-                                )
-                            """,
-                            language: "swift"
-                        )
                     }
                 }
 

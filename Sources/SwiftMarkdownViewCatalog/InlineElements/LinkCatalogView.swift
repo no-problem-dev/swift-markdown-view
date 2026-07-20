@@ -70,22 +70,17 @@ public struct LinkCatalogView: View {
                     )
                 }
 
-                // Link styles
-                CatalogSectionCard(title: "リンクスタイル") {
+                // Link appearance
+                CatalogSectionCard(title: "リンクの見た目") {
                     VStack(alignment: .leading, spacing: spacing.md) {
-                        Text("カスタムスタイルを適用できます:")
+                        Text("リンクの色は DesignSystem の `ColorPalette` から解決されます。`primary` を差し替えると変わります:")
                             .typography(.bodyMedium)
                             .foregroundStyle(colorPalette.onSurfaceVariant)
 
                         CodeSnippetView(
                             code: """
-                            // 下線なしのスタイル
                             MarkdownView(source)
-                                .markdownLinkStyle(SubtleLinkStyle())
-
-                            // クラシックスタイル（青色＋下線）
-                            MarkdownView(source)
-                                .markdownLinkStyle(ClassicLinkStyle())
+                                .theme(ThemeProvider(colorPalette: MyPalette()))
                             """,
                             language: "swift"
                         )

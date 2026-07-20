@@ -84,16 +84,14 @@ let content = MarkdownContent(parsing: longMarkdownString)
 MarkdownView(content)
 ```
 
-### スタイルを適用する
+### 見た目を調整する
 
-環境モディファイアで各要素の表示を制御する:
+色・スペーシング・タイポグラフィは DesignSystem のテーマから解決される。
+テーマを差し替えれば Markdown の表示全体が追従する:
 
 ```swift
 MarkdownView(source)
-    .codeBlockStyle(TerminalCodeBlockStyle())
-    .headingStyle(ColoredHeadingStyle())
-    .markdownLinkStyle(ClassicLinkStyle())
-    .markdownTableStyle(StripedTableStyle())
+    .theme(ThemeProvider(colorPalette: MyPalette()))
 ```
 
 ### シンタックスハイライトを有効にする

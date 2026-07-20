@@ -119,7 +119,6 @@ public struct AsideCatalogView: View {
                         MarkdownView(\"\"\"
                         > Warning: この操作は危険です。
                         \"\"\")
-                        .asideStyle(MyCustomAsideStyle())
                         """,
                         language: "swift"
                     )

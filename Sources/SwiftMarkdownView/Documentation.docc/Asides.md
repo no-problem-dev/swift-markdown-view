@@ -67,63 +67,9 @@ MarkdownView("""
 """)
 ```
 
-## カスタムスタイル
-
-``AsideStyle``プロトコルに準拠したスタイルを作成することで、
-Asideの見た目をカスタマイズできる。
-
-### AsideStyleプロトコル
-
-```swift
-public protocol AsideStyle: Sendable {
-    func icon(for kind: AsideKind) -> String
-    func accentColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color
-    func backgroundColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color
-    func titleColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color
-}
-```
-
-### カスタムスタイルの例
-
-```swift
-struct MyAsideStyle: AsideStyle {
-    func icon(for kind: AsideKind) -> String {
-        switch kind {
-        case .warning: return "flame.fill"
-        case .tip: return "lightbulb.fill"
-        case .bug: return "ant.fill"
-        default: return DefaultAsideStyle().icon(for: kind)
-        }
-    }
-
-    func accentColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color {
-        switch kind {
-        case .tip: return .mint
-        case .warning: return .orange
-        default: return DefaultAsideStyle().accentColor(for: kind, colorPalette: colorPalette)
-        }
-    }
-
-    func backgroundColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color {
-        accentColor(for: kind, colorPalette: colorPalette).opacity(0.15)
-    }
-
-    func titleColor(for kind: AsideKind, colorPalette: any ColorPalette) -> Color {
-        accentColor(for: kind, colorPalette: colorPalette)
-    }
-}
-```
-
-### スタイルの適用
-
-```swift
-MarkdownView(source)
-    .asideStyle(MyAsideStyle())
-```
-
 ## デフォルトスタイル
 
-``DefaultAsideStyle``は以下の特徴を持つ：
+既定の Aside 表示は以下の特徴を持つ：
 
 - **アイコン**: SF Symbolsを使用した直感的なアイコン
 - **アクセントカラー**: 種類に応じたセマンティックカラー
