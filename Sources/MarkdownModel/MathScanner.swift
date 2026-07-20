@@ -151,6 +151,12 @@ private struct Scanner {
                 j += 2
                 continue
             }
+            // ディスプレイ数式は複数行にまたがれるが、ブロックの境界は越えられない。
+            // 打ち切らないと `He paid $$ for it.` の後ろにあるコードブロックが丸ごと
+            // 数式として飲み込まれる（インライン版は `\n` と `` ` `` で打ち切っている）。
+            if chars[j] == "\n", isBlockBoundary(afterNewlineAt: j) {
+                break
+            }
             if chars[j] == "$" && chars[j + 1] == "$" {
                 let latex = trimmed(contentStart..<j)
                 if latex.isEmpty {
@@ -215,6 +221,32 @@ private struct Scanner {
             j += 1
         }
         i = start + 1
+    }
+
+    /// `newline` の直後の行が、ディスプレイ数式を打ち切るブロック境界か。
+    ///
+    /// 空行は段落を終わらせ、フェンス行はコードブロックを開く。どちらも数式の内側には
+    /// 入り得ないので、ここで閉じデリミターの探索をやめる。
+    private func isBlockBoundary(afterNewlineAt newline: Int) -> Bool {
+        var k = newline + 1
+        var indent = 0
+        while k < chars.count, chars[k] == " " || chars[k] == "\t" {
+            indent += chars[k] == "\t" ? 4 : 1
+            k += 1
+        }
+        // 空行（次も改行、または文書末）。
+        if k >= chars.count || chars[k] == "\n" { return true }
+        // インデントコードブロックの開始。
+        if indent >= 4 { return true }
+        // フェンスの開始（``` または ~~~）。
+        guard chars[k] == "`" || chars[k] == "~" else { return false }
+        let fence = chars[k]
+        var run = 0
+        while k < chars.count, chars[k] == fence {
+            run += 1
+            k += 1
+        }
+        return run >= 3
     }
 
     // MARK: Code constructs (skipped verbatim)

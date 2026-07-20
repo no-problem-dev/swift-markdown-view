@@ -42,12 +42,17 @@ public enum LivePreviewStyler {
 
         var runs: [StyleRun] = []
 
-        // Block-level headings first, so inline traits inside a heading merge
-        // onto the enlarged font rather than overwriting it.
-        appendHeadingRuns(text: text, activeLine: activeLine, into: &runs)
+        // ブロック構造はトークナイザだけが知っている（フェンスの開閉を状態として追う）。
+        // インラインスパンの解析器は行単位でブロック文脈を持たないため、フェンスの範囲を
+        // ここで渡して除外する。渡さないと ```` ```let a = **b** ``` ```` の `**` が
+        // conceal されて、ユーザーのソースコードから記号が消えて表示される。
+        let tokens = MarkdownTokenizer.tokenize(text)
+        appendHeadingRuns(text: text, tokens: tokens, activeLine: activeLine, into: &runs)
 
-        let spans = InlineSpanParser.parse(text)
-        for span in spans {
+        let verbatim = verbatimRanges(in: tokens)
+        for span in InlineSpanParser.parse(text) {
+            guard !isInsideVerbatim(span.fullRange, verbatim) else { continue }
+
             // Content styling is always applied (revealed lines keep bold etc.).
             if let trait = contentTrait(for: span.kind), span.contentRange.length > 0 {
                 runs.append(StyleRun(range: span.contentRange, trait: trait))
@@ -64,12 +69,56 @@ public enum LivePreviewStyler {
         return runs
     }
 
+    // MARK: - Verbatim (fenced code) regions
+
+    /// フェンスコードの範囲を昇順・非重複にまとめる。
+    ///
+    /// インラインコードは含めない。`InlineSpanParser` がバッククォートを正しく優先するため、
+    /// 除外すると等幅の装飾まで失われる。
+    private static func verbatimRanges(in tokens: [MarkdownToken]) -> [TextSpan] {
+        var merged: [TextSpan] = []
+        for token in tokens where token.kind == .codeFence || token.kind == .codeBlock {
+            if let last = merged.last, token.range.lowerBound <= last.upperBound {
+                merged[merged.count - 1] = TextSpan(
+                    lowerBound: last.lowerBound,
+                    upperBound: max(last.upperBound, token.range.upperBound)
+                )
+            } else {
+                merged.append(token.range)
+            }
+        }
+        return merged
+    }
+
+    /// 昇順・非重複の範囲列に対する二分探索。スパンごとに線形探索すると文書長に対して
+    /// 二次になるため、探索側で潰しておく。
+    private static func isInsideVerbatim(_ span: TextSpan, _ ranges: [TextSpan]) -> Bool {
+        var low = 0
+        var high = ranges.count - 1
+        while low <= high {
+            let mid = (low + high) / 2
+            let range = ranges[mid]
+            if span.lowerBound >= range.upperBound {
+                low = mid + 1
+            } else if span.upperBound <= range.lowerBound {
+                high = mid - 1
+            } else {
+                return true
+            }
+        }
+        return false
+    }
+
     // MARK: - Block headings
 
     /// 各 ATX 見出しのコンテンツに `.heading(level)` ランを出力し、`#…` マーカー（および直後のスペース）を非表示にする。
     /// ただし見出しの行がアクティブな場合はマーカーを表示する（インラインスパンのマーカー表示ルールと一致）。
-    private static func appendHeadingRuns(text: String, activeLine: TextSpan?, into runs: inout [StyleRun]) {
-        let tokens = MarkdownTokenizer.tokenize(text)
+    private static func appendHeadingRuns(
+        text: String,
+        tokens: [MarkdownToken],
+        activeLine: TextSpan?,
+        into runs: inout [StyleRun]
+    ) {
         var i = 0
         while i < tokens.count {
             guard tokens[i].kind == .headingMarker else { i += 1; continue }
