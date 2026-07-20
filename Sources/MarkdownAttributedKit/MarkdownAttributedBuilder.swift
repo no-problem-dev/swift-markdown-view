@@ -9,7 +9,7 @@ import AppKit
 /// セマンティックモデルから、ドキュメント全体を覆う単一の描画済み `NSAttributedString` を生成する。TextKit ビューがホストし、選択がブロックをまたいで連続し、デフォルトのコピーが読み取り可能なテキストを返す。
 ///
 /// フェーズ1は散文を担う: 見出し、段落、強調/太字/取り消し線、インラインコード、リンク、改行、順序あり/なし（タスク含む）リスト、ブロッククォート、水平線、コードブロックのプレーンフォールバック。コードブロック背景・画像/数式アタッチメント・テーブルは後続フェーズで追加する。
-public struct MarkdownAttributedBuilder {
+package struct MarkdownAttributedBuilder {
 
     public var theme: MarkdownTextTheme
     /// 画像/数式アタッチメントの同期レンダラー（省略可）。画像を返した場合は要素が1文字の `NSTextAttachment` になり、返さない場合は Markdown ソースタグ付きの読み取り可能テキストにフォールバックする。

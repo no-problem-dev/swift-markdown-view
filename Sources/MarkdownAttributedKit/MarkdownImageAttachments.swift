@@ -6,13 +6,13 @@ import AppKit
 #endif
 
 /// 画像待機中のアタッチメントリクエスト。ビルダーが `![alt](source)` 向けに生成した `NSTextAttachment` プレースホルダーを `.markdownAttachment` タグで特定し、ビューがレイアウト後に `source` をロードして `attachment.image` を埋める。
-public struct MarkdownImageRequest {
+package struct MarkdownImageRequest {
     public let range: NSRange
     public let source: String
     public let attachment: NSTextAttachment
 }
 
-public enum MarkdownImageAttachments {
+package enum MarkdownImageAttachments {
 
     /// ドキュメント順に未充填の画像アタッチメントをすべて返す。
     public static func requests(in attributed: NSAttributedString) -> [MarkdownImageRequest] {

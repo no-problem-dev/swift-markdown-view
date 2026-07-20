@@ -1,6 +1,6 @@
 import Foundation
 
-public extension NSAttributedString.Key {
+package extension NSAttributedString.Key {
     /// 段落範囲をデコレーションブロックとしてマークし、TextKit レイアウトフラグメントが背景や装飾（コードブロック塗りつぶし、引用バー、水平線）を描画できるようにする。値は ``MarkdownBlockDecoration``。
     static let markdownBlockDecoration = NSAttributedString.Key("markdownBlockDecoration")
 
@@ -48,7 +48,7 @@ public final class MarkdownAttachment: NSObject {
 }
 
 /// カスタムレイアウトフラグメントによってブロック範囲をどう装飾するかを記述する。参照型（`NSObject`）として `NSTextStorage` の属性値になり、コピー/編集操作でも生き残る。
-public final class MarkdownBlockDecoration: NSObject {
+package final class MarkdownBlockDecoration: NSObject {
 
     public enum Kind: Equatable, Sendable {
         /// フェンス/インデント形式のコードブロック。フラグメントが丸角背景を塗りつぶす。

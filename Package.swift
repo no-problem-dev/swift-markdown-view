@@ -57,6 +57,12 @@ let package = Package(
         // UI 非依存の意味モデル層。swift-markdown AST → ドメイン型（Block/Inline/Content）と
         // 数式プリプロセッサ。Foundation と swift-markdown のみに依存し、SwiftUI/UIKit を
         // 一切 import しない。SwiftUI レンダラ・TextKit レンダラ・エディタが等しく依存する土台。
+        // UIKit / AppKit のクロスプラットフォームエイリアスだけを持つ最小ターゲット。
+        // レンダラ側(MarkdownAttributedKit)とエディタ側(SwiftMarkdownEditorTextKit)が
+        // 同名の public typealias を別々に宣言していたため、両方を import した利用者の
+        // スコープで曖昧になっていた。定義を 1 か所にして解消する。
+        .target(name: "MarkdownPlatform"),
+
         .target(
             name: "MarkdownModel",
             dependencies: [
@@ -78,6 +84,7 @@ let package = Package(
         .target(
             name: "MarkdownAttributedKit",
             dependencies: [
+                "MarkdownPlatform",
                 "MarkdownModel"
             ]
         ),
@@ -202,6 +209,7 @@ let package = Package(
         .target(
             name: "SwiftMarkdownEditorTextKit",
             dependencies: [
+                "MarkdownPlatform",
                 "SwiftMarkdownEditorCore",
                 "SwiftMarkdownEditorRules"
             ]

@@ -37,7 +37,11 @@ public struct MarkdownSelectableText {
     }
 
     /// レイアウト後にコードブロックへ非同期シンタックスハイライターを適用する。
-    public func codeHighlighter(_ highlighter: (any MarkdownCodeHighlighting)?) -> MarkdownSelectableText {
+    ///
+    /// `MarkdownCodeHighlighting` は TextKit 層の内部プロトコルなのでパッケージ内に閉じる。
+    /// 利用者は SwiftUI 層の ``SyntaxHighlighter`` を ``SwiftUICore/View/markdownSyntaxHighlighter(_:)``
+    /// で注入する（``SyntaxHighlighterAdapter`` が橋渡しする）。
+    package func codeHighlighter(_ highlighter: (any MarkdownCodeHighlighting)?) -> MarkdownSelectableText {
         var copy = self
         copy.highlighter = highlighter
         return copy

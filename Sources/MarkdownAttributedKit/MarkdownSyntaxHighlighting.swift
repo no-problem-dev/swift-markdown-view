@@ -15,18 +15,18 @@ import AppKit
 /// > `MarkdownCodeHighlighting` はレンダリングパイプライン内部の低レベルインタフェースであり、
 /// > `throws` なし・`Optional` 返り値という制約を持つ。`SyntaxHighlighter` は `throws` に対応し、
 /// > `.markdownSyntaxHighlighter(_:)` モディファイア経由で注入する。
-public protocol MarkdownCodeHighlighting: Sendable {
+package protocol MarkdownCodeHighlighting: Sendable {
     func highlightedCode(_ code: String, language: String?) async -> AttributedString?
 }
 
 /// 構築済み属性文字列内で ``NSAttributedString/Key/markdownCodeLanguage`` タグによって特定されるコード領域。
-public struct MarkdownCodeRegion: Equatable {
+package struct MarkdownCodeRegion: Equatable {
     public let range: NSRange
     public let language: String?
     public let code: String
 }
 
-public enum MarkdownSyntaxHighlighting {
+package enum MarkdownSyntaxHighlighting {
 
     /// ドキュメント順にすべてのコード領域を返す。範囲はコードテキストのみ（ブロック区切りを含まない）のため、ハイライターの出力が 1:1 で対応する。
     public static func regions(in attributed: NSAttributedString) -> [MarkdownCodeRegion] {

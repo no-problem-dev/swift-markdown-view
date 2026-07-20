@@ -1,10 +1,17 @@
 #if canImport(UIKit)
 import UIKit
 
-/// 属性文字列ビルダーと TextKit ビューを一度だけ書くためのクロスプラットフォームエイリアス。UIKit/AppKit に依存するが **SwiftUI-free**。
+/// 属性文字列ビルダーと TextKit ビューを一度だけ書くためのクロスプラットフォームエイリアス。
+/// UIKit/AppKit に依存するが **SwiftUI-free**。
+///
+/// このターゲットが唯一の定義場所。以前は `MarkdownAttributedKit` と
+/// `SwiftMarkdownEditorTextKit` が同名の public typealias を別々に宣言しており、
+/// 両方を import した利用者のスコープで `PlatformColor` / `PlatformFont` が曖昧になった。
 public typealias PlatformFont = UIFont
 public typealias PlatformColor = UIColor
 public typealias PlatformImage = UIImage
+public typealias PlatformView = UIView
+public typealias PlatformTextView = UITextView
 
 #elseif canImport(AppKit)
 import AppKit
@@ -12,6 +19,8 @@ import AppKit
 public typealias PlatformFont = NSFont
 public typealias PlatformColor = NSColor
 public typealias PlatformImage = NSImage
+public typealias PlatformView = NSView
+public typealias PlatformTextView = NSTextView
 #endif
 
 #if canImport(UIKit) || canImport(AppKit)
