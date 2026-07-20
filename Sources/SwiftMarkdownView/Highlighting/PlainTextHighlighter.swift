@@ -14,7 +14,7 @@ import SwiftUI
 /// import SwiftMarkdownViewHighlightJS
 ///
 /// MarkdownView(source)
-///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
+///     .markdownSyntaxHighlighter(HighlightJSSyntaxHighlighter())
 ///
 /// // または自動ライト/ダーク対応のアダプティブハイライトを使用
 /// MarkdownView(source)

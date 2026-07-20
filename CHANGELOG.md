@@ -35,6 +35,16 @@
 
 ### 変更
 
+- View modifier の命名を `markdown` prefix に統一した。`View` の extension は
+  グローバル名前空間で、`headingStyle` や `codeBlockStyle` のような一般名は利用者の
+  アプリや他ライブラリと衝突しうる。旧名は deprecated エイリアスとして残しており、
+  Xcode の Fix-it で移行できる（削除は次のメジャー）
+  - `headingStyle` → `markdownHeadingStyle`
+  - `codeBlockStyle` → `markdownCodeBlockStyle`
+  - `asideStyle` → `markdownAsideStyle`
+  - `syntaxHighlighter` → `markdownSyntaxHighlighter`
+  - `mathRenderer` → `markdownMathRenderer`
+  - `mermaidScriptProvider` → `markdownMermaidScriptProvider`
 - tvOS / watchOS のプラットフォーム宣言を削除。依存パッケージが iOS / macOS しか
   宣言しておらず、実際には解決・ビルドできなかった
 - デモ画面を `SwiftMarkdownViewCatalog` として別 product に分離。本体を import しても

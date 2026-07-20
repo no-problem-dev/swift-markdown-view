@@ -37,7 +37,7 @@ import DesignSystem
 ///
 /// // 使用例
 /// MarkdownView(source)
-///     .asideStyle(MyAsideStyle())
+///     .markdownAsideStyle(MyAsideStyle())
 /// ```
 public protocol AsideStyle: Sendable {
 
@@ -191,12 +191,17 @@ extension View {
     /// > Note: これはノートだ。
     /// > Warning: これは警告だ。
     /// """)
-    /// .asideStyle(MyCustomAsideStyle())
+    /// .markdownAsideStyle(MyCustomAsideStyle())
     /// ```
     ///
     /// - Parameter style: 使用する Aside スタイル。
     /// - Returns: Aside スタイルが適用されたビュー。
-    public func asideStyle(_ style: some AsideStyle) -> some View {
+    public func markdownAsideStyle(_ style: some AsideStyle) -> some View {
         environment(\.asideStyle, style)
+    }
+
+    @available(*, deprecated, renamed: "markdownAsideStyle(_:)")
+    public func asideStyle(_ style: some AsideStyle) -> some View {
+        markdownAsideStyle(style)
     }
 }

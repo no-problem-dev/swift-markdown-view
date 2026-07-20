@@ -11,7 +11,7 @@ import DesignSystem
 ///
 /// ```swift
 /// MarkdownView(source)
-///     .mathRenderer(LaTeXMathRenderer())
+///     .markdownMathRenderer(LaTeXMathRenderer())
 /// ```
 ///
 /// ``SyntaxHighlighter`` パターンを踏襲し、コアは依存なしのままで
@@ -99,13 +99,18 @@ extension View {
     ///
     /// ```swift
     /// MarkdownView("The identity $e^{i\\pi} + 1 = 0$ holds.")
-    ///     .mathRenderer(LaTeXMathRenderer())
+    ///     .markdownMathRenderer(LaTeXMathRenderer())
     /// ```
     ///
     /// - Parameter renderer: 使用する数式レンダラー。
     /// - Returns: 数式レンダラーが適用されたビュー。
-    public func mathRenderer(_ renderer: some MathRenderer) -> some View {
+    public func markdownMathRenderer(_ renderer: some MathRenderer) -> some View {
         environment(\.mathRenderer, renderer)
+    }
+
+    @available(*, deprecated, renamed: "markdownMathRenderer(_:)")
+    public func mathRenderer(_ renderer: some MathRenderer) -> some View {
+        markdownMathRenderer(renderer)
     }
 }
 

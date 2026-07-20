@@ -14,7 +14,7 @@ extension EnvironmentValues {
     ///
     /// ```swift
     /// MarkdownView(source)
-    ///     .mermaidScriptProvider(BundledMermaidScriptProvider())
+    ///     .markdownMermaidScriptProvider(BundledMermaidScriptProvider())
     /// ```
     public var mermaidScriptProvider: any MermaidScriptProvider {
         get { self[MermaidScriptProviderKey.self] }
@@ -32,9 +32,14 @@ extension View {
     ///
     /// ```swift
     /// MarkdownView(source)
-    ///     .mermaidScriptProvider(CDNMermaidScriptProvider(version: "10"))
+    ///     .markdownMermaidScriptProvider(CDNMermaidScriptProvider(version: "10"))
     /// ```
-    public func mermaidScriptProvider(_ provider: any MermaidScriptProvider) -> some View {
+    public func markdownMermaidScriptProvider(_ provider: any MermaidScriptProvider) -> some View {
         environment(\.mermaidScriptProvider, provider)
+    }
+
+    @available(*, deprecated, renamed: "markdownMermaidScriptProvider(_:)")
+    public func mermaidScriptProvider(_ provider: any MermaidScriptProvider) -> some View {
+        markdownMermaidScriptProvider(provider)
     }
 }

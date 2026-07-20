@@ -26,7 +26,7 @@ import DesignSystem
 /// }
 ///
 /// MarkdownView(source)
-///     .codeBlockStyle(MyCodeBlockStyle())
+///     .markdownCodeBlockStyle(MyCodeBlockStyle())
 /// ```
 public protocol CodeBlockStyle: Sendable {
 
@@ -229,12 +229,17 @@ extension View {
     /// print(greeting)
     /// ```
     /// """)
-    /// .codeBlockStyle(TerminalCodeBlockStyle())
+    /// .markdownCodeBlockStyle(TerminalCodeBlockStyle())
     /// ```
     ///
     /// - Parameter style: 使用するコードブロックスタイル。
     /// - Returns: コードブロックスタイルが適用されたビュー。
-    public func codeBlockStyle(_ style: some CodeBlockStyle) -> some View {
+    public func markdownCodeBlockStyle(_ style: some CodeBlockStyle) -> some View {
         environment(\.codeBlockStyle, style)
+    }
+
+    @available(*, deprecated, renamed: "markdownCodeBlockStyle(_:)")
+    public func codeBlockStyle(_ style: some CodeBlockStyle) -> some View {
+        markdownCodeBlockStyle(style)
     }
 }

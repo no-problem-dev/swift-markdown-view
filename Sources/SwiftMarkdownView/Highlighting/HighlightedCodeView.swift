@@ -14,7 +14,7 @@ import DesignSystem
 /// カスタムハイライターを使用する場合:
 /// ```swift
 /// HighlightedCodeView(code: swiftCode, language: "swift")
-///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
+///     .markdownSyntaxHighlighter(HighlightJSSyntaxHighlighter())
 /// ```
 public struct HighlightedCodeView: View {
 

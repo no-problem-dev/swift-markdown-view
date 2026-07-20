@@ -14,7 +14,7 @@ import AppKit
 /// > Note: ユーザー向けの公開 API は ``SyntaxHighlighter`` プロトコルを使用すること。
 /// > `MarkdownCodeHighlighting` はレンダリングパイプライン内部の低レベルインタフェースであり、
 /// > `throws` なし・`Optional` 返り値という制約を持つ。`SyntaxHighlighter` は `throws` に対応し、
-/// > `.syntaxHighlighter(_:)` モディファイア経由で注入する。
+/// > `.markdownSyntaxHighlighter(_:)` モディファイア経由で注入する。
 public protocol MarkdownCodeHighlighting: Sendable {
     func highlightedCode(_ code: String, language: String?) async -> AttributedString?
 }

@@ -40,7 +40,7 @@ public enum MermaidScriptSource: Sendable, Equatable {
 ///
 /// ```swift
 /// MarkdownView(source)
-///     .mermaidScriptProvider(CDNMermaidScriptProvider())
+///     .markdownMermaidScriptProvider(CDNMermaidScriptProvider())
 /// ```
 public struct CDNMermaidScriptProvider: MermaidScriptProvider {
 
@@ -73,7 +73,7 @@ public struct CDNMermaidScriptProvider: MermaidScriptProvider {
 ///
 /// ```swift
 /// MarkdownView(source)
-///     .mermaidScriptProvider(BundledMermaidScriptProvider())
+///     .markdownMermaidScriptProvider(BundledMermaidScriptProvider())
 /// ```
 ///
 /// - Note: アプリターゲットのリソースに `mermaid.min.js` を追加する必要がある。

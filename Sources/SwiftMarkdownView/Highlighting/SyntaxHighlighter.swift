@@ -12,7 +12,7 @@ import SwiftUI
 /// import SwiftMarkdownViewHighlightJS
 ///
 /// MarkdownView(source)
-///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
+///     .markdownSyntaxHighlighter(HighlightJSSyntaxHighlighter())
 ///
 /// // またはアダプティブハイライトを使用
 /// MarkdownView(source)
@@ -44,7 +44,7 @@ extension EnvironmentValues {
     ///
     /// ```swift
     /// MarkdownView(source)
-    ///     .syntaxHighlighter(CustomHighlighter())
+    ///     .markdownSyntaxHighlighter(CustomHighlighter())
     /// ```
     public var syntaxHighlighter: any SyntaxHighlighter {
         get { self[SyntaxHighlighterKey.self] }
@@ -64,12 +64,17 @@ extension View {
     /// import SwiftMarkdownViewHighlightJS
     ///
     /// MarkdownView(source)
-    ///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
+    ///     .markdownSyntaxHighlighter(HighlightJSSyntaxHighlighter())
     /// ```
     ///
     /// - Parameter highlighter: 使用するハイライター。
     /// - Returns: カスタムハイライターが適用されたビュー。
-    public func syntaxHighlighter(_ highlighter: some SyntaxHighlighter) -> some View {
+    public func markdownSyntaxHighlighter(_ highlighter: some SyntaxHighlighter) -> some View {
         environment(\.syntaxHighlighter, highlighter)
+    }
+
+    @available(*, deprecated, renamed: "markdownSyntaxHighlighter(_:)")
+    public func syntaxHighlighter(_ highlighter: some SyntaxHighlighter) -> some View {
+        markdownSyntaxHighlighter(highlighter)
     }
 }

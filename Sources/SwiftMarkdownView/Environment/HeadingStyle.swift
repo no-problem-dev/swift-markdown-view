@@ -26,7 +26,7 @@ import DesignSystem
 /// }
 ///
 /// MarkdownView(source)
-///     .headingStyle(MyHeadingStyle())
+///     .markdownHeadingStyle(MyHeadingStyle())
 /// ```
 public protocol HeadingStyle: Sendable {
 
@@ -251,12 +251,17 @@ extension View {
     /// ## Section Header
     /// ### Subsection
     /// """)
-    /// .headingStyle(ColoredHeadingStyle())
+    /// .markdownHeadingStyle(ColoredHeadingStyle())
     /// ```
     ///
     /// - Parameter style: 使用する見出しスタイル。
     /// - Returns: 見出しスタイルが適用されたビュー。
-    public func headingStyle(_ style: some HeadingStyle) -> some View {
+    public func markdownHeadingStyle(_ style: some HeadingStyle) -> some View {
         environment(\.headingStyle, style)
+    }
+
+    @available(*, deprecated, renamed: "markdownHeadingStyle(_:)")
+    public func headingStyle(_ style: some HeadingStyle) -> some View {
+        markdownHeadingStyle(style)
     }
 }

@@ -15,13 +15,13 @@ import SwiftMarkdownView
 /// import SwiftMarkdownViewHighlightJS
 ///
 /// MarkdownView(source)
-///     .syntaxHighlighter(HighlightJSSyntaxHighlighter())
+///     .markdownSyntaxHighlighter(HighlightJSSyntaxHighlighter())
 /// ```
 ///
 /// カスタムテーマを使用する場合:
 /// ```swift
 /// MarkdownView(source)
-///     .syntaxHighlighter(HighlightJSSyntaxHighlighter(theme: .xcode, colorMode: .light))
+///     .markdownSyntaxHighlighter(HighlightJSSyntaxHighlighter(theme: .xcode, colorMode: .light))
 /// ```
 public struct HighlightJSSyntaxHighlighter: SyntaxHighlighter, Sendable {
 
@@ -168,6 +168,6 @@ private struct AdaptiveSyntaxHighlightingModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         let highlighter = HighlightJSSyntaxHighlighter.forColorScheme(colorScheme, theme: theme)
-        return content.syntaxHighlighter(highlighter)
+        return content.markdownSyntaxHighlighter(highlighter)
     }
 }
