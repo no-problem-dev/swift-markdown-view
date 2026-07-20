@@ -88,6 +88,13 @@ let package = Package(
             ]
         ),
 
+        .testTarget(
+            name: "MarkdownTextKitTests",
+            dependencies: [
+                "MarkdownTextKit"
+            ]
+        ),
+
         .target(
             name: "SwiftMarkdownView",
             dependencies: [
