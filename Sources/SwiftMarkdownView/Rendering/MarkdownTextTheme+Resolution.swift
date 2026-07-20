@@ -46,8 +46,10 @@ extension MarkdownTextTheme {
 struct SyntaxHighlighterAdapter: MarkdownCodeHighlighting {
     let base: any SyntaxHighlighter
 
-    func highlightedCode(_ code: String, language: String?) async -> AttributedString? {
-        try? await base.highlight(code, language: language)
+    func highlightedCode(_ code: String, language: String?) async throws -> AttributedString? {
+        // `try?` で握り潰さない。`SyntaxHighlighter.highlight` は doc でスローを
+        // 約束しており、捨てると利用者は自作ハイライターの失敗を観測できない。
+        try await base.highlight(code, language: language)
     }
 }
 #endif

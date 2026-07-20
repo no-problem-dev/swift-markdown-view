@@ -1,4 +1,5 @@
 import SwiftUI
+import MarkdownAttributedKit
 
 // MARK: - MathRenderer Protocol
 
@@ -15,7 +16,17 @@ import SwiftUI
 ///
 /// ``SyntaxHighlighter`` パターンを踏襲し、コアは依存なしのままで
 /// 実装を環境経由で注入する設計。
-public protocol MathRenderer: Sendable {
+///
+/// TextKit のアタッチメント描画（ディスプレイ数式の画像化）も同じ実装が担うため、
+/// ``MarkdownAttachmentRendering`` を継承する。以前は無関係な 2 プロトコルを
+/// 実行時の `as?` で繋いでおり、**自作レンダラーを注入しても無言で無視されて
+/// 数式が `$latex$` のまま表示される**という失敗の仕方をした。継承にすることで
+/// 適合漏れがコンパイルエラーになる。
+///
+/// 数式を組版しない実装は ``MarkdownAttachmentRendering/renderedImage(for:theme:)``
+/// で `nil` を返せばよい（``PlainMathRenderer`` がそうしている）。読み取り可能な
+/// フォールバックテキストに落ちる。
+public protocol MathRenderer: MarkdownAttachmentRendering, Sendable {
 
     /// 数式を `Text` セグメントとしてレンダリングする。
     ///
@@ -44,6 +55,11 @@ public struct PlainMathRenderer: MathRenderer {
         Text("$\(latex)$")
             .font(.system(size: fontSize ?? 17, design: .monospaced))
             .foregroundStyle(textColor)
+    }
+
+    /// 組版しないので画像は返さない。呼び出し側が `$latex$` のテキストに落とす。
+    public func renderedImage(for kind: MarkdownAttachment.Kind, theme: MarkdownTextTheme) -> MarkdownRenderedImage? {
+        nil
     }
 }
 

@@ -16,7 +16,7 @@ import AppKit
 /// > `throws` なし・`Optional` 返り値という制約を持つ。`SyntaxHighlighter` は `throws` に対応し、
 /// > `.markdownSyntaxHighlighter(_:)` モディファイア経由で注入する。
 package protocol MarkdownCodeHighlighting: Sendable {
-    func highlightedCode(_ code: String, language: String?) async -> AttributedString?
+    func highlightedCode(_ code: String, language: String?) async throws -> AttributedString?
 }
 
 /// 構築済み属性文字列内で ``NSAttributedString/Key/markdownCodeLanguage`` タグによって特定されるコード領域。

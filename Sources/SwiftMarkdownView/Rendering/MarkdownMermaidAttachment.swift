@@ -1,5 +1,6 @@
 #if os(iOS) || os(macOS)
 import Foundation
+import OSLog
 import WebKit
 import MarkdownAttributedKit
 
@@ -14,17 +15,58 @@ typealias MermaidPlatformView = NSView
 /// Mermaid ダイアグラムをライブかつスクロール可能な `WKWebView` でレンダリングするテキストアタッチメント。
 /// コンテナ幅で固定高のボックスを占有し、ダイアグラムが大きい場合はボックス内でスクロールする
 ///（大きなダイアグラムでもレイアウトを崩さず、小さいダイアグラムも適切なボックスに収まる）。
+/// WebView に流し込む Mermaid スクリプトの形。
+///
+/// `MermaidScriptSource` の 3 ケース（url / inline / localFile）はここで 2 つに畳まれる。
+/// localFile は読み込んでインラインにする — file URL を `<script src>` に渡しても
+/// `loadHTMLString(baseURL:)` の origin では読めないため。
+enum MermaidScript: Equatable {
+    /// リモート URL を `<script src>` で読み込む。
+    case remote(URL)
+    /// JavaScript を HTML に直接埋め込む。
+    case inline(String)
+
+    /// プロバイダーが宣言したソースを、そのまま WebView に渡す形へ写す。
+    ///
+    /// 以前は呼び出し側に「解釈できなければ CDN」という無条件フォールバックがあり、
+    /// `.inline` を選んだ利用者のアプリから**気づかないまま外部通信が飛んでいた**。
+    /// 宣言されたソース以外へは絶対に落ちない。読めなければ `nil` を返し、描画しない。
+    static func resolve(from source: MermaidScriptSource) -> MermaidScript? {
+        switch source {
+        case .url(let url):
+            return .remote(url)
+        case .inline(let javaScript):
+            return .inline(javaScript)
+        case .localFile(let url):
+            // file URL を `<script src>` に渡しても `loadHTMLString(baseURL:)` の
+            // origin からは読めない。中身を読み込んで埋め込む。
+            guard let javaScript = try? String(contentsOf: url, encoding: .utf8) else {
+                logger.warning(
+                    "Mermaid スクリプトを読み込めませんでした [\(url.path, privacy: .public)]。ダイアグラムは描画されません"
+                )
+                return nil
+            }
+            return .inline(javaScript)
+        }
+    }
+
+    private static let logger = Logger(
+        subsystem: "com.no-problem.swift-markdown-view",
+        category: "Mermaid"
+    )
+}
+
 final class MarkdownMermaidAttachment: NSTextAttachment {
 
     let source: String
-    let scriptURL: URL
+    let script: MermaidScript
     let isDark: Bool
     /// ダイアグラムボックスの固定表示高さ（ポイント）。
     let displayHeight: CGFloat
 
-    init(source: String, scriptURL: URL, isDark: Bool, displayHeight: CGFloat) {
+    init(source: String, script: MermaidScript, isDark: Bool, displayHeight: CGFloat) {
         self.source = source
-        self.scriptURL = scriptURL
+        self.script = script
         self.isDark = isDark
         self.displayHeight = displayHeight
         super.init(data: nil, ofType: nil)
@@ -66,11 +108,18 @@ final class MermaidAttachmentViewProvider: NSTextAttachmentViewProvider {
         #elseif canImport(AppKit)
         webView.autoresizingMask = [.width, .height]
         #endif
-        let scheme = attachment.scriptURL.scheme ?? "https"
-        let host = attachment.scriptURL.host ?? "cdn.jsdelivr.net"
+        // リモート読み込みのときだけ、スクリプトの origin を baseURL にする。
+        // インライン埋め込みには外部 origin が要らない。
+        let baseURL: URL?
+        if case .remote(let url) = attachment.script,
+           let scheme = url.scheme, let host = url.host {
+            baseURL = URL(string: "\(scheme)://\(host)/")
+        } else {
+            baseURL = nil
+        }
         webView.loadHTMLString(
-            MermaidHTML.make(source: attachment.source, scriptURL: attachment.scriptURL, isDark: attachment.isDark),
-            baseURL: URL(string: "\(scheme)://\(host)/")
+            MermaidHTML.make(source: attachment.source, script: attachment.script, isDark: attachment.isDark),
+            baseURL: baseURL
         )
         view = webView
     }
@@ -89,7 +138,7 @@ final class MermaidAttachmentViewProvider: NSTextAttachmentViewProvider {
 }
 
 enum MermaidHTML {
-    static func make(source: String, scriptURL: URL, isDark: Bool) -> String {
+    static func make(source: String, script: MermaidScript, isDark: Bool) -> String {
         let theme = isDark ? "dark" : "default"
         let background = isDark ? "#1c1c1e" : "#ffffff"
         let diagram = source.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -106,7 +155,7 @@ enum MermaidHTML {
         .mermaid { display: inline-block; }
         .mermaid svg { max-width: none !important; display: block; }
         </style>
-        <script src="\(scriptURL.absoluteString)"></script>
+        \(scriptTag(for: script))
         </head>
         <body>
         <div class="mermaid" id="d">\(diagram)</div>
@@ -119,6 +168,16 @@ enum MermaidHTML {
         </body>
         </html>
         """
+    }
+
+    private static func scriptTag(for script: MermaidScript) -> String {
+        switch script {
+        case .remote(let url):
+            return "<script src=\"\(url.absoluteString)\"></script>"
+        case .inline(let javaScript):
+            // </script> が JS 文字列に含まれると HTML パーサがそこでタグを閉じてしまう。
+            return "<script>\(javaScript.replacingOccurrences(of: "</script", with: "<\\/script"))</script>"
+        }
     }
 }
 #endif

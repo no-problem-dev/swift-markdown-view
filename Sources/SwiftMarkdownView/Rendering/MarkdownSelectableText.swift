@@ -1,5 +1,6 @@
 #if os(iOS) || os(macOS)
 import SwiftUI
+import OSLog
 import MarkdownModel
 import MarkdownAttributedKit
 import MarkdownTextKit
@@ -23,7 +24,7 @@ public struct MarkdownSelectableText {
     public var theme: MarkdownTextTheme
     var highlighter: (any MarkdownCodeHighlighting)?
     var attachmentRenderer: (any MarkdownAttachmentRendering)?
-    var mermaidConfig: (scriptURL: URL, isDark: Bool)?
+    var mermaidConfig: (script: MermaidScript, isDark: Bool)?
 
     @Environment(\.markdownImagePolicy) private var imagePolicy
 
@@ -54,10 +55,10 @@ public struct MarkdownSelectableText {
         return copy
     }
 
-    /// `scriptURL` から読み込む WebView で Mermaid ダイアグラムをレンダリングする。
-    func mermaid(scriptURL: URL, isDark: Bool) -> MarkdownSelectableText {
+    /// WebView で Mermaid ダイアグラムをレンダリングする。
+    func mermaid(script: MermaidScript, isDark: Bool) -> MarkdownSelectableText {
         var copy = self
-        copy.mermaidConfig = (scriptURL, isDark)
+        copy.mermaidConfig = (script, isDark)
         return copy
     }
 
@@ -87,10 +88,15 @@ public struct MarkdownSelectableText {
         var highlightTask: Task<Void, Never>?
         var imageTask: Task<Void, Never>?
 
+        fileprivate static let logger = Logger(
+            subsystem: "com.no-problem.swift-markdown-view",
+            category: "SyntaxHighlight"
+        )
+
         /// 各 Mermaid プレースホルダーアタッチメントをライブかつスクロール可能な
         /// WebView アタッチメントに交換する。冪等 — インストール済みのアタッチメントはスキップする。
         @MainActor
-        func installMermaid(in storage: NSTextStorage, scriptURL: URL, isDark: Bool, displayHeight: CGFloat) {
+        func installMermaid(in storage: NSTextStorage, script: MermaidScript, isDark: Bool, displayHeight: CGFloat) {
             let full = NSRange(location: 0, length: storage.length)
             var swaps: [(NSRange, String)] = []
             storage.enumerateAttribute(.markdownAttachment, in: full) { value, range, _ in
@@ -102,7 +108,7 @@ public struct MarkdownSelectableText {
             guard !swaps.isEmpty else { return }
             storage.beginEditing()
             for (range, source) in swaps {
-                let attachment = MarkdownMermaidAttachment(source: source, scriptURL: scriptURL, isDark: isDark, displayHeight: displayHeight)
+                let attachment = MarkdownMermaidAttachment(source: source, script: script, isDark: isDark, displayHeight: displayHeight)
                 storage.addAttribute(.attachment, value: attachment, range: range)
             }
             storage.endEditing()
@@ -155,7 +161,21 @@ public struct MarkdownSelectableText {
             highlightTask = Task { @MainActor in
                 for region in regions {
                     if Task.isCancelled { return }
-                    guard let highlighted = await highlighter.highlightedCode(region.code, language: region.language) else { continue }
+                    let highlighted: AttributedString?
+                    do {
+                        highlighted = try await highlighter.highlightedCode(region.code, language: region.language)
+                    } catch {
+                        // ハイライトは装飾なので、失敗しても本文は素のまま描き続ける。
+                        // ただし黙って捨てない — 握り潰すと、自作ハイライターの不具合が
+                        // 「なぜか色が付かない」としてしか観測できなくなる。
+                        // 画像読み込みの失敗報告と同じ作法（Logger）に揃える。
+                        let language = region.language ?? "(なし)"
+                        Self.logger.warning(
+                            "コードブロックをハイライトできませんでした [language=\(language, privacy: .public)]: \(error, privacy: .public)"
+                        )
+                        continue
+                    }
+                    guard let highlighted else { continue }
                     if Task.isCancelled { return }
                     storage.beginEditing()
                     MarkdownSyntaxHighlighting.applyForegroundColors(from: highlighted, to: storage, at: region.range)
@@ -200,7 +220,7 @@ extension MarkdownSelectableText: UIViewRepresentable {
             }
         )
         if let mermaid = mermaidConfig {
-            context.coordinator.installMermaid(in: textView.textStorage, scriptURL: mermaid.scriptURL, isDark: mermaid.isDark, displayHeight: 280)
+            context.coordinator.installMermaid(in: textView.textStorage, script: mermaid.script, isDark: mermaid.isDark, displayHeight: 280)
         }
     }
 
@@ -236,7 +256,7 @@ extension MarkdownSelectableText: NSViewRepresentable {
                 invalidate: { [weak textView] in textView?.invalidateIntrinsicContentSize() }
             )
             if let mermaid = mermaidConfig {
-                context.coordinator.installMermaid(in: storage, scriptURL: mermaid.scriptURL, isDark: mermaid.isDark, displayHeight: 280)
+                context.coordinator.installMermaid(in: storage, script: mermaid.script, isDark: mermaid.isDark, displayHeight: 280)
             }
         }
     }

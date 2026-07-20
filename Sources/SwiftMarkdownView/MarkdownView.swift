@@ -14,8 +14,8 @@ import SwiftUI
 /// MarkdownView(content)
 /// ```
 ///
-/// `swift-design-system` パッケージが提供するテーマと自動統合し、
-/// 適切なタイポグラフィ・色・スペーシングトークンを適用する。
+/// 色・寸法・文字サイズは ``MarkdownPalette`` / ``MarkdownMetrics`` / ``MarkdownTypeScale``
+/// から解決する。既定はシステムの意味色なので、設定なしでライト/ダークどちらでも読める。
 public struct MarkdownView: View {
 
     /// レンダリング対象のパース済み Markdown コンテンツ。
@@ -65,19 +65,14 @@ private struct MarkdownTextKitBackend: View {
             theme: .resolved(palette: palette, metrics: metrics, typeScale: typeScale)
         )
             .codeHighlighter(SyntaxHighlighterAdapter(base: highlighter))
-            .attachmentRenderer(mathRenderer as? MarkdownAttachmentRendering)
-        if let url = Self.mermaidScriptURL(mermaidScriptProvider) {
-            view = view.mermaid(scriptURL: url, isDark: colorScheme == .dark)
+            // `MathRenderer` は `MarkdownAttachmentRendering` を継承するので実行時キャストは不要。
+            .attachmentRenderer(mathRenderer)
+        if let script = MermaidScript.resolve(from: mermaidScriptProvider.scriptSource) {
+            view = view.mermaid(script: script, isDark: colorScheme == .dark)
         }
         return view
     }
 
-    private static func mermaidScriptURL(_ provider: any MermaidScriptProvider) -> URL? {
-        if case .url(let url) = provider.scriptSource { return url }
-        if case .localFile(let url) = provider.scriptSource { return url }
-        if case .url(let url) = CDNMermaidScriptProvider().scriptSource { return url }
-        return nil
-    }
 }
 #endif
 

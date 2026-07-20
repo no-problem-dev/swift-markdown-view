@@ -25,7 +25,10 @@ public struct MarkdownRenderedImage: @unchecked Sendable {
 /// 画像/数式アタッチメント用の画像をレンダリングするプロトコル。同期的に動作し、数式組版（SwiftLaTeXView/SwiftMath）とローカル画像はビルド時に即座に解決する。リモート画像のロードはビュー層が別途担う。
 ///
 /// UI 非依存の抽象（このターゲットに置く）。具体的なレンダラーはサテライトターゲット（数式は `SwiftMarkdownViewLaTeX`）に置き、注入する。
-public protocol MarkdownAttachmentRendering {
+/// 戻り値の ``MarkdownRenderedImage`` が `@unchecked Sendable` を名乗る一方、
+/// 生成側には並行性の契約が無かった。レンダラーはレイアウトパスから
+/// isolation 境界をまたいで参照されるため、`Sendable` を要求する。
+public protocol MarkdownAttachmentRendering: Sendable {
     /// アタッチメント用のレンダリング済み画像を返す。`nil` を返すと読み取り可能なフォールバックテキスト（`[alt]` / `$latex$`）にフォールバックする。
     func renderedImage(for kind: MarkdownAttachment.Kind, theme: MarkdownTextTheme) -> MarkdownRenderedImage?
 }

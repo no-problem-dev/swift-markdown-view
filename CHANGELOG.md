@@ -19,6 +19,80 @@
 
 ### 破壊的変更
 
+- **配線されていない公開 API を全廃した。** いずれも本体レンダリング経路からの参照が
+  0 件で、Catalog のデモとテストだけが参照していた。
+  - Style プロトコル 5 系統（`HeadingStyle` / `CodeBlockStyle` / `TableStyle` /
+    `LinkStyle` / `AsideStyle`）と既定実装 17 型を削除。
+    **移行**: 見た目の調整は `MarkdownPalette` / `MarkdownMetrics` / `MarkdownTypeScale`
+    で行う（下記「テーマ」参照）
+  - `MarkdownRenderingOptions` を `renderMath` 1 フィールドに縮小。他 7 つと
+    `.compact` / `.plainText` を削除。**移行**: 該当する代替は無い。画像の抑止は
+    `.markdownImagePolicy(.bundleOnly)` が近い
+  - `EditorHistory` / `MarkdownEditorEngine` を削除。undo/redo はシステムの
+    `UndoManager` が担っており二重実装だった。**移行**: 不要（既に UndoManager 経由）
+  - `MathBlockView` / `CodeBlockView` / `MermaidDiagramView` / `AdaptiveMermaidView` /
+    `MermaidFallbackView` を削除。**移行**: `MarkdownView` を使う
+  - `MathRenderer.displayMath(_:)` 要件を削除。**移行**: ディスプレイ数式は
+    `MarkdownAttachmentRendering.renderedImage(for:theme:)` で描く
+
+- **外部デザインシステムへの必須依存を外した。**
+  - `SwiftMarkdownView` / `SwiftMarkdownEditor` は `swift-design-system` を
+    リンクしなくなった。色・寸法・文字サイズは `MarkdownPalette` /
+    `MarkdownMetrics` / `MarkdownTypeScale` として自前で抽象化してある
+  - **既定パレットがシステムの意味色になり、ライト/ダークに自動追従する。**
+    従来の既定は `LightColorPalette()` 固定で `colorScheme` を見ておらず、
+    素で使うとダークモードで文字が読めなかった。README の回避手順は不要になった
+  - **移行**: `.markdownTheme(themeProvider)` を使っていた場合は
+    `SwiftMarkdownViewDesignSystem` product を依存に追加して import する。
+    呼び出し自体は変わらない。エディタは `SwiftMarkdownEditorDesignSystem` の
+    `.markdownEditorDesignSystemTheme()`
+  - **移行**: `MarkdownEditorTheme.fromDesignSystem(palette:)` は
+    `SwiftMarkdownEditorDesignSystem` へ移動した
+
+- **`MathRenderer` の要件を 1 本にまとめた。**
+  `inlineMath(_:palette:)` と `inlineMath(_:fontSize:palette:)` の 2 本立てをやめ、
+  `inlineMath(_:fontSize:textColor:)` だけにした。旧デフォルト実装は fontSize を
+  破棄しており、同梱の `LaTeXMathRenderer` は両方実装していたため、
+  **サードパーティ実装でのみ数式のサイズが周囲に追従しない**という出方をしていた。
+  **移行**: `palette` の代わりに解決済みの `textColor` を受け取る。`fontSize` が
+  `nil` のときは実装側の既定サイズを使う
+
+- **`MathRenderer` が `MarkdownAttachmentRendering` を継承するようになった。**
+  従来は無関係な 2 プロトコルを `MarkdownView` 内の `as?` で繋いでおり、
+  **自作 `MathRenderer` を注入しても無言で無視され、数式が `$latex$` のまま
+  表示された**。**移行**: `renderedImage(for:theme:)` を実装する。組版しないなら
+  `nil` を返せば読み取り可能なテキストに落ちる
+
+- **`MermaidScriptSource.inline` が実際に機能するようになった。**
+  従来は `.url` と `.localFile` しか解釈せず、それ以外は無条件で CDN に落ちていた。
+  **オフライン動作のつもりで `.inline` を選んだ利用者のアプリから、気づかないまま
+  外部通信が飛んでいた。** あわせて `.localFile` も、file URL を `<script src>` に
+  渡す実装（WebView の origin からは読めない）から、中身を読み込んで埋め込む方式に
+  改めた。読み込めない場合はログを出して**描画しない** — CDN には落ちない
+
+- **`MarkdownAttachmentRendering` が `Sendable` を要求するようになった。**
+  戻り値の `MarkdownRenderedImage` が `@unchecked Sendable` を名乗る一方、
+  生成側に並行性の契約が無かった
+
+- **`SyntaxHighlighter` の失敗を握り潰さなくなった。**
+  `try?` で捨てていたため、doc がスローを約束しているのに利用者は自作ハイライターの
+  失敗を「なぜか色が付かない」としてしか観測できなかった。今は理由をログに出す
+  （描画自体は素のコードで続行する）
+
+- **実装詳細の再輸出をやめた。** `import SwiftMarkdownView` から見えていた
+  `MarkdownAttributedBuilder` / `MarkdownCodeHighlighting` / `MarkdownCodeRegion` /
+  `MarkdownSyntaxHighlighting` / `MarkdownImageRequest` / `MarkdownImageAttachments` /
+  `MarkdownBlockDecoration` と `NSAttributedString.Key` 拡張を `package` に降格した。
+  引き続き見えるのは `MarkdownTextTheme` / `MarkdownAttachment` /
+  `MarkdownRenderedImage` / `MarkdownAttachmentRendering` の 4 型で、いずれも
+  自作アタッチメントレンダラを書くのに必要
+
+- **`PlatformColor` / `PlatformFont` の二重定義を解消した。**
+  `MarkdownAttributedKit` と `SwiftMarkdownEditorTextKit` が同名の public typealias を
+  別々に宣言しており、両方を import した利用者のスコープで曖昧になっていた。
+  定義は `MarkdownPlatform` ターゲット 1 か所に集約した。**移行**: 型は同一
+  （`UIColor`/`NSColor`）なので通常は変更不要
+
 - 画像の読み込みに `MarkdownImagePolicy` を導入し、**既定でローカルファイルシステムへの
   アクセスを行わなくなった**。`![alt](source)` の source はドキュメント由来の文字列で、
   LLM 出力やユーザー投稿の場合がある。従来は `file:` URL と裸のファイルパスを無条件に
@@ -33,15 +107,34 @@
   `assertionFailure` を発生させる。従来は無言で CDN にフォールバックしており、
   オフライン動作を期待した利用者のアプリから気づかないまま外部通信が発生していた
 
+### 追加
+
+- `MarkdownPalette` / `MarkdownMetrics` / `MarkdownTypeScale` と、それぞれの
+  既定実装・環境値・View modifier。外部依存なしで見た目を差し替えられる:
+
+  ```swift
+  struct BrandPalette: MarkdownPalette {
+      var text: Color { .primary }
+      var secondaryText: Color { .secondary }
+      var heading: Color { .indigo }
+      var link: Color { .blue }
+      var codeBackground: Color { Color.gray.opacity(0.12) }
+      var rule: Color { Color.gray.opacity(0.4) }
+  }
+
+  MarkdownView(source).markdownPalette(BrandPalette())
+  ```
+
+- `SwiftMarkdownViewDesignSystem` / `SwiftMarkdownEditorDesignSystem` product。
+  `swift-design-system` のトークンを上記の抽象へ写すブリッジ
+- `MarkdownEditorTheme` の環境値と `.markdownEditorTheme(_:)` modifier
+
 ### 変更
 
 - View modifier の命名を `markdown` prefix に統一した。`View` の extension は
   グローバル名前空間で、`headingStyle` や `codeBlockStyle` のような一般名は利用者の
   アプリや他ライブラリと衝突しうる。旧名は deprecated エイリアスとして残しており、
   Xcode の Fix-it で移行できる（削除は次のメジャー）
-  - `headingStyle` → `markdownHeadingStyle`
-  - `codeBlockStyle` → `markdownCodeBlockStyle`
-  - `asideStyle` → `markdownAsideStyle`
   - `syntaxHighlighter` → `markdownSyntaxHighlighter`
   - `mathRenderer` → `markdownMathRenderer`
   - `mermaidScriptProvider` → `markdownMermaidScriptProvider`
