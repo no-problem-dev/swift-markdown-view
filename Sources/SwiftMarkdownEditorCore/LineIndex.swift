@@ -6,14 +6,14 @@ import Foundation
 /// 1 回だけなら問題ないが、ライブプレビューはインラインスパン 1 件につき 1 回呼ぶため、
 /// 文書長 × スパン数 ＝ 実質二次に膨らむ。打鍵ごとにこれが走るので、長い文書では
 /// 1 打鍵が数秒になる。同じ文書を何度も走査する呼び出し側はこの型を使うこと。
-public struct LineIndex: Sendable {
+package struct LineIndex: Sendable {
 
     /// 各行の開始位置（UTF-16 オフセット）。常に 0 から始まる。
     private let lineStarts: [Int]
     /// 各行の内容の終端（改行を含まない）。`lineStarts` と同じ要素数。
     private let lineEnds: [Int]
 
-    public init(_ text: String) {
+    package init(_ text: String) {
         let units = Array(text.utf16)
         var starts: [Int] = [0]
         var ends: [Int] = []
@@ -27,7 +27,7 @@ public struct LineIndex: Sendable {
     }
 
     /// `offset` を含む行の範囲（末尾の改行は含まない）。
-    public func lineRange(containing offset: Int) -> TextSpan {
+    package func lineRange(containing offset: Int) -> TextSpan {
         let index = lineIndex(containing: offset)
         return TextSpan(lowerBound: lineStarts[index], upperBound: lineEnds[index])
     }

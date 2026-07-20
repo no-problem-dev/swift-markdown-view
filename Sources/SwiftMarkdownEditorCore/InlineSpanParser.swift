@@ -13,7 +13,7 @@ import Foundation
 /// 意図的に実装しない。支配的なケースをカバーする実用的なサブセットであり、
 /// 非表示／表示メカニズムはマッチャーの精度と独立しているため、
 /// レンダリングパスを変更せずに後からマッチャーを強化できる。
-public enum InlineSpanParser {
+package enum InlineSpanParser {
 
     private enum C {
         static let newline: UInt16 = 0x0A
@@ -24,7 +24,7 @@ public enum InlineSpanParser {
         static let backslash: UInt16 = 0x5C
     }
 
-    public static func parse(_ text: String) -> [InlineSpan] {
+    package static func parse(_ text: String) -> [InlineSpan] {
         let u = Array(text.utf16)
         var spans: [InlineSpan] = []
         let n = u.count

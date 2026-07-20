@@ -7,24 +7,24 @@ import Foundation
 /// *コンテンツ* 範囲（スタイル適用対象）と *マーカー* 範囲（非表示対象）の両方が必要。
 /// ``InlineSpan`` はデリミタをペアにし、正確な UTF-16 オフセットを保持するため、
 /// TextKit 層は再計測なしに属性を適用できる。
-public struct InlineSpan: Equatable, Sendable {
+package struct InlineSpan: Equatable, Sendable {
 
-    public enum Kind: Equatable, Hashable, Sendable {
+    package enum Kind: Equatable, Hashable, Sendable {
         case strong          // **x** / __x__
         case emphasis        // *x* / _x_
         case strikethrough   // ~~x~~
         case code            // `x`
     }
 
-    public var kind: Kind
+    package var kind: Kind
     /// マーカーを含むスパン全体の範囲。
-    public var fullRange: TextSpan
+    package var fullRange: TextSpan
     /// マーカー間のコンテンツ範囲（スタイルが適用される部分）。
-    public var contentRange: TextSpan
+    package var contentRange: TextSpan
     /// デリミタ範囲（開きマーカー・閉じマーカーの順）— 非表示対象。
-    public var markerRanges: [TextSpan]
+    package var markerRanges: [TextSpan]
 
-    public init(kind: Kind, fullRange: TextSpan, contentRange: TextSpan, markerRanges: [TextSpan]) {
+    package init(kind: Kind, fullRange: TextSpan, contentRange: TextSpan, markerRanges: [TextSpan]) {
         self.kind = kind
         self.fullRange = fullRange
         self.contentRange = contentRange

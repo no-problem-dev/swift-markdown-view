@@ -42,18 +42,18 @@ public final class MarkdownEditorController: ObservableObject {
     /// 選択範囲を区切り文字で囲む。既に囲まれていれば外す。
     public func toggleWrap(_ delimiter: String) {
         guard let (text, selection) = readState() else { return }
-        apply(MarkdownFormatting.wrap(text: text, selection: selection, delimiter: delimiter))
+        applyTransform(MarkdownFormatting.wrap(text: text, selection: selection, delimiter: delimiter))
     }
 
     /// 選択行に接頭辞を付ける。全行が既に持っていれば外す。
     public func toggleLinePrefix(_ prefix: String) {
         guard let (text, selection) = readState() else { return }
-        apply(MarkdownFormatting.toggleLinePrefix(text: text, selection: selection, prefix: prefix))
+        applyTransform(MarkdownFormatting.toggleLinePrefix(text: text, selection: selection, prefix: prefix))
     }
 
     public func insertLink() {
         guard let (text, selection) = readState() else { return }
-        apply(MarkdownFormatting.insertLink(text: text, selection: selection))
+        applyTransform(MarkdownFormatting.insertLink(text: text, selection: selection))
     }
 
     // MARK: - Undo / redo
@@ -83,6 +83,31 @@ public final class MarkdownEditorController: ObservableObject {
         #endif
     }
 
+    // MARK: - 独自コマンド
+
+    /// 現在のドキュメントテキストとセレクション。テキストビュー未接続なら `nil`。
+    ///
+    /// `MarkdownFormatting` の純関数と組み合わせて独自コマンドを組み立てる:
+    ///
+    /// ```swift
+    /// guard let state = controller.state else { return }
+    /// controller.apply(MarkdownFormatting.wrap(
+    ///     text: state.text, selection: state.selection, delimiter: "=="
+    /// ))
+    /// ```
+    public var state: EditorState? {
+        guard let (text, selection) = readState() else { return nil }
+        return EditorState(text: text, selection: selection)
+    }
+
+    /// 変換をテキストビューに適用する。
+    ///
+    /// 標準コマンド（``toggleBold()`` など）もこれを経由する。undo は
+    /// システムの `UndoManager` が担うため、適用結果はそのまま取り消せる。
+    public func apply(_ transform: EditTransform) {
+        applyTransform(transform)
+    }
+
     private func readState() -> (text: String, selection: Selection)? {
         guard let textView else { return nil }
         #if canImport(UIKit)
@@ -92,7 +117,7 @@ public final class MarkdownEditorController: ObservableObject {
         #endif
     }
 
-    private func apply(_ transform: EditTransform) {
+    private func applyTransform(_ transform: EditTransform) {
         guard let textView else { return }
         let range = transform.change.range.nsRange
 

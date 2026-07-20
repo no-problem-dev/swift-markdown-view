@@ -18,7 +18,7 @@ import SwiftUI
 ///
 /// // または自動ライト/ダーク対応のアダプティブハイライトを使用
 /// MarkdownView(source)
-///     .adaptiveSyntaxHighlighting()
+///     .adaptiveSyntaxHighlighting()   // 要 import SwiftMarkdownViewHighlightJS
 /// ```
 public struct PlainTextHighlighter: SyntaxHighlighter, Sendable {
 

@@ -3,8 +3,8 @@ import Foundation
 /// ある範囲への単一スタイル貢献。貢献は *加算的* で、
 /// TextKit 層がベース属性にマージする（例：`italic` 済み範囲に `bold` を適用すると bold-italic になる）。
 /// `conceal` 範囲はコンテンツ範囲と重複しないため衝突は起きない。
-public struct StyleRun: Equatable, Sendable {
-    public enum Trait: Equatable, Sendable {
+package struct StyleRun: Equatable, Sendable {
+    package enum Trait: Equatable, Sendable {
         case bold
         case italic
         case monospace
@@ -15,10 +15,10 @@ public struct StyleRun: Equatable, Sendable {
         case conceal
     }
 
-    public var range: TextSpan
-    public var trait: Trait
+    package var range: TextSpan
+    package var trait: Trait
 
-    public init(range: TextSpan, trait: Trait) {
+    package init(range: TextSpan, trait: Trait) {
         self.range = range
         self.trait = trait
     }
@@ -31,13 +31,13 @@ public struct StyleRun: Equatable, Sendable {
 /// 純粋で UI に依存しない。セマンティックな ``StyleRun`` を返し、
 /// TextKit 層が `conceal` をクリアカラー＋極小フォント＋負カーニングで実装し、
 /// 各トレイトをフォントのシンボリックトレイトにマッピングする。
-public enum LivePreviewStyler {
+package enum LivePreviewStyler {
 
     /// - Parameters:
     ///   - text: ドキュメントのソーステキスト。
     ///   - selection: 現在のセレクション。編集中でない場合は `nil`。
     ///   - focused: エディタがフォーカスされているかどうか。`false` のとき全て非表示になる（読み取り専用のレンダリング状態）。
-    public static func runs(text: String, selection: Selection?, focused: Bool) -> [StyleRun] {
+    package static func runs(text: String, selection: Selection?, focused: Bool) -> [StyleRun] {
         // 行境界は一度だけ求める。スパンごとに全文を走査すると文書長に対して二次になり、
         // 打鍵とカーソル移動のたびに走るためエディタが実用にならない。
         let lines = LineIndex(text)

@@ -122,6 +122,19 @@
   - `wrap(_:)` → `toggleWrap(_:)`
   - `linePrefix(_:)` → `toggleLinePrefix(_:)`
 
+- **エディタ 4 ターゲットの公開面を確定した。** `SwiftMarkdownEditorCore` /
+  `Rules` / `TextKit` は `.library` product として宣言されていなかったが、
+  SwiftPM は依存グラフ内の全ターゲットをモジュール検索パスに載せるため、
+  外部から import できてしまっていた（実測で確認）。つまり利用者は未文書な
+  挙動に依存し、こちらは何が契約かを決めていない状態だった。
+  - `import SwiftMarkdownEditor` 1 つで、init の引数型（`InputRuleProcessor`）も
+    テーマ型（`MarkdownEditorTheme`）も独自コマンドの部品（`EditTransform` /
+    `MarkdownFormatting`）も届くよう再輸出した
+  - 契約でないものは `package` に降格: `LineIndex` / `InlineSpan` /
+    `InlineSpanParser` / `StyleRun` / `LivePreviewStyler`
+  - **移行**: 3 ターゲットを個別に import していた場合は
+    `import SwiftMarkdownEditor` だけで足りる
+
 - **`PlatformColor` / `PlatformFont` の二重定義を解消した。**
   `MarkdownAttributedKit` と `SwiftMarkdownEditorTextKit` が同名の public typealias を
   別々に宣言しており、両方を import した利用者のスコープで曖昧になっていた。
@@ -163,6 +176,42 @@
 - `SwiftMarkdownViewDesignSystem` / `SwiftMarkdownEditorDesignSystem` product。
   `swift-design-system` のトークンを上記の抽象へ写すブリッジ
 - `MarkdownEditorTheme` の環境値と `.markdownEditorTheme(_:)` modifier
+- **エディタの拡張点を公開した。** 差別化の中核でありながら、テーマ以外は
+  ほぼ差し替え不能だった:
+  - `MarkdownEditorToolbarItem` — ツールバーを項目の配列で構成する。既定は
+    `.standard`。`label`（読み上げ名）は省略できず、`key` を与えると
+    ショートカットも付く。**ショートカットは項目定義から供給されるので、
+    ツールバーを差し替えても失われない**。空配列を渡すとツールバーを表示しない
+  - `MarkdownFormattingToolbar` を public 化。自前のモード UI と組み合わせられる
+  - `MarkdownEditorController.state` / `apply(_:)` を public 化。これで
+    `MarkdownFormatting` の純関数と組み合わせて任意コマンドが書ける。従来は
+    `apply` も `readState` も private で、**現在のテキストと選択を読むことすら
+    できなかった**
+  - `MarkdownEditor(controller:)` でコントローラを注入できる。外部から
+    プログラム的にコマンドを送れる
+  - `MarkdownEditor(text:mode:...)` でモードを `Binding` として外に出せる
+
+  ```swift
+  MarkdownEditor(
+      text: $text,
+      mode: $mode,
+      toolbar: [
+          .bold, .italic,
+          .separator,
+          .item(icon: "highlighter", label: "マーカー", key: "h") { controller in
+              guard let state = controller.state else { return }
+              controller.apply(MarkdownFormatting.wrap(
+                  text: state.text, selection: state.selection, delimiter: "=="
+              ))
+          }
+      ],
+      controller: controller
+  )
+  ```
+
+- `MarkdownContent(blocks:)` を public 化。`MarkdownView.init(_ content:)` の doc は
+  「レンダリング前にコンテンツを加工したい場合に使用する」と書いていたが、
+  ブロック配列から組み直す入口が internal で**実行不可能だった**
 
 ### 変更
 

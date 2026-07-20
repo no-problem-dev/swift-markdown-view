@@ -22,8 +22,21 @@ public struct MarkdownContent: Sendable, Equatable {
 
     /// ブロックを直接指定して MarkdownContent を生成する。
     ///
+    /// パース結果を加工してから描画したい場合に使う。たとえば見出しレベルを
+    /// 一段下げる、特定のブロックを差し替える、複数ドキュメントを連結する:
+    ///
+    /// ```swift
+    /// let parsed = MarkdownContent(parsing: source)
+    /// let withoutImages = MarkdownContent(blocks: parsed.blocks.filter { block in
+    ///     if case .paragraph(let inlines) = block, inlines.count == 1,
+    ///        case .image = inlines[0] { return false }
+    ///     return true
+    /// })
+    /// MarkdownView(withoutImages)
+    /// ```
+    ///
     /// - Parameter blocks: ブロックレベル要素。
-    internal init(blocks: [MarkdownBlock]) {
+    public init(blocks: [MarkdownBlock]) {
         self.blocks = blocks
     }
 }

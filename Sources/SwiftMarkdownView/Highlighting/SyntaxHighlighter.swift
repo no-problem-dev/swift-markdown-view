@@ -16,7 +16,7 @@ import SwiftUI
 ///
 /// // またはアダプティブハイライトを使用
 /// MarkdownView(source)
-///     .adaptiveSyntaxHighlighting()
+///     .adaptiveSyntaxHighlighting()   // 要 import SwiftMarkdownViewHighlightJS
 /// ```
 public protocol SyntaxHighlighter: Sendable {
     /// 指定したソースコードをハイライトする。
