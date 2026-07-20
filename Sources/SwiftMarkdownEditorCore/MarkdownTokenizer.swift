@@ -36,6 +36,46 @@ public enum MarkdownTokenizer {
         static let nine: UInt16 = 0x39
     }
 
+    /// フェンスコードが占める範囲を昇順・非重複にまとめる。
+    ///
+    /// フェンスの開閉を状態として追えるのはトークナイザだけなので、ブロック文脈を必要とする
+    /// 層（ライブプレビューのインライン装飾・入力ルール）はここから受け取る。
+    /// インラインコードは含めない。
+    public static func fencedCodeRanges(_ tokens: [MarkdownToken]) -> [TextSpan] {
+        var merged: [TextSpan] = []
+        for token in tokens where token.kind == .codeFence || token.kind == .codeBlock {
+            // トークンは行末の改行を含まないので、連続する行の間には必ず 1 文字の隙間ができる。
+            // 橋渡ししないと、行末にキャレットがあるときフェンスの外と判定される。
+            if let last = merged.last, token.range.lowerBound <= last.upperBound + 1 {
+                merged[merged.count - 1] = TextSpan(
+                    lowerBound: last.lowerBound,
+                    upperBound: Swift.max(last.upperBound, token.range.upperBound)
+                )
+            } else {
+                merged.append(token.range)
+            }
+        }
+        return merged
+    }
+
+    /// `offset` がフェンスコードの内側にあるか。
+    public static func isInsideFencedCode(_ text: String, offset: Int) -> Bool {
+        let ranges = fencedCodeRanges(tokenize(text))
+        var low = 0
+        var high = ranges.count - 1
+        while low <= high {
+            let mid = (low + high) / 2
+            if offset >= ranges[mid].upperBound {
+                low = mid + 1
+            } else if offset < ranges[mid].lowerBound {
+                high = mid - 1
+            } else {
+                return true
+            }
+        }
+        return false
+    }
+
     private static func isDigit(_ u: UInt16) -> Bool { u >= C.zero && u <= C.nine }
 
     private static func firstIndex(of unit: UInt16, _ u: [UInt16], _ start: Int, _ end: Int) -> Int? {

@@ -177,3 +177,52 @@ struct IndividualRuleTests {
         #expect(wrapResult != nil)
     }
 }
+
+/// リスト継続ルールがブロック文脈とキャレット位置を尊重することの検証。
+@Suite("リスト継続ルールの文脈判定")
+struct ListContinuationContextTests {
+
+    private func apply(_ text: String, caret: Int) -> String? {
+        let state = EditorState(text: text, selection: Selection(caret: caret))
+        let rule = ListContinuationRule()
+        guard let transform = rule.transform(
+            state: state,
+            inserting: "\n",
+            replacing: TextSpan(lowerBound: caret, upperBound: caret)
+        ) else { return nil }
+        return transform.change.apply(to: text)
+    }
+
+    @Test("行頭で Enter を押してもマーカーが二重にならない")
+    func caretBeforeMarkerDoesNotDuplicate() {
+        // ルールは発火せず、通常の改行に委ねる（"\n- - abc" になっていた）。
+        #expect(apply("- abc", caret: 0) == nil)
+    }
+
+    @Test("マーカーの途中で Enter を押しても発火しない")
+    func caretInsideMarkerDoesNotFire() {
+        #expect(apply("- abc", caret: 1) == nil)
+    }
+
+    @Test("内容の直前で Enter を押すと項目が分かれる")
+    func caretAtContentStartSplitsItem() {
+        #expect(apply("- abc", caret: 2) == "- \n- abc")
+    }
+
+    @Test("行末の Enter は従来どおり継続する")
+    func caretAtEndContinues() {
+        #expect(apply("- abc", caret: 5) == "- abc\n- ")
+    }
+
+    @Test("フェンスコードの中では発火しない")
+    func insideFencedCodeDoesNotFire() {
+        // "```\n- item\n```" のキャレット 10（"- item" の行末）
+        #expect(apply("```\n- item\n```", caret: 10) == nil)
+    }
+
+    @Test("フェンスコードの外では従来どおり発火する")
+    func outsideFencedCodeStillFires() {
+        let text = "```\ncode\n```\n\n- item"
+        #expect(apply(text, caret: text.utf16Length) == text + "\n- ")
+    }
+}

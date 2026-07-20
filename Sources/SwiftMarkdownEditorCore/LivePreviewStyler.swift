@@ -52,7 +52,7 @@ public enum LivePreviewStyler {
         let tokens = MarkdownTokenizer.tokenize(text)
         appendHeadingRuns(lines: lines, tokens: tokens, activeLine: activeLine, into: &runs)
 
-        let verbatim = verbatimRanges(in: tokens)
+        let verbatim = MarkdownTokenizer.fencedCodeRanges(tokens)
         for span in InlineSpanParser.parse(text) {
             guard !isInsideVerbatim(span.fullRange, verbatim) else { continue }
 
@@ -73,25 +73,6 @@ public enum LivePreviewStyler {
     }
 
     // MARK: - Verbatim (fenced code) regions
-
-    /// フェンスコードの範囲を昇順・非重複にまとめる。
-    ///
-    /// インラインコードは含めない。`InlineSpanParser` がバッククォートを正しく優先するため、
-    /// 除外すると等幅の装飾まで失われる。
-    private static func verbatimRanges(in tokens: [MarkdownToken]) -> [TextSpan] {
-        var merged: [TextSpan] = []
-        for token in tokens where token.kind == .codeFence || token.kind == .codeBlock {
-            if let last = merged.last, token.range.lowerBound <= last.upperBound {
-                merged[merged.count - 1] = TextSpan(
-                    lowerBound: last.lowerBound,
-                    upperBound: max(last.upperBound, token.range.upperBound)
-                )
-            } else {
-                merged.append(token.range)
-            }
-        }
-        return merged
-    }
 
     /// 昇順・非重複の範囲列に対する二分探索。スパンごとに線形探索すると文書長に対して
     /// 二次になるため、探索側で潰しておく。

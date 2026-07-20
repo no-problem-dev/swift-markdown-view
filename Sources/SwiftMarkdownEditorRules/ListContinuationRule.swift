@@ -20,6 +20,10 @@ public struct ListContinuationRule: InputRule {
         guard text == "\n", range.isEmpty else { return nil }
         let caret = range.lowerBound
 
+        // フェンスコードの中ではリスト記法はただの文字列。マーカーを自動挿入すると
+        // ユーザーが書いているコードが書き換わる。
+        guard !MarkdownTokenizer.isInsideFencedCode(state.text, offset: caret) else { return nil }
+
         let lineRange = state.text.lineRange(containing: caret)
         let line = state.text.substring(in: lineRange)
         guard let prefix = ListPrefix.parse(line) else { return nil }
@@ -27,6 +31,10 @@ public struct ListContinuationRule: InputRule {
         let lineStart = lineRange.lowerBound
         let contentStartGlobal = lineStart + prefix.contentStart
         let contentEndGlobal = lineRange.upperBound
+
+        // キャレットがマーカーより前にあるなら、これは「項目の継続」ではなく行の分割。
+        // 内容の有無だけで判定すると、行頭で Enter を押したときにマーカーが二重になる。
+        guard caret >= contentStartGlobal else { return nil }
 
         let content = state.text.substring(in: TextSpan(lowerBound: contentStartGlobal, upperBound: contentEndGlobal))
         let isEmptyItem = content.trimmingCharacters(in: .whitespaces).isEmpty
