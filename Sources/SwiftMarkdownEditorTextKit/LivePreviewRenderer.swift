@@ -11,7 +11,7 @@ import AppKit
 /// デリミタマーカーを **クリアカラー＋極小フォント＋負カーニング** で非表示にする
 /// （`nodes-app/swift-markdown-engine` の `MarkdownStyler` で検証済み）。
 /// ソーステキストは変更せず、属性のみ変更する。
-public enum LivePreviewRenderer {
+enum LivePreviewRenderer {
 
     /// 非表示マーカーのグリフをほぼゼロに縮小する極小フォントサイズ。
     /// 負カーニングが残留アドバンスを除去する。
@@ -19,7 +19,7 @@ public enum LivePreviewRenderer {
     static let concealFontSize: CGFloat = 0.1
 
     /// ドキュメント全体のライブプレビュー属性を再適用する。
-    public static func apply(
+    static func apply(
         text: String,
         selection: Selection?,
         focused: Bool,

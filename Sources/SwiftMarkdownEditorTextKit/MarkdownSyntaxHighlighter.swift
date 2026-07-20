@@ -13,10 +13,10 @@ import AppKit
 /// 属性ロジックが純粋でテスト可能な関数になる：
 /// テストは実行中のビューなしで attributed string を構築して任意のオフセットの色・フォントを検証でき、
 /// スナップショットも同じ文字列をレンダリングできる。
-public enum MarkdownSyntaxHighlighter {
+enum MarkdownSyntaxHighlighter {
 
     /// トレイトセットに対応するプラットフォームフォントを構築する。
-    public static func font(
+    static func font(
         size: CGFloat,
         bold: Bool = false,
         italic: Bool = false,
@@ -49,7 +49,7 @@ public enum MarkdownSyntaxHighlighter {
     }
 
     /// ベース（スタイルなし）のテキスト属性。
-    public static func baseAttributes(theme: MarkdownEditorTheme) -> [NSAttributedString.Key: Any] {
+    static func baseAttributes(theme: MarkdownEditorTheme) -> [NSAttributedString.Key: Any] {
         [
             .font: font(size: theme.baseFontSize),
             .foregroundColor: theme.textColor
@@ -57,7 +57,7 @@ public enum MarkdownSyntaxHighlighter {
     }
 
     /// 1 つのトークン種別の属性。
-    public static func attributes(
+    static func attributes(
         for kind: MarkdownToken.Kind,
         theme: MarkdownEditorTheme
     ) -> [NSAttributedString.Key: Any] {
@@ -78,7 +78,7 @@ public enum MarkdownSyntaxHighlighter {
     ///
     /// `tokens` のオフセットは `storage` に有効でなければならない。
     /// 範囲外のトークンは防御的にスキップする。
-    public static func apply(
+    static func apply(
         tokens: [MarkdownToken],
         to storage: NSMutableAttributedString,
         theme: MarkdownEditorTheme
@@ -93,7 +93,7 @@ public enum MarkdownSyntaxHighlighter {
     }
 
     /// `storage` の文字列をトークナイズしてハイライトをインプレースで再適用する。
-    public static func highlight(_ storage: NSMutableAttributedString, theme: MarkdownEditorTheme) {
+    static func highlight(_ storage: NSMutableAttributedString, theme: MarkdownEditorTheme) {
         let tokens = MarkdownTokenizer.tokenize(storage.string)
         apply(tokens: tokens, to: storage, theme: theme)
     }
@@ -101,7 +101,7 @@ public enum MarkdownSyntaxHighlighter {
     /// `text` のハイライト済み attributed string を構築する。
     ///
     /// プレビュー・スナップショット・テストに利用できる（テキストビュー不要）。
-    public static func attributedString(for text: String, theme: MarkdownEditorTheme) -> NSMutableAttributedString {
+    static func attributedString(for text: String, theme: MarkdownEditorTheme) -> NSMutableAttributedString {
         let storage = NSMutableAttributedString(string: text)
         highlight(storage, theme: theme)
         return storage
