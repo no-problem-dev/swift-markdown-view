@@ -9,6 +9,11 @@
 
 ### 修正
 
+- **`MarkdownEditorController.canUndo` / `canRedo` が SwiftUI を更新しなかったのを修正。**
+  `UndoManager` を読む計算プロパティなのに `objectWillChange` を流していなかったため、
+  **利用者が自作した「元に戻す」ボタンが永久に無効のままだった**。undo 通知を購読して
+  publish する。購読先の `object` を絞らないのは、`NSTextView.undoManager` が
+  レスポンダチェーン経由で解決され `bind(_:)` の時点ではまだ `nil` だから
 - コードブロックの中身が数式に置換される不具合を修正。`~~~` フェンス・4 スペースの
   インデントコード・`$` が先行する場合のインラインコードスパンが、いずれも数式スキャナの
   保護対象から漏れていた（`~~~python\ncost = $5$\n~~~` の中身が `cost = 0` になっていた）
@@ -184,6 +189,11 @@
 - `SwiftMarkdownViewDesignSystem` / `SwiftMarkdownEditorDesignSystem` product。
   `swift-design-system` のトークンを上記の抽象へ写すブリッジ
 - `MarkdownEditorTheme` の環境値と `.markdownEditorTheme(_:)` modifier
+- macOS の検索バーについて、ホストアプリ側で `.commands { TextEditingCommands() }` が
+  要ることを README とソースコメントに明記した。エディタは `usesFindBar` を有効にしているが、
+  ⌘F はアプリの Edit メニュー経由で届き、SwiftUI の既定メニューには Find が含まれない。
+  **宣言しないと検索バーは出てこない**（実機で確認）
+
 - **エディタの拡張点を公開した。** 差別化の中核でありながら、テーマ以外は
   ほぼ差し替え不能だった:
   - `MarkdownEditorToolbarItem` — ツールバーを項目の配列で構成する。既定は

@@ -202,6 +202,21 @@ MarkdownEditor(
 
 ルールは順に試され、最初に一致したものが勝つ。
 
+### 検索・置換（macOS）
+
+ソースエディタは標準の検索バーを有効にしているが、<kbd>⌘F</kbd> はホストアプリの
+Edit メニュー経由で届く。SwiftUI の既定メニューには Find が含まれていないので、
+`App` 側で宣言する:
+
+```swift
+WindowGroup {
+    EditorScreen()
+}
+.commands { TextEditingCommands() }
+```
+
+これが無いと、エディタ側の準備ができていても検索バーは出てこない。
+
 ### エディタのテーマ
 
 ソースの着色は `MarkdownEditorTheme` から来る。既定はシステムの意味色で構成されており、

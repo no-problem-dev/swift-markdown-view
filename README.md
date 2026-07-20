@@ -202,6 +202,20 @@ MarkdownEditor(
 
 Rules are tried in order and the first match wins.
 
+### Find and replace (macOS)
+
+The source editor enables the standard find bar, but <kbd>⌘F</kbd> is routed through the host
+app's Edit menu, and SwiftUI's default menu bar does not include Find. Declare it in your `App`:
+
+```swift
+WindowGroup {
+    EditorScreen()
+}
+.commands { TextEditingCommands() }
+```
+
+Without this the find bar never appears, even though the editor is ready for it.
+
 ### Editor theme
 
 Source highlighting colors come from `MarkdownEditorTheme`. The default is built from system

@@ -17,12 +17,42 @@ public final class MarkdownEditorController: ObservableObject {
 
     weak var textView: PlatformTextView?
 
+    /// deinit は MainActor 隔離されないため、トークンは箱越しに持つ。
+    private let undoObservers = ObserverBox()
+
     public init() {}
 
     /// このコントローラが操作するプラットフォームテキストビューを登録する。
     /// テキストビューの作成時にエディタビューから呼ばれる。
     public func bind(_ textView: PlatformTextView) {
         self.textView = textView
+        observeUndoStack()
+    }
+
+    /// undo スタックの変化を `objectWillChange` に流す。
+    ///
+    /// ``canUndo`` / ``canRedo`` は `UndoManager` を読む計算プロパティなので、
+    /// これが無いと SwiftUI が再評価せず、**利用者が自作した「元に戻す」ボタンが
+    /// 押せるようにならない**（実機で確認した実際の症状）。
+    private func observeUndoStack() {
+        undoObservers.removeAll()
+        let center = NotificationCenter.default
+        let names: [Notification.Name] = [
+            .NSUndoManagerDidUndoChange,
+            .NSUndoManagerDidRedoChange,
+            .NSUndoManagerDidCloseUndoGroup,
+            .NSUndoManagerDidOpenUndoGroup,
+            .NSUndoManagerWillCloseUndoGroup
+        ]
+        // object を絞らない。`NSTextView.undoManager` はレスポンダチェーン（ウィンドウ）
+        // 経由で解決されるため、`bind(_:)` の時点ではまだ nil で、そこで購読先を
+        // 確定させると**一度も通知が届かない**（実機で確認した実際の症状）。
+        // 他の undo マネージャの通知も拾うが、余分な SwiftUI 無効化が走るだけで害はない。
+        undoObservers.tokens = names.map { name in
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.objectWillChange.send() }
+            }
+        }
     }
 
     // MARK: - Toolbar commands
@@ -136,4 +166,22 @@ public final class MarkdownEditorController: ObservableObject {
         textView.setSelectedRange(transform.selection.range.nsRange)
         #endif
     }
+}
+
+
+/// 通知の購読トークンを保持する箱。
+///
+/// `MarkdownEditorController` は `@MainActor` なので、その `deinit` からは隔離された
+/// プロパティに触れない。解除の責務をこの非隔離クラスに逃がす。
+private final class ObserverBox: @unchecked Sendable {
+
+    var tokens: [any NSObjectProtocol] = []
+
+    func removeAll() {
+        let center = NotificationCenter.default
+        for token in tokens { center.removeObserver(token) }
+        tokens.removeAll()
+    }
+
+    deinit { removeAll() }
 }

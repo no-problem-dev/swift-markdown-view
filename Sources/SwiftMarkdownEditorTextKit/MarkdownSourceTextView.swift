@@ -279,6 +279,11 @@ extension MarkdownSourceTextView: NSViewRepresentable {
         textView.textContainerInset = NSSize(width: 8, height: 12)
 
         // 検索・置換。標準の Find bar をそのまま使う。
+        //
+        // ただし ⌘F はここではなく **ホストアプリの Edit メニュー**から届く。
+        // SwiftUI アプリの既定メニューには Find が含まれないので、
+        // `.commands { TextEditingCommands() }` を宣言しないと ⌘F は無反応になる
+        // （実機で確認済み。README のエディタ章に手順を書いてある）。
         textView.usesFindBar = true
         textView.isIncrementalSearchingEnabled = true
 

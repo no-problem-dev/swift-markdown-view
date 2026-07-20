@@ -31,5 +31,8 @@ struct MarkdownPlaygroundApp: App {
             }
             .adaptiveSyntaxHighlighting()
         }
+        // ⌘F でエディタの検索バーを出すには、ホストアプリ側で Find コマンドを
+        // 宣言する必要がある。SwiftUI の既定メニューには含まれていない。
+        .commands { TextEditingCommands() }
     }
 }
