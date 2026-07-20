@@ -45,6 +45,20 @@ public struct TextChange: Equatable, Sendable {
         TextSpan(location: range.lowerBound, length: insertedLength)
     }
 
+    // MARK: - Alignment
+
+    /// `text` の文字境界に揃えた変更を返す。
+    ///
+    /// `range` が書記素クラスタの途中を指していると、``apply(to:)`` は境界へ広げて置換する一方で
+    /// ``lengthDelta`` や ``insertedRange`` は元の（狭い）範囲で計算されるため、両者が食い違う。
+    /// オフセットを算術で組み立てた場合は、`lengthDelta` を読む前にこれを通すこと。
+    /// `UITextView` / `NSTextView` 由来のセレクションは既に境界に揃っているので影響はない。
+    public func aligned(in text: String) -> TextChange {
+        let alignedRange = text.alignedSpan(range)
+        guard alignedRange != range else { return self }
+        return TextChange(range: alignedRange, replacement: replacement)
+    }
+
     // MARK: - Apply
 
     /// この変更を適用した `text` を返す。
