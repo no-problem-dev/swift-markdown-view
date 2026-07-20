@@ -64,6 +64,22 @@ public struct MarkdownSourceTextView {
     }
 }
 
+// MARK: - Shared helpers
+
+public extension MarkdownSourceTextView {
+
+    /// 新しいテキスト長に収まるように選択範囲を切り詰める。
+    ///
+    /// 親がテキストを差し替えたときに使う。差分が分からないので厳密な位置写像はできないが、
+    /// 収まる選択をわざわざ捨てる理由はない。長さを無条件に 0 にすると、正規化・整形・
+    /// 外部 undo・再読込のたびにユーザーの選択が消える。
+    static func clampSelection(_ selection: NSRange, toLength length: Int) -> NSRange {
+        let location = Swift.max(0, Swift.min(selection.location, length))
+        let available = length - location
+        return NSRange(location: location, length: Swift.max(0, Swift.min(selection.length, available)))
+    }
+}
+
 // MARK: - Coordinator (shared logic)
 
 public extension MarkdownSourceTextView {
@@ -139,6 +155,8 @@ extension MarkdownSourceTextView: UIViewRepresentable {
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         // 下方向スクロールのドラッグでキーボードを閉じられるようにする。
         textView.keyboardDismissMode = .interactive
+        // 検索・置換。最低要件が iOS 17 なので標準の Find interaction をそのまま使える。
+        textView.isFindInteractionEnabled = true
 
         // Markdown-safe input: smart substitutions corrupt syntax.
         textView.smartQuotesType = .no
@@ -180,7 +198,10 @@ extension MarkdownSourceTextView: UIViewRepresentable {
         textView.textStorage.setAttributedString(
             NSAttributedString(string: value, attributes: MarkdownSyntaxHighlighter.baseAttributes(theme: theme))
         )
-        let clamped = NSRange(location: min(selection.location, value.utf16.count), length: 0)
+        // 選択を長さごと保てる範囲で保つ。無条件に length 0 へ潰すと、親がテキストを
+        // 書き換えるたびにユーザーの選択が消える。差分が分からないので厳密な写像はできないが、
+        // 新しいテキストに収まる選択をわざわざ捨てる理由はない。
+        let clamped = Self.clampSelection(selection, toLength: value.utf16.count)
         textView.selectedRange = clamped
         coordinator.applyStyling(to: textView.textStorage, selection: clamped, focused: textView.isFirstResponder)
         textView.typingAttributes = MarkdownSyntaxHighlighter.baseAttributes(theme: theme)
@@ -192,6 +213,9 @@ extension MarkdownSourceTextView: UIViewRepresentable {
 extension MarkdownSourceTextView.Coordinator: UITextViewDelegate {
 
     public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText replacement: String) -> Bool {
+        // 変換途中（未確定文字列がある状態）では入力ルールを動かさない。
+        // ここで false を返すと合成セッションを外から壊し、変換候補が消える。
+        guard textView.markedTextRange == nil else { return true }
         guard let transform = ruleTransform(currentText: textView.text, replacing: range, with: replacement) else {
             return true
         }
@@ -201,6 +225,9 @@ extension MarkdownSourceTextView.Coordinator: UITextViewDelegate {
 
     public func textViewDidChange(_ textView: UITextView) {
         guard !isApplyingProgrammaticChange else { return }
+        // 未確定文字列は下線・変換節ハイライトを属性として持つ。全域に属性を貼り直すと
+        // それらを巻き込んで消してしまう。未確定のかなを親の状態へ流さないためでもある。
+        guard textView.markedTextRange == nil else { return }
         text.wrappedValue = textView.text
         rehighlight(textView.textStorage, selection: textView.selectedRange, focused: textView.isFirstResponder) { textView.selectedRange = $0 }
         textView.typingAttributes = MarkdownSyntaxHighlighter.baseAttributes(theme: theme)
@@ -209,7 +236,7 @@ extension MarkdownSourceTextView.Coordinator: UITextViewDelegate {
     public func textViewDidChangeSelection(_ textView: UITextView) {
         // Live preview reveals the raw markers on the caret's line as the
         // selection moves; re-style without disturbing text or selection.
-        guard livePreview, !isApplyingProgrammaticChange else { return }
+        guard livePreview, !isApplyingProgrammaticChange, textView.markedTextRange == nil else { return }
         isApplyingProgrammaticChange = true
         applyStyling(to: textView.textStorage, selection: textView.selectedRange, focused: textView.isFirstResponder)
         isApplyingProgrammaticChange = false
@@ -251,6 +278,10 @@ extension MarkdownSourceTextView: NSViewRepresentable {
         textView.insertionPointColor = theme.tintColor
         textView.textContainerInset = NSSize(width: 8, height: 12)
 
+        // 検索・置換。標準の Find bar をそのまま使う。
+        textView.usesFindBar = true
+        textView.isIncrementalSearchingEnabled = true
+
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.isAutomaticTextReplacementEnabled = false
@@ -284,9 +315,13 @@ extension MarkdownSourceTextView: NSViewRepresentable {
     @MainActor
     private func setText(_ value: String, on textView: NSTextView, coordinator: Coordinator) {
         guard let storage = textView.textStorage else { return }
+        let selection = textView.selectedRange()
         coordinator.isApplyingProgrammaticChange = true
         storage.setAttributedString(NSAttributedString(string: value, attributes: MarkdownSyntaxHighlighter.baseAttributes(theme: theme)))
-        coordinator.applyStyling(to: storage, selection: textView.selectedRange(), focused: MarkdownSourceTextView.isFocused(textView))
+        // iOS 側と同じく、収まる範囲で選択を保つ。ここには復元処理自体が無かった。
+        let clamped = Self.clampSelection(selection, toLength: (value as NSString).length)
+        textView.setSelectedRange(clamped)
+        coordinator.applyStyling(to: storage, selection: clamped, focused: MarkdownSourceTextView.isFocused(textView))
         textView.typingAttributes = MarkdownSyntaxHighlighter.baseAttributes(theme: theme)
         coordinator.appliedStyleSignature = styleSignature()
         coordinator.isApplyingProgrammaticChange = false
@@ -301,6 +336,7 @@ extension MarkdownSourceTextView: NSViewRepresentable {
 extension MarkdownSourceTextView.Coordinator: NSTextViewDelegate {
 
     public func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString replacement: String?) -> Bool {
+        guard !textView.hasMarkedText() else { return true }
         guard let replacement,
               let transform = ruleTransform(currentText: textView.string, replacing: affectedCharRange, with: replacement) else {
             return true
@@ -311,6 +347,7 @@ extension MarkdownSourceTextView.Coordinator: NSTextViewDelegate {
 
     public func textDidChange(_ notification: Notification) {
         guard !isApplyingProgrammaticChange, let textView = notification.object as? NSTextView, let storage = textView.textStorage else { return }
+        guard !textView.hasMarkedText() else { return }
         text.wrappedValue = textView.string
         rehighlight(storage, selection: textView.selectedRange(), focused: MarkdownSourceTextView.isFocused(textView)) { textView.setSelectedRange($0) }
         textView.typingAttributes = MarkdownSyntaxHighlighter.baseAttributes(theme: theme)
@@ -318,7 +355,8 @@ extension MarkdownSourceTextView.Coordinator: NSTextViewDelegate {
 
     public func textViewDidChangeSelection(_ notification: Notification) {
         guard livePreview, !isApplyingProgrammaticChange,
-              let textView = notification.object as? NSTextView, let storage = textView.textStorage else { return }
+              let textView = notification.object as? NSTextView, let storage = textView.textStorage,
+              !textView.hasMarkedText() else { return }
         isApplyingProgrammaticChange = true
         applyStyling(to: storage, selection: textView.selectedRange(), focused: MarkdownSourceTextView.isFocused(textView))
         isApplyingProgrammaticChange = false

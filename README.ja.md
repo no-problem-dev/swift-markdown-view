@@ -126,7 +126,7 @@ MarkdownView(source)
 
 // 手動設定
 MarkdownView(source)
-    .syntaxHighlighter(
+    .markdownSyntaxHighlighter(
         HighlightJSSyntaxHighlighter(theme: .atomOne, colorMode: .dark)
     )
 ```
@@ -147,7 +147,7 @@ struct MyHighlighter: SyntaxHighlighter {
 }
 
 MarkdownView(source)
-    .syntaxHighlighter(MyHighlighter())
+    .markdownSyntaxHighlighter(MyHighlighter())
 ```
 
 ## Aside（コールアウト）

@@ -16,8 +16,8 @@ import AppKit
 /// システムのコピーで選択した可読テキストを取得できる —
 /// SwiftUI のブロック単位 `Text` レンダリングでは構造上実現できない挙動。
 ///
-/// 新しいレンダリングバックエンド。数式・画像・テーブルの機能が揃った段階で
-/// `MarkdownView` がこちらに委譲する。それまでは明示的なオプトイン選択可能ビューとして提供する。
+/// `MarkdownView` の実レンダリングバックエンド。`MarkdownView.body` はこの型に全面委譲する。
+/// 直接使うのは、テーマを注入したい場合など `MarkdownView` の環境値経由では届かないときだけでよい。
 public struct MarkdownSelectableText {
     public let content: MarkdownContent
     public var theme: MarkdownTextTheme
