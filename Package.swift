@@ -133,6 +133,13 @@ let package = Package(
             ]
         ),
 
+        .testTarget(
+            name: "SwiftMarkdownViewLaTeXTests",
+            dependencies: [
+                "SwiftMarkdownViewLaTeX"
+            ]
+        ),
+
         // MARK: - Editor
 
         // UI 非依存のドキュメントモデル層。EditorState / TextChange / 位置写像 /
