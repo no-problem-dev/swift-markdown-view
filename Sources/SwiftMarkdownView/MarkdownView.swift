@@ -1,5 +1,4 @@
 import SwiftUI
-import DesignSystem
 
 /// Markdown テキストをレンダリングする SwiftUI View。
 ///
@@ -52,15 +51,19 @@ public struct MarkdownView: View {
 private struct MarkdownTextKitBackend: View {
     let content: MarkdownContent
 
-    @Environment(\.colorPalette) private var palette
-    @Environment(\.spacingScale) private var spacing
+    @Environment(\.markdownPalette) private var palette
+    @Environment(\.markdownMetrics) private var metrics
+    @Environment(\.markdownTypeScale) private var typeScale
     @Environment(\.syntaxHighlighter) private var highlighter
     @Environment(\.mathRenderer) private var mathRenderer
     @Environment(\.mermaidScriptProvider) private var mermaidScriptProvider
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        var view = MarkdownSelectableText(content, theme: .resolved(palette: palette, spacing: spacing))
+        var view = MarkdownSelectableText(
+            content,
+            theme: .resolved(palette: palette, metrics: metrics, typeScale: typeScale)
+        )
             .codeHighlighter(SyntaxHighlighterAdapter(base: highlighter))
             .attachmentRenderer(mathRenderer as? MarkdownAttachmentRendering)
         if let url = Self.mermaidScriptURL(mermaidScriptProvider) {

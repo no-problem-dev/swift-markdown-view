@@ -86,13 +86,25 @@ MarkdownView(content)
 
 ### 見た目を調整する
 
-色・スペーシング・タイポグラフィは DesignSystem のテーマから解決される。
-テーマを差し替えれば Markdown の表示全体が追従する:
+既定はシステムの意味色なので、設定なしでライト/ダークどちらでも文字が読める。
+自分の配色に合わせるには ``MarkdownPalette`` を実装する:
 
 ```swift
+struct BrandPalette: MarkdownPalette {
+    var text: Color { .primary }
+    var secondaryText: Color { .secondary }
+    var heading: Color { .indigo }
+    var link: Color { .blue }
+    var codeBackground: Color { Color.gray.opacity(0.12) }
+    var rule: Color { Color.gray.opacity(0.4) }
+}
+
 MarkdownView(source)
-    .theme(ThemeProvider(colorPalette: MyPalette()))
+    .markdownPalette(BrandPalette())
 ```
+
+`swift-design-system` を使っているなら `SwiftMarkdownViewDesignSystem` を追加して
+`.markdownTheme(themeProvider)` を呼ぶとアプリテーマに追従する。
 
 ### シンタックスハイライトを有効にする
 

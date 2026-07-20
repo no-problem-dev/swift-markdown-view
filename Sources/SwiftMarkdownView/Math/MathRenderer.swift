@@ -1,9 +1,8 @@
 import SwiftUI
-import DesignSystem
 
 // MARK: - MathRenderer Protocol
 
-/// Markdownコンテンツ内の数式をレンダリングする型。
+/// Markdown コンテンツ内の数式をレンダリングする型。
 ///
 /// コアモジュールは LaTeX ソースを組版なしで表示する ``PlainMathRenderer`` を同梱する。
 /// 本格的な組版を行うには `SwiftMarkdownViewLaTeX` モジュールを追加して
@@ -18,35 +17,21 @@ import DesignSystem
 /// 実装を環境経由で注入する設計。
 public protocol MathRenderer: Sendable {
 
-    /// インライン数式を `Text` セグメントとしてレンダリングする。
+    /// 数式を `Text` セグメントとしてレンダリングする。
     ///
     /// 結果は周囲の段落テキストと連結されるため、`Text` である必要がある
     ///（画像はベースラインオフセット付きの `Text(Image)` 補間で参加できる）。
     ///
     /// - Parameters:
     ///   - latex: デリミタなしの LaTeX ソース。
-    ///   - palette: 環境から取得した現在のカラーパレット。
-    @MainActor func inlineMath(_ latex: String, palette: any ColorPalette) -> Text
-
-    /// 特定のフォントサイズでインライン数式をレンダリングする。
-    ///
-    /// 見出しやラベルなど非ボディテキストに埋め込まれた数式（``MathText`` 参照）に使用し、
-    /// 周囲のフォントに合わせる。デフォルト実装はサイズを無視して
-    /// ``inlineMath(_:palette:)`` にフォールバックする。
-    @MainActor func inlineMath(_ latex: String, fontSize: CGFloat, palette: any ColorPalette) -> Text
-}
-
-extension MathRenderer {
-
-    @MainActor
-    public func inlineMath(_ latex: String, fontSize: CGFloat, palette: any ColorPalette) -> Text {
-        inlineMath(latex, palette: palette)
-    }
+    ///   - fontSize: 周囲のテキストのポイントサイズ。`nil` ならレンダラー自身の既定を使う。
+    ///   - textColor: 周囲のテキストの色。
+    @MainActor func inlineMath(_ latex: String, fontSize: CGFloat?, textColor: Color) -> Text
 }
 
 // MARK: - PlainMathRenderer
 
-/// 組版なしで LaTeX ソースを表示するデフォルト数式レンダラー。
+/// 組版なしで LaTeX ソースを表示する既定の数式レンダラー。
 ///
 /// 数式は等幅の `$...$` テキストとして表示する。
 /// コアモジュールを依存なしに保ちつつ、グレースフルなデグレードを実現する。
@@ -55,10 +40,10 @@ public struct PlainMathRenderer: MathRenderer {
     public init() {}
 
     @MainActor
-    public func inlineMath(_ latex: String, palette: any ColorPalette) -> Text {
+    public func inlineMath(_ latex: String, fontSize: CGFloat?, textColor: Color) -> Text {
         Text("$\(latex)$")
-            .font(.system(.body, design: .monospaced))
-            .foregroundStyle(MarkdownColors.inlineCodeText(palette))
+            .font(.system(size: fontSize ?? 17, design: .monospaced))
+            .foregroundStyle(textColor)
     }
 }
 
@@ -72,7 +57,7 @@ extension EnvironmentValues {
 
     /// 数式のレンダリングに使用するレンダラー。
     ///
-    /// この値を設定するには ``SwiftUICore/View/mathRenderer(_:)`` モディファイアを使用する。
+    /// この値を設定するには ``SwiftUICore/View/markdownMathRenderer(_:)`` モディファイアを使用する。
     public var mathRenderer: any MathRenderer {
         get { self[MathRendererKey.self] }
         set { self[MathRendererKey.self] = newValue }

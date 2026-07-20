@@ -1,5 +1,4 @@
 import SwiftUI
-import DesignSystem
 
 /// 埋め込み数式をインラインで組版するシングルラインテキストビュー。
 ///
@@ -23,7 +22,7 @@ public struct MathText: View {
     private let mathFontSize: CGFloat?
 
     @Environment(\.mathRenderer) private var renderer
-    @Environment(\.colorPalette) private var colorPalette
+    @Environment(\.markdownPalette) private var palette
     @Environment(\.markdownRenderingOptions) private var options
 
     /// - Parameters:
@@ -47,11 +46,7 @@ public struct MathText: View {
             case .text(let text):
                 output = output + Text(text)
             case .math(let latex, _, _):
-                if let mathFontSize {
-                    output = output + renderer.inlineMath(latex, fontSize: mathFontSize, palette: colorPalette)
-                } else {
-                    output = output + renderer.inlineMath(latex, palette: colorPalette)
-                }
+                output = output + renderer.inlineMath(latex, fontSize: mathFontSize, textColor: palette.text)
             }
         }
         return output

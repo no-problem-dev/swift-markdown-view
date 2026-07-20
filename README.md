@@ -2,7 +2,7 @@
 
 English | [日本語](./README.ja.md)
 
-A SwiftUI-native Markdown rendering library. Integrates with DesignSystem for beautiful Markdown display.
+A SwiftUI-native Markdown rendering library.
 
 ![Swift 6.2+](https://img.shields.io/badge/Swift-6.2+-orange.svg)
 ![iOS 17+](https://img.shields.io/badge/iOS-17+-blue.svg)
@@ -19,8 +19,10 @@ A SwiftUI-native Markdown rendering library. Integrates with DesignSystem for be
   across blocks and Copy yields readable text
 - **Rich Element Support**: Tables, task lists, images, Mermaid diagrams, math (LaTeX), and more
 - **Optional Syntax Highlighting**: 50+ languages via separate HighlightJS module
-- **DesignSystem Integration**: Seamless integration with ColorPalette, Typography, and Spacing
-- **Customizable**: Style configuration through environment values
+- **No design-system lock-in**: Colors, metrics, and type sizes are plain protocols you implement.
+  Defaults use system semantic colors and adapt to light/dark automatically
+- **Optional `swift-design-system` bridge**: Add `SwiftMarkdownViewDesignSystem` if your app already
+  uses it, and Markdown follows your app theme
 
 ## Quick Start
 
@@ -187,31 +189,51 @@ graph TD
 - iOS 26+, macOS 26+: Native WebKit rendering
 - Earlier versions: Fallback display (shown as code block)
 
-## DesignSystem Theme
+## Theming
 
-Apply a theme to the view hierarchy with `ThemeProvider`. Every design token
-(colors, typography, spacing) resolves from it:
+The defaults use system semantic colors, so text stays readable in both light and dark mode
+without any setup. To match your own design, implement `MarkdownPalette` — no external
+dependency is involved:
+
+```swift
+import SwiftMarkdownView
+
+struct BrandPalette: MarkdownPalette {
+    var text: Color { .primary }
+    var secondaryText: Color { .secondary }
+    var heading: Color { .indigo }
+    var link: Color { .blue }
+    var codeBackground: Color { Color.gray.opacity(0.12) }
+    var rule: Color { Color.gray.opacity(0.4) }
+}
+
+MarkdownView("# Themed Markdown")
+    .markdownPalette(BrandPalette())
+```
+
+`MarkdownMetrics` (paragraph spacing, indent step) and `MarkdownTypeScale` (body and heading
+sizes) work the same way via `.markdownMetrics(_:)` and `.markdownTypeScale(_:)`.
+
+### Using swift-design-system
+
+If your app already uses `swift-design-system`, add the `SwiftMarkdownViewDesignSystem` product
+and Markdown follows your app theme:
 
 ```swift
 import DesignSystem
 import SwiftMarkdownView
+import SwiftMarkdownViewDesignSystem
 
-struct ContentView: View {
-    @State private var theme = ThemeProvider(initialMode: .dark)
-
-    var body: some View {
-        MarkdownView("# Themed Markdown")
-            .theme(theme)
-    }
-}
-```
-
-To override a single token instead of the whole theme, inject a concrete type:
-
-```swift
 MarkdownView("# Themed Markdown")
-    .environment(\.colorPalette, DarkColorPalette())
+    .markdownTheme(themeProvider)
 ```
+
+For the editor, the equivalent is `SwiftMarkdownEditorDesignSystem` and
+`.markdownEditorDesignSystemTheme()`.
+
+> `swift-design-system` is still resolved as a package dependency because the optional bridge,
+> LaTeX, and catalog modules use it. What changed is that `SwiftMarkdownView` and
+> `SwiftMarkdownEditor` no longer link or expose it, so your code never has to touch its types.
 
 ## Module Structure
 
@@ -221,6 +243,8 @@ MarkdownView("# Themed Markdown")
 | `SwiftMarkdownEditor` | Markdown editor with live preview |
 | `SwiftMarkdownViewHighlightJS` | Optional HighlightJS syntax highlighting |
 | `SwiftMarkdownViewLaTeX` | Optional LaTeX math rendering |
+| `SwiftMarkdownViewDesignSystem` | Optional bridge that maps `swift-design-system` tokens onto Markdown theming |
+| `SwiftMarkdownEditorDesignSystem` | Same bridge for the editor theme |
 | `SwiftMarkdownViewCatalog` | Demo screens showing every supported element. Not needed to use the library |
 
 ## Dependencies

@@ -29,21 +29,17 @@ public struct LaTeXMathRenderer: MathRenderer {
     }
 
     @MainActor
-    public func inlineMath(_ latex: String, palette: any ColorPalette) -> Text {
-        inlineMath(latex, fontSize: style.inlineFontSize, palette: palette)
-    }
-
-    @MainActor
-    public func inlineMath(_ latex: String, fontSize: CGFloat, palette: any ColorPalette) -> Text {
-        LaTeXView.inlineText(
+    public func inlineMath(_ latex: String, fontSize: CGFloat?, textColor: Color) -> Text {
+        let size = fontSize ?? style.inlineFontSize
+        return LaTeXView.inlineText(
             latex,
             fontFamily: style.fontFamily,
-            fontSize: fontSize,
-            color: style.textColor(palette)
+            fontSize: size,
+            color: textColor
         )
         ?? Text(latex)
-            .font(.system(.body, design: .monospaced))
-            .foregroundStyle(style.errorColor(palette))
+            .font(.system(size: size, design: .monospaced))
+            .foregroundStyle(textColor)
     }
 }
 

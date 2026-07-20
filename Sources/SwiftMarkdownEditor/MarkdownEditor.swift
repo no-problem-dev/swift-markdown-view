@@ -1,5 +1,4 @@
 import SwiftUI
-import DesignSystem
 import SwiftMarkdownView
 import SwiftMarkdownEditorCore
 import SwiftMarkdownEditorRules
@@ -17,7 +16,8 @@ import SwiftMarkdownEditorTextKit
 /// `text` のプレーン Markdown 文字列が唯一の正。
 /// 編集は TextKit 2 テキストビュー上で行われ、プレビューは ``MarkdownView`` を再利用するため
 /// パッケージ全体でレンダリング結果が一致する。
-/// 色とスペーシングは環境の `swift-design-system` テーマから取得する。
+/// 着色は環境の ``MarkdownEditorTheme`` から取得する。既定はシステムの意味色で
+/// ライト/ダークに自動追従し、外部のデザインシステムを必要としない。
 public struct MarkdownEditor: View {
 
     @Binding private var text: String
@@ -27,7 +27,7 @@ public struct MarkdownEditor: View {
 
     @StateObject private var controller = MarkdownEditorController()
     @State private var mode: MarkdownEditorMode
-    @Environment(\.colorPalette) private var palette
+    @Environment(\.markdownEditorTheme) private var environmentTheme
 
     /// `text` にバインドした Markdown エディタを作成する。
     ///
@@ -53,7 +53,9 @@ public struct MarkdownEditor: View {
     }
 
     private var theme: MarkdownEditorTheme {
-        .fromDesignSystem(palette: palette, baseFontSize: baseFontSize)
+        var resolved = environmentTheme
+        resolved.baseFontSize = baseFontSize
+        return resolved
     }
 
     private var availableModes: [MarkdownEditorMode] {
@@ -70,7 +72,7 @@ public struct MarkdownEditor: View {
             Divider()
             content
         }
-        .background(palette.surface)
+        .background(Color(theme.backgroundColor))
     }
 
     // MARK: - Header
@@ -80,9 +82,13 @@ public struct MarkdownEditor: View {
             // Mode switcher row. The control fills the width so its segments are
             // equal (each segment is maxWidth: .infinity internally); a content-
             // hugging control would size segments to their labels and look uneven.
-            SegmentedControl(selection: $mode, options: availableModes) { mode in
-                Text(mode.displayName)
+            Picker("", selection: $mode) {
+                ForEach(availableModes, id: \.self) { mode in
+                    Text(mode.displayName).tag(mode)
+                }
             }
+            .pickerStyle(.segmented)
+            .labelsHidden()
             .frame(maxWidth: 420)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 8)

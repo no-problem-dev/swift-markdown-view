@@ -1,20 +1,25 @@
 import SwiftUI
-import DesignSystem
 import SwiftMarkdownEditorTextKit
 
 /// ソースエディタ上部に表示されるフォーマットバー。
 ///
-/// デザインシステムの `IconButton` で構築されアプリテーマを継承する。
 /// 各ボタンは ``MarkdownEditorController`` のコマンドを呼び出し、
 /// アクティブなテキストビューに純粋なフォーマット変換を適用する。
 struct MarkdownFormattingToolbar: View {
 
+    private enum Metrics {
+        static let itemSpacing: CGFloat = 4
+        static let horizontalPadding: CGFloat = 8
+        static let verticalPadding: CGFloat = 4
+        static let iconSize: CGFloat = 15
+        static let hitTarget: CGFloat = 28
+    }
+
     @ObservedObject var controller: MarkdownEditorController
-    @Environment(\.spacingScale) private var spacing
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: spacing.xs) {
+            HStack(spacing: Metrics.itemSpacing) {
                 group {
                     button("bold", label: "太字", key: "b") { controller.bold() }
                     button("italic", label: "斜体", key: "i") { controller.italic() }
@@ -33,8 +38,8 @@ struct MarkdownFormattingToolbar: View {
                     button("link", label: "リンクを挿入", key: "k") { controller.insertLink() }
                 }
             }
-            .padding(.horizontal, spacing.sm)
-            .padding(.vertical, spacing.xs)
+            .padding(.horizontal, Metrics.horizontalPadding)
+            .padding(.vertical, Metrics.verticalPadding)
         }
     }
 
@@ -52,8 +57,15 @@ struct MarkdownFormattingToolbar: View {
         modifiers: EventModifiers = .command,
         action: @escaping () -> Void
     ) -> some View {
-        let base = IconButton(icon: icon, size: .small, action: action)
-            .accessibilityLabel(label)
+        let base = Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: Metrics.iconSize))
+                .frame(width: Metrics.hitTarget, height: Metrics.hitTarget)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+
         if let key {
             base.keyboardShortcut(key, modifiers: modifiers)
         } else {
@@ -63,6 +75,6 @@ struct MarkdownFormattingToolbar: View {
 
     @ViewBuilder
     private func group<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        HStack(spacing: spacing.xs) { content() }
+        HStack(spacing: Metrics.itemSpacing) { content() }
     }
 }

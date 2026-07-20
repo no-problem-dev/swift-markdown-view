@@ -1,5 +1,4 @@
 import SwiftUI
-import DesignSystem
 
 /// シンタックスハイライトを非同期で適用してコードをレンダリングする SwiftUI ビュー。
 ///
@@ -25,7 +24,7 @@ public struct HighlightedCodeView: View {
     public let language: String?
 
     @Environment(\.syntaxHighlighter) private var highlighter
-    @Environment(\.colorPalette) private var colorPalette
+    @Environment(\.markdownPalette) private var palette
 
     @State private var state: HighlightState = .idle
 
@@ -56,7 +55,7 @@ public struct HighlightedCodeView: View {
         case .idle, .loading:
             // Show plain text during loading for smooth transition
             Text(code)
-                .foregroundStyle(colorPalette.onSurface)
+                .foregroundStyle(palette.text)
 
         case .success(let attributed):
             Text(attributed)
@@ -64,7 +63,7 @@ public struct HighlightedCodeView: View {
         case .failure:
             // Fallback to plain text on error
             Text(code)
-                .foregroundStyle(colorPalette.onSurface)
+                .foregroundStyle(palette.text)
         }
     }
 

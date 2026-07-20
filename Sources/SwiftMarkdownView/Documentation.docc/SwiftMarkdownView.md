@@ -1,6 +1,6 @@
 # ``SwiftMarkdownView``
 
-DesignSystem 統合を備えた SwiftUI ネイティブな Markdown レンダリングライブラリ。
+SwiftUI ネイティブな Markdown レンダリング・編集ライブラリ。
 
 @Metadata {
     @PageColor(blue)
@@ -89,6 +89,15 @@ struct ArticleView: View {
 
 - ``AsideKind``
 - <doc:Asides>
+
+### テーマ
+
+- ``MarkdownPalette``
+- ``DefaultMarkdownPalette``
+- ``MarkdownMetrics``
+- ``DefaultMarkdownMetrics``
+- ``MarkdownTypeScale``
+- ``DefaultMarkdownTypeScale``
 
 ### レンダリングオプション
 

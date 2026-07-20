@@ -108,7 +108,6 @@ struct MyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .theme(ThemeProvider())
                 .adaptiveSyntaxHighlighting()
         }
     }
@@ -123,6 +122,5 @@ Markdownカタログでシンタックスハイライトを有効にするには
 import SwiftMarkdownViewHighlightJS
 
 MarkdownCatalogView()
-    .theme(ThemeProvider())
     .adaptiveSyntaxHighlighting()
 ```

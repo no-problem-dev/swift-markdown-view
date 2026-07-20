@@ -28,6 +28,16 @@ let package = Package(
             name: "SwiftMarkdownEditor",
             targets: ["SwiftMarkdownEditor"]
         ),
+        // swift-design-system を使っているアプリ向けのブリッジ。本体は外部デザインシステムに
+        // 依存しないので、テーマ連携が要る利用者だけがこちらを追加で取る。
+        .library(
+            name: "SwiftMarkdownViewDesignSystem",
+            targets: ["SwiftMarkdownViewDesignSystem"]
+        ),
+        .library(
+            name: "SwiftMarkdownEditorDesignSystem",
+            targets: ["SwiftMarkdownEditorDesignSystem"]
+        ),
         // 各機能を実際に描画して見せるデモ画面群。ライブラリの機能ではないので
         // 本体には含めず、見たい人だけが opt-in する。
         .library(
@@ -95,12 +105,23 @@ let package = Package(
             ]
         ),
 
+        // 描画本体。外部デザインシステムに依存しない。色・寸法・文字サイズは
+        // MarkdownPalette / MarkdownMetrics / MarkdownTypeScale として自前で抽象化しており、
+        // 既定実装はシステムの意味色でライト/ダークに自動追従する。
         .target(
             name: "SwiftMarkdownView",
             dependencies: [
                 "MarkdownModel",
                 "MarkdownAttributedKit",
-                "MarkdownTextKit",
+                "MarkdownTextKit"
+            ]
+        ),
+
+        // swift-design-system のトークンを Markdown 側の抽象へ写すブリッジ。
+        .target(
+            name: "SwiftMarkdownViewDesignSystem",
+            dependencies: [
+                "SwiftMarkdownView",
                 .product(name: "DesignSystem", package: "swift-design-system")
             ]
         ),
@@ -111,6 +132,7 @@ let package = Package(
             name: "SwiftMarkdownViewCatalog",
             dependencies: [
                 "SwiftMarkdownView",
+                "SwiftMarkdownViewDesignSystem",
                 .product(name: "DesignSystem", package: "swift-design-system")
             ]
         ),
@@ -126,8 +148,9 @@ let package = Package(
             name: "SwiftMarkdownViewLaTeX",
             dependencies: [
                 "SwiftMarkdownView",
-                // LaTeXMathRenderer が ColorPalette を直接使う。SwiftMarkdownView 経由で
-                // 暗黙に解決されていたが、本体から DesignSystem を外す際に壊れるため明示する。
+                // swift-latex-view の MathStyle プロトコルが ColorPalette / SpacingScale を
+                // 要件に持つため、この付加モジュールだけは DesignSystem を避けられない。
+                // 本体(SwiftMarkdownView)は依存しないので、利用者は opt-in で受け入れる。
                 .product(name: "DesignSystem", package: "swift-design-system"),
                 .product(name: "SwiftLaTeXView", package: "swift-latex-view")
             ]
@@ -192,13 +215,22 @@ let package = Package(
         ),
 
         // 公開 SwiftUI 層。MarkdownEditor View・ツールバー・モード切替・分割プレビュー。
-        // デザインシステムと既存 MarkdownView（プレビュー）をここで消費する。
+        // 外部デザインシステムに依存しない。着色は MarkdownEditorTheme 環境値から取る。
         .target(
             name: "SwiftMarkdownEditor",
             dependencies: [
                 "SwiftMarkdownView",
                 "SwiftMarkdownEditorCore",
                 "SwiftMarkdownEditorRules",
+                "SwiftMarkdownEditorTextKit"
+            ]
+        ),
+
+        // swift-design-system のパレットから MarkdownEditorTheme を導出するブリッジ。
+        .target(
+            name: "SwiftMarkdownEditorDesignSystem",
+            dependencies: [
+                "SwiftMarkdownEditor",
                 "SwiftMarkdownEditorTextKit",
                 .product(name: "DesignSystem", package: "swift-design-system")
             ]

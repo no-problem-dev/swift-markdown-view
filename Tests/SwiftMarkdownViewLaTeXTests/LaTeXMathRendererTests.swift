@@ -1,7 +1,6 @@
 #if os(iOS) || os(macOS)
 import Testing
 import SwiftUI
-import DesignSystem
 @testable import SwiftMarkdownViewLaTeX
 @testable import SwiftMarkdownView
 @testable import MarkdownAttributedKit
@@ -15,7 +14,7 @@ import DesignSystem
 struct LaTeXMathRendererTests {
 
     private let renderer = LaTeXMathRenderer()
-    private let palette: any ColorPalette = LightColorPalette()
+    private let textColor = Color.primary
 
     /// 組版に失敗しても Text を返すこと（呼び出し側は非 Optional を期待している）。
     @Test("不正な LaTeX でもインライン描画が返る", arguments: [
@@ -29,8 +28,8 @@ struct LaTeXMathRendererTests {
         String(repeating: "\\frac{1}{2}", count: 200)
     ])
     func inlineMathSurvivesMalformedInput(latex: String) {
-        _ = renderer.inlineMath(latex, palette: palette)
-        _ = renderer.inlineMath(latex, fontSize: 17, palette: palette)
+        _ = renderer.inlineMath(latex, fontSize: nil, textColor: textColor)
+        _ = renderer.inlineMath(latex, fontSize: 17, textColor: textColor)
     }
 
     @Test("不正な LaTeX でもディスプレイ描画がクラッシュしない", arguments: [
