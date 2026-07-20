@@ -2,7 +2,11 @@ import Foundation
 
 /// swift-markdown パーシング前に数式領域を抽出し、パース後に AST ノードとして復元する。
 ///
-/// `\(...\)` デリミターはバックスラッシュエスケープ処理で破壊され、`$a_b$` の添字は強調パーシングで消費されるため、Markdown パーシング前に数式を抽出する必要がある。各数式領域はプレースホルダートークン（cmark でもプレーンテキストとして残る私用領域文字）に置き換える。ディスプレイ数式は独立した段落に分離する。
+/// `\(...\)` デリミターはバックスラッシュエスケープ処理で破壊され、`$a_b$` の添字は強調パーシングで消費されるため、Markdown パーシング前に数式を抽出する必要がある。各数式領域はプレースホルダートークン（cmark でもプレーンテキストとして残る私用領域文字）に置き換える。
+///
+/// ディスプレイ数式を独立したブロックへ切り出すのは**復元側**の仕事。抽出時に空行を挿すと、
+/// その数式を包んでいるリスト項目や引用ごと打ち切ってしまう。復元側は AST を見ているので、
+/// 段落の内側だけを分けられる。
 enum MathPreprocessor {
 
     struct Capture: Equatable {
@@ -34,16 +38,26 @@ enum MathPreprocessor {
         for part in parts {
             switch part {
             case .text(let text):
-                processed += text
+                // ソース由来のトークン文字を落とす。残すと復元時に数式プレースホルダーとして
+                // 解釈され、外部入力（LLM 出力・ユーザー投稿）で数式が増殖する。
+                // U+E000/U+E001 は私用領域で Markdown 上の意味を持たないため、除去して差し支えない。
+                processed += sanitized(text)
             case .math(let latex, let isDisplay, let raw):
                 let token = "\(tokenStart)\(captures.count)\(tokenEnd)"
                 captures.append(Capture(latex: latex, isDisplay: isDisplay, raw: raw))
-                // Display math becomes its own block; blank lines force a
-                // standalone paragraph in the Markdown structure.
-                processed += isDisplay ? "\n\n\(token)\n\n" : token
+                // ディスプレイ数式もここでは素のトークンとして埋める。
+                // 空行を挿してブロックに切り出すと、段落だけでなくリスト項目・引用・
+                // テーブルまで打ち切ってしまう（`- item $$a$$ more` でリストが壊れた）。
+                // ブロックへの切り出しは、構造が分かっている復元側で行う。
+                processed += token
             }
         }
         return Extraction(processed: processed, captures: captures)
+    }
+
+    private static func sanitized(_ text: String) -> String {
+        guard text.contains(tokenStart) || text.contains(tokenEnd) else { return text }
+        return text.filter { $0 != tokenStart && $0 != tokenEnd }
     }
 
     // MARK: - Restore
@@ -56,11 +70,7 @@ enum MathPreprocessor {
     private static func restoreBlock(_ block: MarkdownBlock, captures: [Capture]) -> [MarkdownBlock] {
         switch block {
         case .paragraph(let inlines):
-            // A paragraph holding a single display-math token becomes a math block.
-            if let capture = soleDisplayCapture(of: inlines, captures: captures) {
-                return [.math(capture.latex)]
-            }
-            return [.paragraph(restoreInlines(inlines, captures: captures))]
+            return splitParagraph(inlines, captures: captures)
 
         case .heading(let level, let content):
             return [.heading(level: level, content: restoreInlines(content, captures: captures))]
@@ -80,6 +90,81 @@ enum MathPreprocessor {
         case .codeBlock, .thematicBreak, .mermaid, .math:
             return [block]
         }
+    }
+
+    /// 段落をディスプレイ数式の位置で分割し、数式を独立したブロックとして切り出す。
+    ///
+    /// 切り出しは AST 上で行う。抽出時に空行を挿す方式だと、その段落を包んでいる
+    /// リスト項目や引用ごと打ち切ってしまい、構造が壊れる。ここでは段落の内側だけを
+    /// 分けるので、リスト項目の中の数式はその項目の中に残る。
+    private static func splitParagraph(_ inlines: [MarkdownInline], captures: [Capture]) -> [MarkdownBlock] {
+        var blocks: [MarkdownBlock] = []
+        var pending: [MarkdownInline] = []
+
+        func flushParagraph() {
+            let restored = restoreInlines(pending, captures: captures)
+            pending = []
+            let hasContent = restored.contains { inline in
+                if case .text(let text) = inline { return !text.allSatisfy(\.isWhitespace) }
+                return true
+            }
+            if hasContent {
+                blocks.append(.paragraph(restored))
+            }
+        }
+
+        for inline in inlines {
+            guard case .text(let text) = inline, text.contains(tokenStart) else {
+                pending.append(inline)
+                continue
+            }
+            for piece in splitOnDisplayTokens(text, captures: captures) {
+                switch piece {
+                case .text(let run):
+                    pending.append(.text(run))
+                case .display(let latex):
+                    flushParagraph()
+                    blocks.append(.math(latex))
+                }
+            }
+        }
+        flushParagraph()
+        return blocks
+    }
+
+    private enum ParagraphPiece {
+        case text(String)
+        case display(String)
+    }
+
+    /// テキストランをディスプレイ数式トークンの位置で切り分ける。
+    /// インライン数式のトークンはそのまま残し、``restoreInlines`` に任せる。
+    private static func splitOnDisplayTokens(_ text: String, captures: [Capture]) -> [ParagraphPiece] {
+        var pieces: [ParagraphPiece] = []
+        var pending = ""
+        var index = text.startIndex
+        while index < text.endIndex {
+            let character = text[index]
+            if character == tokenStart,
+               let endIndex = text[index...].firstIndex(of: tokenEnd),
+               let captureIndex = Int(text[text.index(after: index)..<endIndex]),
+               captures.indices.contains(captureIndex),
+               captures[captureIndex].isDisplay {
+                if !pending.isEmpty {
+                    pieces.append(.text(pending))
+                    pending = ""
+                }
+                pieces.append(.display(captures[captureIndex].latex))
+                index = text.index(after: endIndex)
+            } else {
+                pending.append(character)
+                index = text.index(after: index)
+            }
+        }
+        if !pending.isEmpty {
+            pieces.append(.text(pending))
+        }
+        return pieces
     }
 
     private static func restoreListItem(_ item: ListItem, captures: [Capture]) -> ListItem {
@@ -188,33 +273,5 @@ enum MathPreprocessor {
             result.append(.text(pending))
         }
         return result
-    }
-
-    /// インラインがディスプレイ数式プレースホルダー1つだけから成る（空白を除く）場合、そのキャプチャを返す。
-    private static func soleDisplayCapture(of inlines: [MarkdownInline], captures: [Capture]) -> Capture? {
-        var token: String?
-        for inline in inlines {
-            switch inline {
-            case .text(let text):
-                let trimmedText = text.trimmingCharacters(in: .whitespaces)
-                if trimmedText.isEmpty { continue }
-                guard token == nil else { return nil }
-                token = trimmedText
-            case .softBreak, .hardBreak:
-                continue
-            default:
-                return nil
-            }
-        }
-        guard
-            let token,
-            token.first == tokenStart, token.last == tokenEnd,
-            let captureIndex = Int(token.dropFirst().dropLast()),
-            captures.indices.contains(captureIndex),
-            captures[captureIndex].isDisplay
-        else {
-            return nil
-        }
-        return captures[captureIndex]
     }
 }
