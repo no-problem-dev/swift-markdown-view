@@ -1,19 +1,27 @@
 name: Deploy DocC to GitHub Pages
 
+# DocC の生成物は git に入れない。以前は gh-pages ブランチへ push しており、
+# 生成物のみのブランチに 38 コミットが積み上がってリポジトリが 668 MB に達していた。
+# SPM は full clone するため、これを全利用者が引くことになる。
+# Actions の artifact 経由でデプロイすれば、ドキュメントは履歴に一切入らない。
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: "pages-docc"
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
+    name: Build documentation
     runs-on: macos-15
     steps:
       - name: Checkout
@@ -63,10 +71,25 @@ jobs:
           print("injected overview from", core)
           PY
 
-      - name: Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v4
+      # 静的ホスティングでは使わない。他の DocC カタログから参照させるための索引で、
+      # 合わせて 60 MB を超える。
+      - name: Drop cross-catalog link indexes
+        run: rm -f ./docs/linkable-entities.json ./docs/link-hierarchy.json
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
-          keep_files: true
+          path: ./docs
+
+  deploy:
+    name: Deploy
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
