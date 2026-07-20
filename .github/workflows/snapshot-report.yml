@@ -35,7 +35,10 @@ jobs:
         id: snapshot-test
         continue-on-error: true
         env:
-          SNAPSHOT_RECORD: "1"
+          # swift-snapshot-testing が読むのは SNAPSHOT_TESTING_RECORD。
+          # xcodebuild からテストランナープロセスへ渡すには TEST_RUNNER_ 接頭辞が要る。
+          # 以前は SNAPSHOT_RECORD を設定していたが、これはどこからも読まれていなかった。
+          TEST_RUNNER_SNAPSHOT_TESTING_RECORD: all
         run: |
           # Step 1: Run snapshot tests to generate images
           # WebView tests (Mermaid) are excluded on CI
@@ -56,7 +59,10 @@ jobs:
         if: always()
         continue-on-error: true
         env:
-          SNAPSHOT_RECORD: "1"
+          # swift-snapshot-testing が読むのは SNAPSHOT_TESTING_RECORD。
+          # xcodebuild からテストランナープロセスへ渡すには TEST_RUNNER_ 接頭辞が要る。
+          # 以前は SNAPSHOT_RECORD を設定していたが、これはどこからも読まれていなかった。
+          TEST_RUNNER_SNAPSHOT_TESTING_RECORD: all
         run: |
           # Step 2: Run gallery generator AFTER snapshots are recorded
           xcodebuild test \

@@ -228,8 +228,22 @@ MarkdownView("# Themed Markdown")
 | パッケージ | 用途 | 必須 |
 |-----------|------|------|
 | [swift-markdown](https://github.com/swiftlang/swift-markdown) | Markdown パーシング | ✅ |
-| [swift-design-system](https://github.com/no-problem-dev/swift-design-system) | デザイントークン | ✅ |
-| [HighlightSwift](https://github.com/appstefan/HighlightSwift) | シンタックスハイライト | オプション |
+| [swift-design-system](https://github.com/no-problem-dev/swift-design-system) | デザイントークン。`SwiftMarkdownView` は色・タイポグラフィ・余白・角丸をここから解決する | ✅ |
+| [HighlightSwift](https://github.com/appstefan/HighlightSwift) | シンタックスハイライト | `SwiftMarkdownViewHighlightJS` 利用時のみ |
+| [swift-latex-view](https://github.com/no-problem-dev/swift-latex-view) | LaTeX 組版（[SwiftMath](https://github.com/mgriebling/SwiftMath) を推移的に含む） | `SwiftMarkdownViewLaTeX` 利用時のみ |
+| [swift-visual-testing](https://github.com/no-problem-dev/swift-visual-testing) | スナップショットテスト | テスト時のみ |
+| [swift-docc-plugin](https://github.com/apple/swift-docc-plugin) | ドキュメント生成 | ビルドツールのみ |
+
+`swift-design-system` は本体ライブラリの必須依存であり、オプションではない。
+Markdown の描画だけが目的でも、これが一緒に入る点に注意。
+
+## サンプル
+
+動かせるサンプルアプリが [`Examples/`](./Examples) にある。
+
+- [`MarkdownPlayground`](./Examples/MarkdownPlayground) — 描画・テーマ・ブロックを跨いだ
+  選択を試せる iOS / macOS アプリ
+- [`ZennArticleSwiftUI`](./Examples/ZennArticleSwiftUI) — 実際の長文記事を描画する例
 
 ## ドキュメント
 

@@ -228,8 +228,22 @@ MarkdownView("# Themed Markdown")
 | Package | Purpose | Required |
 |---------|---------|----------|
 | [swift-markdown](https://github.com/swiftlang/swift-markdown) | Markdown parsing | Yes |
-| [swift-design-system](https://github.com/no-problem-dev/swift-design-system) | Design tokens | Yes |
-| [HighlightSwift](https://github.com/appstefan/HighlightSwift) | Syntax highlighting | Optional |
+| [swift-design-system](https://github.com/no-problem-dev/swift-design-system) | Design tokens — `SwiftMarkdownView` resolves colors, typography, spacing and radii through it | Yes |
+| [HighlightSwift](https://github.com/appstefan/HighlightSwift) | Syntax highlighting | Only with `SwiftMarkdownViewHighlightJS` |
+| [swift-latex-view](https://github.com/no-problem-dev/swift-latex-view) | LaTeX typesetting (pulls in [SwiftMath](https://github.com/mgriebling/SwiftMath)) | Only with `SwiftMarkdownViewLaTeX` |
+| [swift-visual-testing](https://github.com/no-problem-dev/swift-visual-testing) | Snapshot testing | Tests only |
+| [swift-docc-plugin](https://github.com/apple/swift-docc-plugin) | Documentation generation | Build tooling only |
+
+`swift-design-system` is a hard dependency of the core library, not an optional add-on.
+If you only need Markdown rendering, be aware that it comes along.
+
+## Examples
+
+Runnable sample apps live in [`Examples/`](./Examples):
+
+- [`MarkdownPlayground`](./Examples/MarkdownPlayground) — iOS and macOS app exercising
+  rendering, theming, and cross-block selection
+- [`ZennArticleSwiftUI`](./Examples/ZennArticleSwiftUI) — rendering a real long-form article
 
 ## Documentation
 
