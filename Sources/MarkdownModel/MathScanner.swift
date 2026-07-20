@@ -14,7 +14,7 @@ import Foundation
 /// ここを取りこぼすとコードブロックの中身が数式に置換されて表示が原文と食い違うため、
 /// 4 種すべてを認識する責務がこのスキャナにある。デリミター仕様は LaTeXCore の
 /// `MathSegmenter`（swift-latex-view）と共通であり、このポートでコアモジュールの依存をゼロに保つ。
-public enum MathScanner {
+package enum MathScanner {
 
     public enum Part: Equatable, Sendable {
         /// ソーステキスト。そのまま保持する。

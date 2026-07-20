@@ -41,7 +41,7 @@ public enum MarkdownTokenizer {
     /// フェンスの開閉を状態として追えるのはトークナイザだけなので、ブロック文脈を必要とする
     /// 層（ライブプレビューのインライン装飾・入力ルール）はここから受け取る。
     /// インラインコードは含めない。
-    public static func fencedCodeRanges(_ tokens: [MarkdownToken]) -> [TextSpan] {
+    package static func fencedCodeRanges(_ tokens: [MarkdownToken]) -> [TextSpan] {
         var merged: [TextSpan] = []
         for token in tokens where token.kind == .codeFence || token.kind == .codeBlock {
             // トークンは行末の改行を含まないので、連続する行の間には必ず 1 文字の隙間ができる。
@@ -59,6 +59,12 @@ public enum MarkdownTokenizer {
     }
 
     /// `offset` がフェンスコードの内側にあるか。
+    /// 指定オフセットがフェンスコードの内側かどうか。
+    ///
+    /// 独自の ``InputRule`` を書くときに要る — コードブロックの中では
+    /// オートフォーマットを効かせたくないため（同梱の `ListContinuationRule` が実例）。
+    /// トークン列そのものを扱う `tokenize` / `fencedCodeRanges` はハイライタ内部の
+    /// 都合なのでパッケージ内に閉じている。
     public static func isInsideFencedCode(_ text: String, offset: Int) -> Bool {
         let ranges = fencedCodeRanges(tokenize(text))
         var low = 0
@@ -95,7 +101,7 @@ public enum MarkdownTokenizer {
     }
 
     /// Markdown ソースを重複しないハイライトトークン列にトークナイズする。
-    public static func tokenize(_ source: String) -> [MarkdownToken] {
+    package static func tokenize(_ source: String) -> [MarkdownToken] {
         let units = Array(source.utf16)
         var tokens: [MarkdownToken] = []
         var fence: (char: UInt16, length: Int)? = nil

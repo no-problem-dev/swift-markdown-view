@@ -135,6 +135,14 @@
   - **移行**: 3 ターゲットを個別に import していた場合は
     `import SwiftMarkdownEditor` だけで足りる
 
+- **`MarkdownTokenizer` と `MathScanner` の公開面を狭めた。**
+  - `MarkdownTokenizer.isInsideFencedCode(_:offset:)` は **public のまま**。独自 `InputRule` が
+    コードブロック内でオートフォーマットを抑えるのに要る（同梱の `ListContinuationRule` が実例）
+  - `MarkdownTokenizer.tokenize(_:)` / `fencedCodeRanges(_:)` と `MathScanner` 全体は
+    `package` へ。いずれも呼び出し元がパッケージ内のハイライタ・前処理だけだった
+  - **移行**: 該当する外部ユースケースは想定していない。トークン列を直接扱う必要が
+    生じた場合は issue で相談してほしい
+
 - **`PlatformColor` / `PlatformFont` の二重定義を解消した。**
   `MarkdownAttributedKit` と `SwiftMarkdownEditorTextKit` が同名の public typealias を
   別々に宣言しており、両方を import した利用者のスコープで曖昧になっていた。
