@@ -40,15 +40,9 @@ public struct MarkdownView: View {
     }
 
     public var body: some View {
-        #if os(iOS) || os(macOS)
-        // iOS/macOS render the whole document into one TextKit 2 text view so
-        // selection runs continuously across blocks and Copy yields readable
-        // text. tvOS/watchOS (no UITextView/NSTextView host) keep the SwiftUI
-        // block renderer.
+        // ドキュメント全体を 1 つの TextKit 2 テキストビューに流し込む。
+        // ブロックを跨いで選択が連続し、コピーで読めるテキストが得られる。
         MarkdownTextKitBackend(content: content)
-        #else
-        BlockRenderer.render(content.blocks)
-        #endif
     }
 }
 

@@ -7,7 +7,7 @@ import DesignSystem
 enum MarkdownTypographyMapping {
 
     /// 見出しレベルに対応する Typography トークンを返す。
-    public static func typography(for headingLevel: Int) -> Typography {
+    static func typography(for headingLevel: Int) -> Typography {
         switch headingLevel {
         case 1: return .displayMedium
         case 2: return .headlineLarge
@@ -20,16 +20,16 @@ enum MarkdownTypographyMapping {
     }
 
     /// ボディテキスト（段落）のタイポグラフィ。
-    public static var body: Typography { .bodyLarge }
+    static var body: Typography { .bodyLarge }
 
     /// インラインコードのタイポグラフィ。
-    public static var inlineCode: Typography { .bodyMedium }
+    static var inlineCode: Typography { .bodyMedium }
 
     /// コードブロックのタイポグラフィ。
-    public static var codeBlock: Typography { .bodySmall }
+    static var codeBlock: Typography { .bodySmall }
 
     /// ブロッククォートテキストのタイポグラフィ。
-    public static var blockquote: Typography { .bodyLarge }
+    static var blockquote: Typography { .bodyLarge }
 }
 
 // MARK: - Markdown Spacing
@@ -38,37 +38,37 @@ enum MarkdownTypographyMapping {
 enum MarkdownSpacing {
 
     /// ブロック要素間のスペーシング。
-    public static func blockSpacing(_ scale: any SpacingScale) -> CGFloat {
+    static func blockSpacing(_ scale: any SpacingScale) -> CGFloat {
         scale.md
     }
 
     /// H1 の上部パディング。
-    public static func heading1TopPadding(_ scale: any SpacingScale) -> CGFloat {
+    static func heading1TopPadding(_ scale: any SpacingScale) -> CGFloat {
         scale.xl
     }
 
     /// H2 の上部パディング。
-    public static func heading2TopPadding(_ scale: any SpacingScale) -> CGFloat {
+    static func heading2TopPadding(_ scale: any SpacingScale) -> CGFloat {
         scale.lg
     }
 
     /// H3〜H6 の上部パディング。
-    public static func headingTopPadding(_ scale: any SpacingScale) -> CGFloat {
+    static func headingTopPadding(_ scale: any SpacingScale) -> CGFloat {
         scale.md
     }
 
     /// コードブロック内のパディング。
-    public static func codeBlockPadding(_ scale: any SpacingScale) -> CGFloat {
+    static func codeBlockPadding(_ scale: any SpacingScale) -> CGFloat {
         scale.md
     }
 
     /// ブロッククォートの左パディング。
-    public static func blockquoteLeftPadding(_ scale: any SpacingScale) -> CGFloat {
+    static func blockquoteLeftPadding(_ scale: any SpacingScale) -> CGFloat {
         scale.lg
     }
 
     /// リストアイテムのインデント。
-    public static func listIndent(_ scale: any SpacingScale) -> CGFloat {
+    static func listIndent(_ scale: any SpacingScale) -> CGFloat {
         scale.lg
     }
 }
@@ -79,52 +79,52 @@ enum MarkdownSpacing {
 enum MarkdownColors {
 
     /// ボディコンテンツのテキストカラー。
-    public static func bodyText(_ palette: any ColorPalette) -> Color {
+    static func bodyText(_ palette: any ColorPalette) -> Color {
         palette.onSurface
     }
 
     /// 見出しのテキストカラー。
-    public static func headingText(_ palette: any ColorPalette) -> Color {
+    static func headingText(_ palette: any ColorPalette) -> Color {
         palette.onSurface
     }
 
     /// リンクのカラー。
-    public static func link(_ palette: any ColorPalette) -> Color {
+    static func link(_ palette: any ColorPalette) -> Color {
         palette.primary
     }
 
     /// コードブロックの背景色。
-    public static func codeBlockBackground(_ palette: any ColorPalette) -> Color {
+    static func codeBlockBackground(_ palette: any ColorPalette) -> Color {
         palette.surfaceVariant
     }
 
     /// コードのテキストカラー。
-    public static func codeText(_ palette: any ColorPalette) -> Color {
+    static func codeText(_ palette: any ColorPalette) -> Color {
         palette.onSurfaceVariant
     }
 
     /// ブロッククォートのボーダーカラー。
-    public static func blockquoteBorder(_ palette: any ColorPalette) -> Color {
+    static func blockquoteBorder(_ palette: any ColorPalette) -> Color {
         palette.outlineVariant
     }
 
     /// ブロッククォートのテキストカラー。
-    public static func blockquoteText(_ palette: any ColorPalette) -> Color {
+    static func blockquoteText(_ palette: any ColorPalette) -> Color {
         palette.onSurfaceVariant
     }
 
     /// リストの箇条書きカラー。
-    public static func listBullet(_ palette: any ColorPalette) -> Color {
+    static func listBullet(_ palette: any ColorPalette) -> Color {
         palette.onSurfaceVariant
     }
 
     /// インラインコードの背景色。
-    public static func inlineCodeBackground(_ palette: any ColorPalette) -> Color {
+    static func inlineCodeBackground(_ palette: any ColorPalette) -> Color {
         palette.surfaceVariant
     }
 
     /// インラインコードのテキストカラー。
-    public static func inlineCodeText(_ palette: any ColorPalette) -> Color {
+    static func inlineCodeText(_ palette: any ColorPalette) -> Color {
         palette.onSurfaceVariant
     }
 }
@@ -135,12 +135,12 @@ enum MarkdownColors {
 enum MarkdownRadius {
 
     /// コードブロックのコーナー半径。
-    public static func codeBlock(_ scale: any RadiusScale) -> CGFloat {
+    static func codeBlock(_ scale: any RadiusScale) -> CGFloat {
         scale.md
     }
 
     /// インラインコードのコーナー半径。
-    public static func inlineCode(_ scale: any RadiusScale) -> CGFloat {
+    static func inlineCode(_ scale: any RadiusScale) -> CGFloat {
         scale.xs
     }
 }

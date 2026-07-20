@@ -4,11 +4,12 @@ import PackageDescription
 
 let package = Package(
     name: "swift-markdown-view",
+    // tvOS / watchOS は宣言しない。本パッケージは swift-design-system と swift-latex-view に
+    // 依存しており、どちらも iOS / macOS しか宣言していないため実際には解決・ビルドできない。
+    // 支えられていないプラットフォームを宣言すると、利用者は原因の分からない失敗に当たる。
     platforms: [
         .iOS(.v17),
-        .macOS(.v14),
-        .tvOS(.v17),
-        .watchOS(.v10)
+        .macOS(.v14)
     ],
     products: [
         .library(
@@ -101,6 +102,9 @@ let package = Package(
             name: "SwiftMarkdownViewLaTeX",
             dependencies: [
                 "SwiftMarkdownView",
+                // LaTeXMathRenderer が ColorPalette を直接使う。SwiftMarkdownView 経由で
+                // 暗黙に解決されていたが、本体から DesignSystem を外す際に壊れるため明示する。
+                .product(name: "DesignSystem", package: "swift-design-system"),
                 .product(name: "SwiftLaTeXView", package: "swift-latex-view")
             ]
         ),

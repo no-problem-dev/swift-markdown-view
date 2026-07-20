@@ -78,6 +78,10 @@ public struct CDNMermaidScriptProvider: MermaidScriptProvider {
 ///
 /// - Note: アプリターゲットのリソースに `mermaid.min.js` を追加する必要がある。
 ///   https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js からダウンロードできる。
+///
+/// - Important: バンドルにスクリプトが無い場合は CDN にフォールバックする。これは
+///   オフライン動作を期待した利用者にとって**外部通信が発生する**という性質の変化なので、
+///   デバッグビルドでは `assertionFailure` で停止させ、リソースの入れ忘れを出荷前に露見させる。
 public struct BundledMermaidScriptProvider: MermaidScriptProvider {
 
     /// Mermaid.js ファイルを含むバンドル。
@@ -100,7 +104,15 @@ public struct BundledMermaidScriptProvider: MermaidScriptProvider {
         if let url = bundle.url(forResource: filename, withExtension: "js") {
             return .localFile(url)
         }
-        // バンドルリソースが見つからない場合は CDN にフォールバック
+        // バンドル欠落はプログラマエラー。黙って CDN に落ちると、オフライン動作を
+        // 期待した利用者のアプリから気づかないまま外部通信が飛ぶ。
+        assertionFailure(
+            """
+            BundledMermaidScriptProvider: \(bundle.bundleIdentifier ?? "(unknown bundle)") に \
+            \(filename).js が見つかりません。CDN にフォールバックするため外部通信が発生します。\
+            アプリターゲットのリソースに追加するか、CDNMermaidScriptProvider を明示的に指定してください。
+            """
+        )
         return CDNMermaidScriptProvider().scriptSource
     }
 }
