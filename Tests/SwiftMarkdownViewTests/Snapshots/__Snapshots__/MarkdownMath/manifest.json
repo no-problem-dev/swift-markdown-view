@@ -1,0 +1,77 @@
+{
+  "generatedAt" : "2026-07-20T00:44:09Z",
+  "name" : "MarkdownMath",
+  "states" : {
+    "latex-display" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "latex-display.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "latex-display.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "latex-inline" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "latex-inline.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "latex-inline.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "latex-mixed" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "latex-mixed.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "latex-mixed.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "math-disabled" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "math-disabled.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "math-disabled.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "plain-fallback" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "plain-fallback.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "plain-fallback.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    }
+  },
+  "type" : "component"
+}
