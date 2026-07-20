@@ -55,7 +55,7 @@ struct ComplexDocumentSnapshotTests {
 
         For more details, see the [documentation](https://example.com).
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -111,7 +111,7 @@ struct ComplexDocumentSnapshotTests {
 
         MIT License
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -148,7 +148,7 @@ struct ComplexDocumentSnapshotTests {
         MarkdownView(content)
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))

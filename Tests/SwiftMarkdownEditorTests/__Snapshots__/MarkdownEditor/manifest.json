@@ -1,0 +1,49 @@
+{
+  "generatedAt" : "2026-07-20T07:56:38Z",
+  "name" : "MarkdownEditor",
+  "states" : {
+    "editMode" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "editMode.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "editMode.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "highlightingDetail" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "highlightingDetail.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "highlightingDetail.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    },
+    "previewMode" : {
+      "disableAnimations" : false,
+      "inNavigation" : false,
+      "snapshots" : [
+        {
+          "file" : "previewMode.light.png",
+          "theme" : "light"
+        },
+        {
+          "file" : "previewMode.dark.png",
+          "theme" : "dark"
+        }
+      ]
+    }
+  },
+  "type" : "component"
+}

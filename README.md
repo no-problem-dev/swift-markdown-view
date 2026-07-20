@@ -2,27 +2,36 @@
 
 English | [日本語](./README.ja.md)
 
-A SwiftUI-native Markdown rendering library.
+**Markdown live editing that works on both iOS and macOS** — plus the renderer it is built on.
+
+`MarkdownEditor` is a SwiftUI editor with live syntax highlighting, a customizable formatting
+toolbar, input rules, and a side-by-side preview on macOS. `MarkdownView` renders the whole
+document into a single TextKit 2 text view, so selection runs across blocks and Copy yields
+readable text.
 
 ![Swift 6.2+](https://img.shields.io/badge/Swift-6.2+-orange.svg)
 ![iOS 17+](https://img.shields.io/badge/iOS-17+-blue.svg)
 ![macOS 14+](https://img.shields.io/badge/macOS-14+-purple.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
+| Editing (light) | Rendered preview (dark) |
+|---|---|
+| <img src=".github/assets/editor-light.png" width="320" alt="MarkdownEditor in edit mode: formatting toolbar and live source highlighting"> | <img src=".github/assets/preview-dark.png" width="320" alt="Rendered Markdown in dark mode: heading, emphasis, lists, task item, blockquote, code block, link"> |
+
 ## Features
 
-- **Renderer and editor in one package**: `MarkdownEditor` gives you a live-preview Markdown
-  editor built on the same rendering engine — source highlighting, input rules for lists and
-  emphasis, and a split preview on macOS
-- **SwiftUI Native**: High-performance rendering using `NSTextStorage` + TextKit 2
-- **Continuous selection**: The whole document renders into one text view, so selection runs
-  across blocks and Copy yields readable text
-- **Rich Element Support**: Tables, task lists, images, Mermaid diagrams, math (LaTeX), and more
-- **Optional Syntax Highlighting**: 50+ languages via separate HighlightJS module
-- **No design-system lock-in**: Colors, metrics, and type sizes are plain protocols you implement.
+- **Editor on both platforms**: one `MarkdownEditor` for iOS and macOS. The macOS side is a full
+  `NSTextView` implementation, not a compatibility shim
+- **Customizable editing**: build the toolbar from an item array, inject your own controller, drive
+  commands programmatically, add input rules — see [Editor](#editor)
+- **Continuous selection**: the whole document renders into one text view, so selection runs across
+  blocks and Copy yields readable text
+- **Live preview**: hide inline markers and render in place while editing (Notion style). The plain
+  `.md` string stays the single source of truth
+- **Rich elements**: tables, task lists, images, Mermaid diagrams, math (LaTeX), asides
+- **Optional syntax highlighting**: 50+ languages via a separate HighlightJS module
+- **No design-system lock-in**: colors, metrics, and type sizes are plain protocols you implement.
   Defaults use system semantic colors and adapt to light/dark automatically
-- **Optional `swift-design-system` bridge**: Add `SwiftMarkdownViewDesignSystem` if your app already
-  uses it, and Markdown follows your app theme
 
 ## Quick Start
 
@@ -103,6 +112,109 @@ Add to your target:
 | Images | `![alt](url)` |
 | Strikethrough | `~~text~~` |
 | Inline Math | `$...$` / `\(...\)` |
+
+## Editor
+
+`MarkdownEditor` binds to a plain `String`. There is no intermediate document model to convert
+to and from — the Markdown text is the state.
+
+```swift
+import SwiftUI
+import SwiftMarkdownEditor
+
+struct EditorScreen: View {
+    @State private var text = "# Draft\n\nStart writing."
+
+    var body: some View {
+        MarkdownEditor(text: $text)
+    }
+}
+```
+
+`livePreview: true` hides inline markers and renders in place while you type; the caret's own line
+keeps its markers so you can still edit them.
+
+### Toolbar
+
+The toolbar is an ordered array of items. `.standard` is the built-in set; you can take part of it
+and add your own commands:
+
+```swift
+MarkdownEditor(text: $text, toolbar: [
+    .bold, .italic,
+    .separator,
+    .item(icon: "highlighter", label: "Highlight", key: "h") { controller in
+        guard let state = controller.state else { return }
+        controller.apply(MarkdownFormatting.wrap(
+            text: state.text, selection: state.selection, delimiter: "=="
+        ))
+    }
+])
+```
+
+`label` is required — icon-only buttons have no spoken name, and VoiceOver users would hear a row of
+indistinguishable buttons without it. Passing `key` adds a keyboard shortcut, which works on macOS
+and on iPad with a hardware keyboard. Shortcuts come from the item definitions, so replacing the
+toolbar does not silently drop them. Pass `[]` to hide the toolbar entirely.
+
+### Driving the editor from your own UI
+
+Inject a controller to send commands from anywhere, and bind `mode` to observe or set the current
+view mode:
+
+```swift
+struct EditorScreen: View {
+    @State private var text = ""
+    @State private var mode: MarkdownEditorMode = .edit
+    @StateObject private var controller = MarkdownEditorController()
+
+    var body: some View {
+        VStack {
+            Button("Bold") { controller.toggleBold() }
+            MarkdownEditor(text: $text, mode: $mode, toolbar: [], controller: controller)
+        }
+    }
+}
+```
+
+`controller.state` gives you the current text and selection; `controller.apply(_:)` applies an
+`EditTransform`. Together with the pure functions in `MarkdownFormatting`, that is enough to write
+any command. Undo and redo are handled by the system `UndoManager`, so your commands are undoable
+without extra work.
+
+### Input rules
+
+Input rules run as you type — continuing a list on Return, wrapping a selection when you type `*`.
+Add your own by conforming to `InputRule`:
+
+```swift
+struct MyRule: InputRule {
+    func transform(state: EditorState, inserting text: String, replacing range: TextSpan) -> RuleTransform? {
+        // return nil to let the next rule try
+    }
+}
+
+MarkdownEditor(
+    text: $text,
+    inputRules: InputRuleProcessor(rules: [MyRule()] + InputRuleProcessor.standard.rules)
+)
+```
+
+Rules are tried in order and the first match wins.
+
+### Editor theme
+
+Source highlighting colors come from `MarkdownEditorTheme`. The default is built from system
+semantic colors and follows light/dark automatically. Change a single token, or build a theme from
+four roles:
+
+```swift
+var theme = MarkdownEditorTheme.light
+theme.styles[.linkURL] = .init(color: .systemPurple, italic: true)
+
+MarkdownEditor(text: $text)
+    .markdownEditorTheme(theme)
+```
 
 ## Syntax Highlighting
 
@@ -265,8 +377,9 @@ If you only need Markdown rendering, be aware that it comes along.
 
 Runnable sample apps live in [`Examples/`](./Examples):
 
-- [`MarkdownPlayground`](./Examples/MarkdownPlayground) — iOS and macOS app exercising
-  rendering, theming, and cross-block selection
+- [`MarkdownPlayground`](./Examples/MarkdownPlayground) — iOS and macOS app with three tabs:
+  the **editor** (custom toolbar item, injected controller, observed mode), the element catalog,
+  and a cross-block selection showcase
 - [`ZennArticleSwiftUI`](./Examples/ZennArticleSwiftUI) — rendering a real long-form article
 
 ## Documentation

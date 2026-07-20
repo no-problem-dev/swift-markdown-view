@@ -6,16 +6,13 @@
 //
 
 import SwiftUI
-import DesignSystem
 
 @main
 struct ZennArticleSwiftUIApp: App {
-    @State private var themeProvider = ThemeProvider()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .theme(themeProvider)
         }
     }
 }

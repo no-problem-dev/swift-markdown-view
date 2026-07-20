@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		1903DAE52F0025F400BF0AED /* SwiftMarkdownView in Frameworks */ = {isa = PBXBuildFile; productRef = 1903DAE42F0025F400BF0AED /* SwiftMarkdownView */; };
 		1903DAE72F0025F400BF0AED /* SwiftMarkdownViewHighlightJS in Frameworks */ = {isa = PBXBuildFile; productRef = 1903DAE62F0025F400BF0AED /* SwiftMarkdownViewHighlightJS */; };
+		1903DAF12F0025F400BF0AED /* SwiftMarkdownEditor in Frameworks */ = {isa = PBXBuildFile; productRef = 1903DAF02F0025F400BF0AED /* SwiftMarkdownEditor */; };
+		1903DAF32F0025F400BF0AED /* SwiftMarkdownViewCatalog in Frameworks */ = {isa = PBXBuildFile; productRef = 1903DAF22F0025F400BF0AED /* SwiftMarkdownViewCatalog */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +32,8 @@
 			files = (
 				1903DAE72F0025F400BF0AED /* SwiftMarkdownViewHighlightJS in Frameworks */,
 				1903DAE52F0025F400BF0AED /* SwiftMarkdownView in Frameworks */,
+				1903DAF12F0025F400BF0AED /* SwiftMarkdownEditor in Frameworks */,
+				1903DAF32F0025F400BF0AED /* SwiftMarkdownViewCatalog in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +78,8 @@
 			packageProductDependencies = (
 				1903DAE42F0025F400BF0AED /* SwiftMarkdownView */,
 				1903DAE62F0025F400BF0AED /* SwiftMarkdownViewHighlightJS */,
+				1903DAF02F0025F400BF0AED /* SwiftMarkdownEditor */,
+				1903DAF22F0025F400BF0AED /* SwiftMarkdownViewCatalog */,
 			);
 			productName = MarkdownPlayground;
 			productReference = 1903DAD52F0025B500BF0AED /* MarkdownPlayground.app */;
@@ -364,6 +370,14 @@
 		1903DAE62F0025F400BF0AED /* SwiftMarkdownViewHighlightJS */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SwiftMarkdownViewHighlightJS;
+		};
+		1903DAF02F0025F400BF0AED /* SwiftMarkdownEditor */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SwiftMarkdownEditor;
+		};
+		1903DAF22F0025F400BF0AED /* SwiftMarkdownViewCatalog */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SwiftMarkdownViewCatalog;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

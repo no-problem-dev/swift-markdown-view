@@ -1,9 +1,7 @@
 import SwiftUI
-import DesignSystem
 
 struct ArticleListView: View {
     let articles: [Article]
-    @State private var showingDesignCatalog = false
 
     var body: some View {
         List(articles) { article in
@@ -13,28 +11,6 @@ struct ArticleListView: View {
         }
         .listStyle(.plain)
         .navigationTitle("Zenn Articles")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showingDesignCatalog = true
-                } label: {
-                    Image(systemName: "paintpalette")
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $showingDesignCatalog) {
-            NavigationStack {
-                DesignSystemCatalogView()
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button("Close") {
-                                showingDesignCatalog = false
-                            }
-                        }
-                    }
-            }
-            .theme(ThemeProvider())
-        }
     }
 }
 

@@ -8,15 +8,19 @@
 import SwiftUI
 import SwiftMarkdownView
 import SwiftMarkdownViewHighlightJS
-import DesignSystem
+import SwiftMarkdownViewCatalog
 
 @main
 struct MarkdownPlaygroundApp: App {
-    @State private var themeProvider = ThemeProvider()
 
     var body: some Scene {
         WindowGroup {
             TabView {
+                NavigationStack {
+                    EditorShowcaseView()
+                }
+                .tabItem { Label("エディタ", systemImage: "square.and.pencil") }
+
                 MarkdownCatalogView()
                     .tabItem { Label("カタログ", systemImage: "list.bullet.rectangle") }
 
@@ -25,7 +29,6 @@ struct MarkdownPlaygroundApp: App {
                 }
                 .tabItem { Label("選択・コピー", systemImage: "selection.pin.in.out") }
             }
-            .theme(themeProvider)
             .adaptiveSyntaxHighlighting()
         }
     }

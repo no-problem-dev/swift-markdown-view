@@ -2,25 +2,36 @@
 
 [English](./README.md) | 日本語
 
-SwiftUI ネイティブな Markdown レンダリングライブラリ。DesignSystem と統合し、美しい Markdown 表示を実現する。
+**iOS と macOS の両方で動く Markdown ライブ編集**と、その土台のレンダラ。
+
+`MarkdownEditor` はライブシンタックスハイライト・差し替え可能なフォーマットツールバー・
+入力ルール・macOS の分割プレビューを備えた SwiftUI エディタ。`MarkdownView` は
+ドキュメント全体を 1 つの TextKit 2 テキストビューに描画するため、ブロックを跨いで
+選択でき、コピーすると読めるテキストが得られる。
 
 ![Swift 6.2+](https://img.shields.io/badge/Swift-6.2+-orange.svg)
 ![iOS 17+](https://img.shields.io/badge/iOS-17+-blue.svg)
 ![macOS 14+](https://img.shields.io/badge/macOS-14+-purple.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
+| 編集中（ライト） | プレビュー（ダーク） |
+|---|---|
+| <img src=".github/assets/editor-light.png" width="320" alt="編集モードの MarkdownEditor: フォーマットツールバーとソースのライブハイライト"> | <img src=".github/assets/preview-dark.png" width="320" alt="ダークモードで描画した Markdown: 見出し・強調・リスト・タスク・引用・コードブロック・リンク"> |
+
 ## 特徴
 
-- **レンダラとエディタが 1 つのパッケージに**: `MarkdownEditor` は同じ描画エンジンの上に
-  作られたライブプレビュー付きエディタ。ソースのハイライト、リストや強調の入力ルール、
-  macOS では分割プレビューに対応
-- **SwiftUI ネイティブ**: `NSTextStorage` + TextKit 2 による高性能レンダリング
+- **両 OS で動くエディタ**: iOS と macOS で同じ `MarkdownEditor`。macOS 側は互換のための
+  張りぼてではなく `NSTextView` の完全実装
+- **編集をカスタマイズできる**: ツールバーを項目配列で組む、独自コントローラを注入する、
+  プログラムからコマンドを送る、入力ルールを足す — [エディタ](#エディタ)を参照
 - **連続選択**: ドキュメント全体を 1 つのテキストビューに描画するため、ブロックを跨いで
   選択でき、コピーすると読めるテキストが得られる
-- **豊富な要素サポート**: テーブル、タスクリスト、画像、Mermaid ダイアグラム、数式（LaTeX）等
+- **ライブプレビュー**: 編集中にインラインマーカーを隠してその場で描画する（Notion 風）。
+  プレーンな `.md` 文字列が唯一の正であることは変わらない
+- **豊富な要素**: テーブル、タスクリスト、画像、Mermaid ダイアグラム、数式（LaTeX）、Aside
 - **オプションのシンタックスハイライト**: 別モジュールで 50+ 言語対応（HighlightJS）
-- **DesignSystem 統合**: ColorPalette、Typography、Spacing とシームレスに連携
-- **カスタマイズ可能**: 環境値を通じたスタイル設定
+- **デザインシステムに縛られない**: 色・寸法・文字サイズは自分で実装するただのプロトコル。
+  既定はシステムの意味色で、ライト/ダークに自動追従する
 
 ## クイックスタート
 
@@ -101,6 +112,108 @@ dependencies: [
 | 画像 | `![alt](url)` |
 | 取り消し線 | `~~text~~` |
 | インライン数式 | `$...$` / `\(...\)` |
+
+## エディタ
+
+`MarkdownEditor` はプレーンな `String` にバインドする。行き来のための中間ドキュメントモデルは
+無く、Markdown テキストそのものが状態。
+
+```swift
+import SwiftUI
+import SwiftMarkdownEditor
+
+struct EditorScreen: View {
+    @State private var text = "# 下書き\n\n書き始める。"
+
+    var body: some View {
+        MarkdownEditor(text: $text)
+    }
+}
+```
+
+`livePreview: true` にすると、入力中にインラインマーカーを隠してその場で描画する。
+キャレットのある行だけはマーカーが残るので、そこは編集できる。
+
+### ツールバー
+
+ツールバーは項目の順序付き配列。`.standard` が既定の構成で、その一部を取って独自コマンドを
+足すこともできる:
+
+```swift
+MarkdownEditor(text: $text, toolbar: [
+    .bold, .italic,
+    .separator,
+    .item(icon: "highlighter", label: "マーカー", key: "h") { controller in
+        guard let state = controller.state else { return }
+        controller.apply(MarkdownFormatting.wrap(
+            text: state.text, selection: state.selection, delimiter: "=="
+        ))
+    }
+])
+```
+
+`label` は省略できない。アイコンだけのボタンには読み上げ名が無く、付けないと VoiceOver
+利用者には区別のつかないボタンが並ぶことになる。`key` を渡すとキーボードショートカットが
+付き、macOS とハードウェアキーボードのある iPad で効く。ショートカットは項目定義から
+供給されるので、ツールバーを差し替えても黙って失われることはない。`[]` を渡すと
+ツールバーを表示しない。
+
+### 自前の UI から操作する
+
+コントローラを注入すればどこからでもコマンドを送れる。`mode` を Binding にすると
+現在の表示モードを観測・変更できる:
+
+```swift
+struct EditorScreen: View {
+    @State private var text = ""
+    @State private var mode: MarkdownEditorMode = .edit
+    @StateObject private var controller = MarkdownEditorController()
+
+    var body: some View {
+        VStack {
+            Button("太字") { controller.toggleBold() }
+            MarkdownEditor(text: $text, mode: $mode, toolbar: [], controller: controller)
+        }
+    }
+}
+```
+
+`controller.state` で現在のテキストと選択が取れ、`controller.apply(_:)` で `EditTransform` を
+適用する。`MarkdownFormatting` の純関数と組み合わせれば、任意のコマンドが書ける。
+undo / redo はシステムの `UndoManager` が担うので、独自コマンドも何もしなくても取り消せる。
+
+### 入力ルール
+
+入力ルールは打鍵に合わせて走る — Return でリストを継続する、`*` を打つと選択を囲む、など。
+`InputRule` に適合すれば独自のルールを足せる:
+
+```swift
+struct MyRule: InputRule {
+    func transform(state: EditorState, inserting text: String, replacing range: TextSpan) -> RuleTransform? {
+        // nil を返すと次のルールに回る
+    }
+}
+
+MarkdownEditor(
+    text: $text,
+    inputRules: InputRuleProcessor(rules: [MyRule()] + InputRuleProcessor.standard.rules)
+)
+```
+
+ルールは順に試され、最初に一致したものが勝つ。
+
+### エディタのテーマ
+
+ソースの着色は `MarkdownEditorTheme` から来る。既定はシステムの意味色で構成されており、
+ライト/ダークに自動追従する。トークン単位で変えることも、4 つの役割から組み立てることもできる:
+
+```swift
+var theme = MarkdownEditorTheme.light
+theme.styles[.linkURL] = .init(color: .systemPurple, italic: true)
+
+MarkdownEditor(text: $text)
+    .markdownEditorTheme(theme)
+```
 
 ## シンタックスハイライト
 
@@ -187,31 +300,49 @@ graph TD
 - iOS 26+、macOS 26+: WebKit によるネイティブレンダリング
 - それ以前: フォールバック表示（コードブロックとして表示）
 
-## DesignSystem テーマの適用
+## テーマ
 
-`ThemeProvider` を View 階層に適用すると、カラー・タイポグラフィ・スペーシングの
-全デザイントークンがそこから解決される。
+既定はシステムの意味色なので、設定なしでライト/ダークどちらでも文字が読める。
+自分のデザインに合わせるには `MarkdownPalette` を実装する。外部依存は関わらない:
+
+```swift
+import SwiftMarkdownView
+
+struct BrandPalette: MarkdownPalette {
+    var text: Color { .primary }
+    var secondaryText: Color { .secondary }
+    var heading: Color { .indigo }
+    var link: Color { .blue }
+    var codeBackground: Color { Color.gray.opacity(0.12) }
+    var rule: Color { Color.gray.opacity(0.4) }
+}
+
+MarkdownView("# Themed Markdown")
+    .markdownPalette(BrandPalette())
+```
+
+`MarkdownMetrics`（段落間隔・インデント幅）と `MarkdownTypeScale`（本文と見出しのサイズ）も
+同様に `.markdownMetrics(_:)` / `.markdownTypeScale(_:)` で差し替える。
+
+### swift-design-system を使う場合
+
+アプリが既に `swift-design-system` を使っているなら、`SwiftMarkdownViewDesignSystem` product を
+追加すれば Markdown がアプリテーマに追従する:
 
 ```swift
 import DesignSystem
 import SwiftMarkdownView
+import SwiftMarkdownViewDesignSystem
 
-struct ContentView: View {
-    @State private var theme = ThemeProvider(initialMode: .dark)
-
-    var body: some View {
-        MarkdownView("# Themed Markdown")
-            .theme(theme)
-    }
-}
-```
-
-テーマ全体ではなく単一のトークンだけ差し替えたい場合は、具象型を注入する。
-
-```swift
 MarkdownView("# Themed Markdown")
-    .environment(\.colorPalette, DarkColorPalette())
+    .markdownTheme(themeProvider)
 ```
+
+エディタ側は `SwiftMarkdownEditorDesignSystem` の `.markdownEditorDesignSystemTheme()`。
+
+> `swift-design-system` はパッケージの依存としては今も解決される（オプションのブリッジ・
+> LaTeX・カタログが使うため）。変わったのは `SwiftMarkdownView` と `SwiftMarkdownEditor` が
+> それをリンクも公開もしなくなった点で、利用者のコードがその型に触れる必要はない。
 
 ## モジュール構成
 
@@ -221,6 +352,8 @@ MarkdownView("# Themed Markdown")
 | `SwiftMarkdownEditor` | ライブプレビュー付き Markdown エディタ |
 | `SwiftMarkdownViewHighlightJS` | オプションの HighlightJS シンタックスハイライト |
 | `SwiftMarkdownViewLaTeX` | オプションの LaTeX 数式レンダリング |
+| `SwiftMarkdownViewDesignSystem` | `swift-design-system` のトークンを Markdown のテーマへ写すオプションのブリッジ |
+| `SwiftMarkdownEditorDesignSystem` | エディタのテーマ向けの同ブリッジ |
 | `SwiftMarkdownViewCatalog` | 対応要素を一通り描画して見せるデモ画面。ライブラリの利用には不要 |
 
 ## 依存関係
@@ -228,21 +361,22 @@ MarkdownView("# Themed Markdown")
 | パッケージ | 用途 | 必須 |
 |-----------|------|------|
 | [swift-markdown](https://github.com/swiftlang/swift-markdown) | Markdown パーシング | ✅ |
-| [swift-design-system](https://github.com/no-problem-dev/swift-design-system) | デザイントークン。`SwiftMarkdownView` は色・タイポグラフィ・余白・角丸をここから解決する | ✅ |
+| [swift-design-system](https://github.com/no-problem-dev/swift-design-system) | デザイントークン。ブリッジ・LaTeX・カタログが使う | オプション |
 | [HighlightSwift](https://github.com/appstefan/HighlightSwift) | シンタックスハイライト | `SwiftMarkdownViewHighlightJS` 利用時のみ |
 | [swift-latex-view](https://github.com/no-problem-dev/swift-latex-view) | LaTeX 組版（[SwiftMath](https://github.com/mgriebling/SwiftMath) を推移的に含む） | `SwiftMarkdownViewLaTeX` 利用時のみ |
 | [swift-visual-testing](https://github.com/no-problem-dev/swift-visual-testing) | スナップショットテスト | テスト時のみ |
 | [swift-docc-plugin](https://github.com/apple/swift-docc-plugin) | ドキュメント生成 | ビルドツールのみ |
 
-`swift-design-system` は本体ライブラリの必須依存であり、オプションではない。
-Markdown の描画だけが目的でも、これが一緒に入る点に注意。
+`SwiftMarkdownView` と `SwiftMarkdownEditor` は `swift-design-system` をリンクしない。
+パッケージ全体としては依存の解決は走るが、利用者のコードがその型に触れる必要はない。
 
 ## サンプル
 
 動かせるサンプルアプリが [`Examples/`](./Examples) にある。
 
-- [`MarkdownPlayground`](./Examples/MarkdownPlayground) — 描画・テーマ・ブロックを跨いだ
-  選択を試せる iOS / macOS アプリ
+- [`MarkdownPlayground`](./Examples/MarkdownPlayground) — iOS / macOS アプリ。3 タブ構成で、
+  **エディタ**（独自ツールバー項目・コントローラ注入・モード観測）、要素カタログ、
+  ブロックを跨いだ選択のショーケース
 - [`ZennArticleSwiftUI`](./Examples/ZennArticleSwiftUI) — 実際の長文記事を描画する例
 
 ## ドキュメント

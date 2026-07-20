@@ -8,7 +8,6 @@
 
 import SwiftUI
 import SwiftMarkdownView
-import DesignSystem
 
 #if canImport(UIKit)
 import UIKit
@@ -25,7 +24,6 @@ private func readClipboard() -> String {
 }
 
 struct SelectionShowcaseView: View {
-    @Environment(\.colorPalette) private var colorPalette
 
     /// 直近にコピーした内容（クリップボード確認用）。
     @State private var clipboard: String = ""
@@ -35,7 +33,7 @@ struct SelectionShowcaseView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("見出し→段落→リスト→コード→表を横断してドラッグ選択し、長押し→コピー。下のボタンでクリップボードの中身を確認できます。")
                     .font(.footnote)
-                    .foregroundStyle(colorPalette.onSurfaceVariant)
+                    .foregroundStyle(.secondary)
 
                 MarkdownView(Self.sample)
 
@@ -49,7 +47,7 @@ struct SelectionShowcaseView: View {
                 if !clipboard.isEmpty {
                     Text("コピーされた内容:")
                         .font(.caption)
-                        .foregroundStyle(colorPalette.onSurfaceVariant)
+                        .foregroundStyle(.secondary)
                     Text(clipboard)
                         .font(.system(.footnote, design: .monospaced))
                         .textSelection(.enabled)
@@ -104,6 +102,5 @@ struct SelectionShowcaseView: View {
 #Preview {
     NavigationStack {
         SelectionShowcaseView()
-            .theme(ThemeProvider())
     }
 }

@@ -22,7 +22,7 @@ struct MathSnapshotTests {
     @Test
     func inlineInParagraph() {
         let view = MarkdownView(#"For $ax^2 + bx + c = 0$ with \(a \neq 0\), solutions exist."#)
-            .mathRenderer(LaTeXMathRenderer())
+            .markdownMathRenderer(LaTeXMathRenderer())
             .padding()
 
         VisualTesting.assertComponentSnapshot(
@@ -41,7 +41,7 @@ struct MathSnapshotTests {
 
         $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
         """)
-        .mathRenderer(LaTeXMathRenderer())
+        .markdownMathRenderer(LaTeXMathRenderer())
         .padding()
 
         VisualTesting.assertComponentSnapshot(
@@ -66,7 +66,7 @@ struct MathSnapshotTests {
 
         **Bold with math: $e^{i\\pi}$ inside.**
         """)
-        .mathRenderer(LaTeXMathRenderer())
+        .markdownMathRenderer(LaTeXMathRenderer())
         .padding()
 
         VisualTesting.assertComponentSnapshot(
@@ -107,7 +107,7 @@ struct MathSnapshotTests {
 
         $$E = mc^2$$
         """)
-        .mathRenderer(LaTeXMathRenderer())
+        .markdownMathRenderer(LaTeXMathRenderer())
         .markdownRenderingOptions(MarkdownRenderingOptions(renderMath: false))
         .padding()
 

@@ -38,7 +38,7 @@ struct ArticleDetailView: View {
                 // Note: Using a11y/xcode themes for best visibility
                 // a11y light has better contrast than xcode light
                 MarkdownView(article.content)
-                    .syntaxHighlighter(
+                    .markdownSyntaxHighlighter(
                         colorScheme == .dark
                             ? HighlightJSSyntaxHighlighter.xcodeDark
                             : HighlightJSSyntaxHighlighter.a11yLight

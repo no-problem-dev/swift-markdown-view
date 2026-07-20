@@ -35,7 +35,7 @@ struct CodeBlockSnapshotTests {
         without syntax highlighting
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -65,7 +65,7 @@ struct CodeBlockSnapshotTests {
         }
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -95,7 +95,7 @@ struct CodeBlockSnapshotTests {
         };
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -126,7 +126,7 @@ struct CodeBlockSnapshotTests {
                 self.age = age
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -157,7 +157,7 @@ struct CodeBlockSnapshotTests {
         }
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -189,7 +189,7 @@ struct CodeBlockSnapshotTests {
         }
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -224,7 +224,7 @@ struct CodeBlockSnapshotTests {
         end
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -255,7 +255,7 @@ struct CodeBlockSnapshotTests {
         VALUES (1, 'login');
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -284,7 +284,7 @@ struct CodeBlockSnapshotTests {
         }
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -315,7 +315,7 @@ struct CodeBlockSnapshotTests {
           name: myapp_db
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
@@ -348,7 +348,7 @@ struct CodeBlockSnapshotTests {
         echo "Deployment complete!"
         ```
         """)
-        .syntaxHighlighter(highlighter)
+        .markdownSyntaxHighlighter(highlighter)
         .padding()
 
         try? await Task.sleep(for: .seconds(highlightDelay))
