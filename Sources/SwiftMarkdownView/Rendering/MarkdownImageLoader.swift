@@ -28,14 +28,20 @@ enum MarkdownImageLoader {
         case undecodable
     }
 
-    static func load(_ source: String, policy: MarkdownImagePolicy) async -> Result<PlatformImage, Failure> {
+    /// - Parameter session: 取得に使うセッション。テストが `URLProtocol` を差し込むための seam で、
+    ///   通常は既定のまま。グローバルな可変状態を作らないよう引数で渡す。
+    static func load(
+        _ source: String,
+        policy: MarkdownImagePolicy,
+        session: URLSession = .shared
+    ) async -> Result<PlatformImage, Failure> {
         if let url = URL(string: source), let scheme = url.scheme?.lowercased() {
             switch scheme {
             case "http", "https":
                 guard policy.allowsRemoteImages else {
                     return .failure(.disallowedSource(source))
                 }
-                return await loadRemote(url, policy: policy)
+                return await loadRemote(url, policy: policy, session: session)
             case "file":
                 guard policy.allowsFileSystemAccess else {
                     return .failure(.disallowedSource(source))
@@ -87,18 +93,34 @@ enum MarkdownImageLoader {
 
     // MARK: - 経路ごとの読み込み
 
-    private static func loadRemote(_ url: URL, policy: MarkdownImagePolicy) async -> Result<PlatformImage, Failure> {
+    private static func loadRemote(_ url: URL, policy: MarkdownImagePolicy, session: URLSession) async -> Result<PlatformImage, Failure> {
         var request = URLRequest(url: url)
         request.timeoutInterval = policy.remoteTimeout
 
         let data: Data
         do {
-            let (received, response) = try await URLSession.shared.data(for: request)
-            // Content-Length を信じず実バイト数で判定する（ヘッダは詐称できる）。
-            if received.count > policy.maximumRemoteByteCount {
-                return .failure(.tooLarge(byteCount: received.count, limit: policy.maximumRemoteByteCount))
+            // 上限に達した時点で受信を打ち切る。`data(for:)` は本文を全部メモリに載せてから
+            // 返すので、そのあとで大きさを見ても遅い。悪意ある `![x](https://…/2gb.bin)` を
+            // 描画しようとしただけでメモリを使い切れてしまう。
+            // Content-Length は詐称できるので、判定は常に実受信バイト数で行う。
+            let (bytes, response) = try await session.bytes(for: request)
+
+            let limit = policy.maximumRemoteByteCount
+            // 申告が正直で上限超えなら、1 バイトも読まずに終わる。
+            // 詐称されていてもこの下のストリーミング判定で守られる。
+            let declared = response.expectedContentLength
+            if declared > 0 && declared > Int64(limit) {
+                return .failure(.tooLarge(byteCount: Int(declared), limit: limit))
             }
-            _ = response
+
+            var received = Data()
+            received.reserveCapacity(Swift.min(limit, 1 << 20))
+            for try await byte in bytes {
+                received.append(byte)
+                if received.count > limit {
+                    return .failure(.tooLarge(byteCount: received.count, limit: limit))
+                }
+            }
             data = received
         } catch {
             return .failure(.transport(error))
