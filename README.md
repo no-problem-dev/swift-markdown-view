@@ -11,10 +11,15 @@ A SwiftUI-native Markdown rendering library. Integrates with DesignSystem for be
 
 ## Features
 
+- **Renderer and editor in one package**: `MarkdownEditor` gives you a live-preview Markdown
+  editor built on the same rendering engine — source highlighting, input rules for lists and
+  emphasis, and a split preview on macOS
 - **SwiftUI Native**: High-performance rendering using `NSTextStorage` + TextKit 2
-- **DesignSystem Integration**: Seamless integration with ColorPalette, Typography, and Spacing
-- **Optional Syntax Highlighting**: 50+ languages via separate HighlightJS module
+- **Continuous selection**: The whole document renders into one text view, so selection runs
+  across blocks and Copy yields readable text
 - **Rich Element Support**: Tables, task lists, images, Mermaid diagrams, math (LaTeX), and more
+- **Optional Syntax Highlighting**: 50+ languages via separate HighlightJS module
+- **DesignSystem Integration**: Seamless integration with ColorPalette, Typography, and Spacing
 - **Customizable**: Style configuration through environment values
 
 ## Quick Start
@@ -213,9 +218,10 @@ MarkdownView("# Themed Markdown")
 | Module | Role |
 |--------|------|
 | `SwiftMarkdownView` | SwiftUI view entry point; includes `MarkdownModel` and `MarkdownAttributedKit` (re-exported) |
+| `SwiftMarkdownEditor` | Markdown editor with live preview |
 | `SwiftMarkdownViewHighlightJS` | Optional HighlightJS syntax highlighting |
 | `SwiftMarkdownViewLaTeX` | Optional LaTeX math rendering |
-| `SwiftMarkdownEditor` | Markdown editor with live preview |
+| `SwiftMarkdownViewCatalog` | Demo screens showing every supported element. Not needed to use the library |
 
 ## Dependencies
 

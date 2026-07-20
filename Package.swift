@@ -27,6 +27,12 @@ let package = Package(
         .library(
             name: "SwiftMarkdownEditor",
             targets: ["SwiftMarkdownEditor"]
+        ),
+        // 各機能を実際に描画して見せるデモ画面群。ライブラリの機能ではないので
+        // 本体には含めず、見たい人だけが opt-in する。
+        .library(
+            name: "SwiftMarkdownViewCatalog",
+            targets: ["SwiftMarkdownViewCatalog"]
         )
     ],
     dependencies: [
@@ -91,6 +97,17 @@ let package = Package(
                 .product(name: "DesignSystem", package: "swift-design-system")
             ]
         ),
+        // 機能デモのカタログ画面。本体から切り出してあるのは、デモは
+        // 「新機能を見せたい時」に、レンダラは「Markdown 仕様やレイアウトを直したい時」に
+        // 変わるため。同居させると、デモ画面の変更が本体のメジャーバンプを強制する。
+        .target(
+            name: "SwiftMarkdownViewCatalog",
+            dependencies: [
+                "SwiftMarkdownView",
+                .product(name: "DesignSystem", package: "swift-design-system")
+            ]
+        ),
+
         .target(
             name: "SwiftMarkdownViewHighlightJS",
             dependencies: [

@@ -11,10 +11,15 @@ SwiftUI ネイティブな Markdown レンダリングライブラリ。DesignSy
 
 ## 特徴
 
+- **レンダラとエディタが 1 つのパッケージに**: `MarkdownEditor` は同じ描画エンジンの上に
+  作られたライブプレビュー付きエディタ。ソースのハイライト、リストや強調の入力ルール、
+  macOS では分割プレビューに対応
 - **SwiftUI ネイティブ**: `NSTextStorage` + TextKit 2 による高性能レンダリング
-- **DesignSystem 統合**: ColorPalette、Typography、Spacing とシームレスに連携
-- **オプションのシンタックスハイライト**: 別モジュールで 50+ 言語対応（HighlightJS）
+- **連続選択**: ドキュメント全体を 1 つのテキストビューに描画するため、ブロックを跨いで
+  選択でき、コピーすると読めるテキストが得られる
 - **豊富な要素サポート**: テーブル、タスクリスト、画像、Mermaid ダイアグラム、数式（LaTeX）等
+- **オプションのシンタックスハイライト**: 別モジュールで 50+ 言語対応（HighlightJS）
+- **DesignSystem 統合**: ColorPalette、Typography、Spacing とシームレスに連携
 - **カスタマイズ可能**: 環境値を通じたスタイル設定
 
 ## クイックスタート
@@ -213,9 +218,10 @@ MarkdownView("# Themed Markdown")
 | モジュール | 役割 |
 |-----------|------|
 | `SwiftMarkdownView` | SwiftUI ビューエントリーポイント。`MarkdownModel`・`MarkdownAttributedKit` を内包（再エクスポート） |
+| `SwiftMarkdownEditor` | ライブプレビュー付き Markdown エディタ |
 | `SwiftMarkdownViewHighlightJS` | オプションの HighlightJS シンタックスハイライト |
 | `SwiftMarkdownViewLaTeX` | オプションの LaTeX 数式レンダリング |
-| `SwiftMarkdownEditor` | ライブプレビュー付き Markdown エディタ |
+| `SwiftMarkdownViewCatalog` | 対応要素を一通り描画して見せるデモ画面。ライブラリの利用には不要 |
 
 ## 依存関係
 
