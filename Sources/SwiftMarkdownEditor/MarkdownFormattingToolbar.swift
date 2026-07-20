@@ -16,23 +16,48 @@ struct MarkdownFormattingToolbar: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: spacing.xs) {
                 group {
-                    IconButton(icon: "bold", size: .small) { controller.bold() }
-                    IconButton(icon: "italic", size: .small) { controller.italic() }
-                    IconButton(icon: "strikethrough", size: .small) { controller.strikethrough() }
-                    IconButton(icon: "curlybraces", size: .small) { controller.code() }
+                    button("bold", label: "太字", key: "b") { controller.bold() }
+                    button("italic", label: "斜体", key: "i") { controller.italic() }
+                    button("strikethrough", label: "取り消し線", key: "x", modifiers: [.command, .shift]) {
+                        controller.strikethrough()
+                    }
+                    button("curlybraces", label: "インラインコード", key: "e") { controller.code() }
                 }
 
                 Divider().frame(height: 20)
 
                 group {
-                    IconButton(icon: "number", size: .small) { controller.toggleHeading() }
-                    IconButton(icon: "list.bullet", size: .small) { controller.bulletList() }
-                    IconButton(icon: "text.quote", size: .small) { controller.toggleQuote() }
-                    IconButton(icon: "link", size: .small) { controller.insertLink() }
+                    button("number", label: "見出し") { controller.toggleHeading() }
+                    button("list.bullet", label: "箇条書き") { controller.bulletList() }
+                    button("text.quote", label: "引用") { controller.toggleQuote() }
+                    button("link", label: "リンクを挿入", key: "k") { controller.insertLink() }
                 }
             }
             .padding(.horizontal, spacing.sm)
             .padding(.vertical, spacing.xs)
+        }
+    }
+
+    /// アイコンだけのボタンにラベルとショートカットを与える。
+    ///
+    /// - アイコンには読み上げ名が無いので、`accessibilityLabel` を必ず付ける。
+    ///   付けないと VoiceOver では 8 個のボタンが区別できない。
+    /// - ショートカットはツールバー側に置く。テキストビューを継承しなくても、
+    ///   ハードウェアキーボードのある iPad と macOS の両方で効く。
+    @ViewBuilder
+    private func button(
+        _ icon: String,
+        label: String,
+        key: KeyEquivalent? = nil,
+        modifiers: EventModifiers = .command,
+        action: @escaping () -> Void
+    ) -> some View {
+        let base = IconButton(icon: icon, size: .small, action: action)
+            .accessibilityLabel(label)
+        if let key {
+            base.keyboardShortcut(key, modifiers: modifiers)
+        } else {
+            base
         }
     }
 
