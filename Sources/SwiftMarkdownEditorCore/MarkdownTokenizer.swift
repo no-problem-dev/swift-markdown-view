@@ -31,6 +31,7 @@ public enum MarkdownTokenizer {
         static let lparen: UInt16 = 0x28    // (
         static let rparen: UInt16 = 0x29    // )
         static let dot: UInt16 = 0x2E       // .
+        static let backslash: UInt16 = 0x5C // \
         static let zero: UInt16 = 0x30
         static let nine: UInt16 = 0x39
     }
@@ -49,6 +50,10 @@ public enum MarkdownTokenizer {
         let units = Array(source.utf16)
         var tokens: [MarkdownToken] = []
         var fence: (char: UInt16, length: Int)? = nil
+        var inIndentedCode = false
+        // 文書の先頭は「直前が空行」と同じ扱い。インデントコードは段落を中断できない
+        // （CommonMark 4.4）ので、開始できるかどうかは直前行が空かで決まる。
+        var previousLineWasBlank = true
 
         var lineStart = 0
         let n = units.count
@@ -61,11 +66,29 @@ public enum MarkdownTokenizer {
             if contentEnd > lineStart && units[contentEnd - 1] == C.carriageReturn {
                 contentEnd -= 1
             }
-            scanLine(units, lineStart, contentEnd, fence: &fence, into: &tokens)
+            scanLine(
+                units, lineStart, contentEnd,
+                fence: &fence,
+                inIndentedCode: &inIndentedCode,
+                previousLineWasBlank: previousLineWasBlank,
+                into: &tokens
+            )
+            previousLineWasBlank = skipLeadingWhitespace(units, lineStart, contentEnd) == contentEnd
             if lineEnd == n { break }
             lineStart = lineEnd + 1
         }
         return tokens
+    }
+
+    /// 行頭のインデント幅。タブは 4 に展開する（CommonMark のタブストップ）。
+    private static func indentWidth(_ u: [UInt16], _ start: Int, _ end: Int) -> Int {
+        var width = 0
+        var i = start
+        while i < end, u[i] == C.space || u[i] == C.tab {
+            width += u[i] == C.tab ? 4 : 1
+            i += 1
+        }
+        return width
     }
 
     // MARK: - Line scanning
@@ -75,6 +98,8 @@ public enum MarkdownTokenizer {
         _ start: Int,
         _ end: Int,
         fence: inout (char: UInt16, length: Int)?,
+        inIndentedCode: inout Bool,
+        previousLineWasBlank: Bool,
         into tokens: inout [MarkdownToken]
     ) {
         guard start < end else { return }
@@ -95,9 +120,31 @@ public enum MarkdownTokenizer {
         }
 
         let contentStart = skipLeadingWhitespace(u, start, end)
+        let indent = indentWidth(u, start, end)
+        let isBlank = contentStart == end
+
+        // インデントコードブロック。プレビュー側（swift-markdown）はこれをコードとして描くので、
+        // ここで拾わないと同じ行が左では見出し・右ではコードになる。
+        // 空行は状態を変えない（CommonMark 4.4）。
+        if !isBlank {
+            if indent >= 4 {
+                if inIndentedCode || previousLineWasBlank {
+                    inIndentedCode = true
+                    tokens.append(MarkdownToken(range: TextSpan(lowerBound: start, upperBound: end), kind: .codeBlock))
+                    return
+                }
+            } else {
+                inIndentedCode = false
+            }
+        } else if inIndentedCode {
+            return
+        }
 
         // Opening code fence.
-        if let fenceRun = leadingFenceRun(u, contentStart, end) {
+        // 開きフェンスのインデントは 3 まで（CommonMark 4.5）。上限を設けないと、
+        // 段落の継続行にある字下げされた ``` でフェンスが開き、以降の文書全体が
+        // コードとして着色され続ける。閉じフェンス側の無制限は意図的なので触らない。
+        if indent <= 3, let fenceRun = leadingFenceRun(u, contentStart, end) {
             tokens.append(MarkdownToken(range: TextSpan(lowerBound: start, upperBound: end), kind: .codeFence))
             fence = (fenceRun.char, fenceRun.length)
             return
@@ -150,6 +197,12 @@ public enum MarkdownTokenizer {
         while i < end {
             let c = u[i]
             switch c {
+            case C.backslash:
+                // エスケープされた文字はデリミターにならない（CommonMark 6.1）。
+                // 拾うと `\*not em\*` の `*` が強調マーカーとして着色され、
+                // プレビュー側がリテラルとして描くのと食い違う。
+                i += 2
+
             case C.backtick:
                 if let span = codeSpan(u, i, end) {
                     tokens.append(MarkdownToken(range: TextSpan(lowerBound: i, upperBound: span), kind: .inlineCode))

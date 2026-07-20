@@ -21,6 +21,7 @@ public enum InlineSpanParser {
         static let star: UInt16 = 0x2A
         static let underscore: UInt16 = 0x5F
         static let tilde: UInt16 = 0x7E
+        static let backslash: UInt16 = 0x5C
     }
 
     public static func parse(_ text: String) -> [InlineSpan] {
@@ -48,6 +49,11 @@ public enum InlineSpanParser {
         var codeRanges: [Range<Int>] = []
         var i = start
         while i < end {
+            // バックスラッシュエスケープ。`\`` はコードスパンを開かない（CommonMark 6.1）。
+            if u[i] == C.backslash {
+                i += 2
+                continue
+            }
             if u[i] == C.backtick {
                 let openEnd = runEnd(u, i, end, of: C.backtick)
                 let len = openEnd - i
@@ -79,6 +85,13 @@ public enum InlineSpanParser {
         i = start
         while i < end {
             let c = u[i]
+            // エスケープされたデリミターは文字そのもの。`\*not em\*` を強調にすると、
+            // プレビュー側（swift-markdown）がリテラルとして描くのと食い違う。
+            // コードスパンの中ではバックスラッシュはエスケープしない（CommonMark 6.1）。
+            if c == C.backslash, !inAnyRange(i, codeRanges) {
+                i += 2
+                continue
+            }
             guard c == C.star || c == C.underscore || c == C.tilde, !inAnyRange(i, codeRanges) else {
                 i += 1
                 continue
