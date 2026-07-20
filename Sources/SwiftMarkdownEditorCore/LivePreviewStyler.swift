@@ -38,7 +38,10 @@ public enum LivePreviewStyler {
     ///   - selection: 現在のセレクション。編集中でない場合は `nil`。
     ///   - focused: エディタがフォーカスされているかどうか。`false` のとき全て非表示になる（読み取り専用のレンダリング状態）。
     public static func runs(text: String, selection: Selection?, focused: Bool) -> [StyleRun] {
-        let activeLine = (focused ? selection : nil).map { activeLineSpan(text: text, selection: $0) }
+        // 行境界は一度だけ求める。スパンごとに全文を走査すると文書長に対して二次になり、
+        // 打鍵とカーソル移動のたびに走るためエディタが実用にならない。
+        let lines = LineIndex(text)
+        let activeLine = (focused ? selection : nil).map { activeLineSpan(lines: lines, selection: $0) }
 
         var runs: [StyleRun] = []
 
@@ -47,7 +50,7 @@ public enum LivePreviewStyler {
         // ここで渡して除外する。渡さないと ```` ```let a = **b** ``` ```` の `**` が
         // conceal されて、ユーザーのソースコードから記号が消えて表示される。
         let tokens = MarkdownTokenizer.tokenize(text)
-        appendHeadingRuns(text: text, tokens: tokens, activeLine: activeLine, into: &runs)
+        appendHeadingRuns(lines: lines, tokens: tokens, activeLine: activeLine, into: &runs)
 
         let verbatim = verbatimRanges(in: tokens)
         for span in InlineSpanParser.parse(text) {
@@ -59,7 +62,7 @@ public enum LivePreviewStyler {
             }
 
             // Markers are concealed unless this span's line is active.
-            let revealed = activeLine.map { $0.overlaps(spanLine(text: text, span: span)) } ?? false
+            let revealed = activeLine.map { $0.overlaps(lines.lineRange(containing: span.fullRange.lowerBound)) } ?? false
             if !revealed {
                 for marker in span.markerRanges {
                     runs.append(StyleRun(range: marker, trait: .conceal))
@@ -114,7 +117,7 @@ public enum LivePreviewStyler {
     /// 各 ATX 見出しのコンテンツに `.heading(level)` ランを出力し、`#…` マーカー（および直後のスペース）を非表示にする。
     /// ただし見出しの行がアクティブな場合はマーカーを表示する（インラインスパンのマーカー表示ルールと一致）。
     private static func appendHeadingRuns(
-        text: String,
+        lines: LineIndex,
         tokens: [MarkdownToken],
         activeLine: TextSpan?,
         into runs: inout [StyleRun]
@@ -134,7 +137,7 @@ public enum LivePreviewStyler {
                 i += 1
             }
 
-            let line = text.lineRange(containing: marker.lowerBound)
+            let line = lines.lineRange(containing: marker.lowerBound)
             let revealed = activeLine.map { $0.overlaps(line) } ?? false
             if !revealed, concealUpper > marker.lowerBound {
                 runs.append(StyleRun(
@@ -157,15 +160,10 @@ public enum LivePreviewStyler {
         }
     }
 
-    /// スパンの開きマーカーが位置する行の範囲。
-    private static func spanLine(text: String, span: InlineSpan) -> TextSpan {
-        text.lineRange(containing: span.fullRange.lowerBound)
-    }
-
     /// セレクションが触れる行の合計範囲（anchor 行から head 行まで）。
-    private static func activeLineSpan(text: String, selection: Selection) -> TextSpan {
-        let lower = text.lineRange(containing: selection.range.lowerBound).lowerBound
-        let upper = text.lineRange(containing: selection.range.upperBound).upperBound
+    private static func activeLineSpan(lines: LineIndex, selection: Selection) -> TextSpan {
+        let lower = lines.lineRange(containing: selection.range.lowerBound).lowerBound
+        let upper = lines.lineRange(containing: selection.range.upperBound).upperBound
         return TextSpan(lowerBound: lower, upperBound: upper)
     }
 }

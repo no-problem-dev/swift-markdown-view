@@ -38,6 +38,15 @@ public enum MarkdownTokenizer {
 
     private static func isDigit(_ u: UInt16) -> Bool { u >= C.zero && u <= C.nine }
 
+    private static func firstIndex(of unit: UInt16, _ u: [UInt16], _ start: Int, _ end: Int) -> Int? {
+        var i = start
+        while i < end {
+            if u[i] == unit { return i }
+            i += 1
+        }
+        return nil
+    }
+
     private static func isAlphanumeric(_ u: UInt16) -> Bool {
         isDigit(u)
             || (u >= 0x41 && u <= 0x5A) // A-Z
@@ -217,8 +226,14 @@ public enum MarkdownTokenizer {
                     tokens.append(MarkdownToken(range: TextSpan(lowerBound: link.textStart, upperBound: link.textEnd), kind: .linkText))
                     tokens.append(MarkdownToken(range: TextSpan(lowerBound: link.urlStart, upperBound: link.urlEnd), kind: .linkURL))
                     i = link.urlEnd
+                } else if let close = firstIndex(of: C.rbracket, u, i, end) {
+                    // この `]` は i 以降のどの `[` から見ても「最初の `]`」なので、
+                    // その手前から始めても同じ理由で失敗する。1 文字ずつ進めると
+                    // 閉じない `[` が多い行で行長に対して二次に膨らむ。
+                    i = close + 1
                 } else {
-                    i += 1
+                    // 行内に `]` が無い。以降どこから始めてもリンクにはならない。
+                    i = end
                 }
 
             case C.star, C.underscore:
