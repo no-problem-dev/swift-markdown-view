@@ -1,0 +1,11 @@
+version: 1
+builder:
+  configs:
+    - documentation_targets:
+        - SwiftMarkdownEditor
+        - SwiftMarkdownEditorDesignSystem
+        - SwiftMarkdownView
+        - SwiftMarkdownViewCatalog
+        - SwiftMarkdownViewDesignSystem
+        - SwiftMarkdownViewHighlightJS
+        - SwiftMarkdownViewLaTeX
