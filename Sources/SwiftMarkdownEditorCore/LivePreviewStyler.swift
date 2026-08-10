@@ -1,17 +1,19 @@
 import Foundation
 
-/// ある範囲への単一スタイル貢献。貢献は *加算的* で、
-/// TextKit 層がベース属性にマージする（例：`italic` 済み範囲に `bold` を適用すると bold-italic になる）。
-/// `conceal` 範囲はコンテンツ範囲と重複しないため衝突は起きない。
+/// One style contribution to one range.
+///
+/// Contributions are *additive*: the TextKit layer merges each one into the base attributes, so
+/// applying `bold` to an already italic range yields bold-italic. Conceal ranges never overlap
+/// content ranges, so the two cannot collide.
 package struct StyleRun: Equatable, Sendable {
     package enum Trait: Equatable, Sendable {
         case bold
         case italic
         case monospace
         case strikethrough
-        /// ATX 見出しのコンテンツ — レベル（1–6）に応じて大きく太字でレンダリングされる。
+        /// The content of an ATX heading, rendered large and bold according to its level (1–6).
         case heading(level: Int)
-        /// テキストを保持したまま範囲を視覚的に非表示にする（マーカー用）。
+        /// Hides the range visually while keeping its text, used for delimiter markers.
         case conceal
     }
 
@@ -24,31 +26,35 @@ package struct StyleRun: Equatable, Sendable {
     }
 }
 
-/// ライブプレビューのスタイルを計算する。コンテンツにスタイルを適用し、デリミタマーカーを非表示にする。
-/// ただしセレクションが触れる行ではマーカーを表示する
-/// （Obsidian/Typora の「カーソル行はソースを表示」ルール。CodeMirror 6 および swift-markdown-engine で確認済み）。
+/// Computes live preview styling: content gets its styles, delimiter markers are hidden.
 ///
-/// 純粋で UI に依存しない。セマンティックな ``StyleRun`` を返し、
-/// TextKit 層が `conceal` をクリアカラー＋極小フォント＋負カーニングで実装し、
-/// 各トレイトをフォントのシンボリックトレイトにマッピングする。
+/// Markers stay visible on the lines the selection touches — the "show the source on the cursor
+/// line" rule from Obsidian and Typora, also confirmed in CodeMirror 6 and swift-markdown-engine.
+///
+/// Pure and UI-independent. It returns semantic ``StyleRun`` values; the TextKit layer implements
+/// `conceal` with a clear color, a near-zero font size and negative kerning, and maps every other
+/// trait onto the font's symbolic traits.
 package enum LivePreviewStyler {
 
+    /// The style runs for a document, given where the caret is.
+    ///
     /// - Parameters:
-    ///   - text: ドキュメントのソーステキスト。
-    ///   - selection: 現在のセレクション。編集中でない場合は `nil`。
-    ///   - focused: エディタがフォーカスされているかどうか。`false` のとき全て非表示になる（読み取り専用のレンダリング状態）。
+    ///   - text: The document's source text.
+    ///   - selection: The current selection, or `nil` when nothing is being edited.
+    ///   - focused: Whether the editor has focus. When `false`, every marker is concealed, which is
+    ///     the read-only rendered state.
     package static func runs(text: String, selection: Selection?, focused: Bool) -> [StyleRun] {
-        // 行境界は一度だけ求める。スパンごとに全文を走査すると文書長に対して二次になり、
-        // 打鍵とカーソル移動のたびに走るためエディタが実用にならない。
+        // Resolve line boundaries once. Scanning the whole text per span is quadratic in document
+        // length, and this runs on every keystroke and caret move, so the editor becomes unusable.
         let lines = LineIndex(text)
         let activeLine = (focused ? selection : nil).map { activeLineSpan(lines: lines, selection: $0) }
 
         var runs: [StyleRun] = []
 
-        // ブロック構造はトークナイザだけが知っている（フェンスの開閉を状態として追う）。
-        // インラインスパンの解析器は行単位でブロック文脈を持たないため、フェンスの範囲を
-        // ここで渡して除外する。渡さないと ```` ```let a = **b** ``` ```` の `**` が
-        // conceal されて、ユーザーのソースコードから記号が消えて表示される。
+        // Only the tokenizer knows the block structure, since it tracks fences opening and closing
+        // as state. The inline span parser works line by line and has no block context, so the
+        // fenced ranges are handed over here and excluded. Without that, the `**` inside
+        // ```` ```let a = **b** ``` ```` gets concealed and the symbols vanish from the user's code.
         let tokens = MarkdownTokenizer.tokenize(text)
         appendHeadingRuns(lines: lines, tokens: tokens, activeLine: activeLine, into: &runs)
 
@@ -74,8 +80,10 @@ package enum LivePreviewStyler {
 
     // MARK: - Verbatim (fenced code) regions
 
-    /// 昇順・非重複の範囲列に対する二分探索。スパンごとに線形探索すると文書長に対して
-    /// 二次になるため、探索側で潰しておく。
+    /// Binary search over ascending, non-overlapping ranges.
+    ///
+    /// A linear scan per span would be quadratic in document length, so the cost is paid here
+    /// instead.
     private static func isInsideVerbatim(_ span: TextSpan, _ ranges: [TextSpan]) -> Bool {
         var low = 0
         var high = ranges.count - 1
@@ -95,8 +103,10 @@ package enum LivePreviewStyler {
 
     // MARK: - Block headings
 
-    /// 各 ATX 見出しのコンテンツに `.heading(level)` ランを出力し、`#…` マーカー（および直後のスペース）を非表示にする。
-    /// ただし見出しの行がアクティブな場合はマーカーを表示する（インラインスパンのマーカー表示ルールと一致）。
+    /// Emits a heading run for every ATX heading and conceals its `#…` marker.
+    ///
+    /// The concealed range covers the marker and the space that follows it. As with inline span
+    /// markers, the marker stays visible while the heading's line is the active one.
     private static func appendHeadingRuns(
         lines: LineIndex,
         tokens: [MarkdownToken],
@@ -141,7 +151,7 @@ package enum LivePreviewStyler {
         }
     }
 
-    /// セレクションが触れる行の合計範囲（anchor 行から head 行まで）。
+    /// The combined range of the lines the selection touches, from the anchor's line to the head's.
     private static func activeLineSpan(lines: LineIndex, selection: Selection) -> TextSpan {
         let lower = lines.lineRange(containing: selection.range.lowerBound).lowerBound
         let upper = lines.lineRange(containing: selection.range.upperBound).upperBound

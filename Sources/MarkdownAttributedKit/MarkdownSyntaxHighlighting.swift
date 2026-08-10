@@ -5,21 +5,24 @@ import UIKit
 import AppKit
 #endif
 
-/// コード文字列のシンタックスハイライト属性を生成する内部プロトコル。
+/// Produces the syntax highlighting attributes for a string of code.
 ///
-/// 実際のハイライター（例: JavaScriptCore 経由の Highlight.js）はメインアクター外で動くため非同期。
-/// `nil` を返した場合、コードはカラー書式なしのプレーンテキストとして表示する。
-/// UI 非依存: 結果は Foundation の `AttributedString` で、前景色をストレージに移植する。
+/// Real highlighters — Highlight.js through JavaScriptCore, for one — run off the main actor, hence the
+/// asynchrony. Returning `nil` displays the code as plain text with no color. The result is a Foundation
+/// `AttributedString`, which keeps this layer free of UI: only its foreground colors are transplanted
+/// into the storage.
 ///
-/// > Note: ユーザー向けの公開 API は ``SyntaxHighlighter`` プロトコルを使用すること。
-/// > `MarkdownCodeHighlighting` はレンダリングパイプライン内部の低レベルインタフェースであり、
-/// > `throws` なし・`Optional` 返り値という制約を持つ。`SyntaxHighlighter` は `throws` に対応し、
-/// > `.markdownSyntaxHighlighter(_:)` モディファイア経由で注入する。
+/// > Note: The client-facing API is the `SyntaxHighlighter` protocol, injected with the
+/// > `.markdownSyntaxHighlighter(_:)` modifier. `MarkdownCodeHighlighting` is the low-level interface
+/// > inside the rendering pipeline, and differs in returning an optional: `nil` means "leave the code
+/// > uncolored", whereas a `SyntaxHighlighter` must always return a string.
 package protocol MarkdownCodeHighlighting: Sendable {
     func highlightedCode(_ code: String, language: String?) async throws -> AttributedString?
 }
 
-/// 構築済み属性文字列内で ``NSAttributedString/Key/markdownCodeLanguage`` タグによって特定されるコード領域。
+/// A region of code inside the built attributed string.
+///
+/// Located by its ``NSAttributedString/Key/markdownCodeLanguage`` tag.
 package struct MarkdownCodeRegion: Equatable {
     public let range: NSRange
     public let language: String?
@@ -28,7 +31,10 @@ package struct MarkdownCodeRegion: Equatable {
 
 package enum MarkdownSyntaxHighlighting {
 
-    /// ドキュメント順にすべてのコード領域を返す。範囲はコードテキストのみ（ブロック区切りを含まない）のため、ハイライターの出力が 1:1 で対応する。
+    /// Every code region in the document, in document order.
+    ///
+    /// A range covers the code text only, excluding the block separator, so a highlighter's output lines
+    /// up with it one to one.
     public static func regions(in attributed: NSAttributedString) -> [MarkdownCodeRegion] {
         var result: [MarkdownCodeRegion] = []
         let full = NSRange(location: 0, length: attributed.length)
@@ -44,7 +50,13 @@ package enum MarkdownSyntaxHighlighting {
         return result
     }
 
-    /// ハイライター生成の `AttributedString` から前景色を `storage` の `range` に移植し、等幅フォント・段落スタイル・ブロックデコレーションを保持する。文字数不一致の場合は何もしない（ハイライターは同一文字を返さなければならない）。
+    /// Transplants the foreground colors of a highlighter's output into a range of the storage.
+    ///
+    /// Only colors are copied, so the monospaced font, the paragraph style, and the block decoration all
+    /// survive.
+    ///
+    /// - Returns: `false` when the highlighted text is not the same length as the range — a highlighter
+    ///   must return exactly the characters it was given — leaving the storage untouched.
     @discardableResult
     public static func applyForegroundColors(
         from highlighted: AttributedString,

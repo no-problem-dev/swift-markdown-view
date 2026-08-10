@@ -2,7 +2,7 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// テキストスタイル要素（太字・斜体・取り消し線）のカタログ View。
+/// Bold, italic, bold-italic, and strikethrough.
 public struct TextStylesCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

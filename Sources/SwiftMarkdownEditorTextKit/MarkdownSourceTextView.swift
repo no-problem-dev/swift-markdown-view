@@ -8,28 +8,34 @@ import UIKit
 import AppKit
 #endif
 
-/// TextKit 2 の `UITextView`/`NSTextView` をラップした SwiftUI コンポーネント。
-/// Markdown ソースをライブシンタックスハイライト付きで編集する。
+/// A SwiftUI view that edits Markdown source with live syntax highlighting.
 ///
-/// 設計上の注意（エディタ戦略より）:
-/// - TextKit 2（`usingTextLayoutManager: true`）上に構築。`.layoutManager` には触れず、
-///   これを触ると TextKit 1 に静かにフォールバックする。
-/// - ハイライトは属性のみで変更時に再適用し、セレクションを保持する。
-/// - Markdown のスマートクォート・ダッシュは無効化 — `*`/`-`/`"` の構文を破壊するため。
-/// - オートフォーマット（リスト継続・スマートラッピング）はルール層の
-///   純粋な ``InputRuleProcessor`` を通じてルーティングされる。
+/// It wraps `UITextView` on iOS and `NSTextView` on macOS. Things worth knowing about the bridge:
+///
+/// - The iOS text view runs on TextKit 2 (`usingTextLayoutManager: true`). Do not reach for
+///   `.layoutManager`: touching it silently drops the view back to TextKit 1.
+/// - The macOS text view comes from `NSTextView.scrollableTextView()`, which vends a TextKit 1 view.
+///   Highlighting is attribute-only and behaves identically there.
+/// - Highlighting changes attributes only, is re-applied on every edit, and preserves the selection.
+/// - Smart quotes and smart dashes are turned off: they corrupt `*`, `-`, and `"` syntax.
+/// - Autoformatting such as list continuation is routed through the pure `InputRuleProcessor` in
+///   the rules layer.
 public struct MarkdownSourceTextView {
 
     @Binding public var text: String
     public var theme: MarkdownEditorTheme
     public var inputRules: InputRuleProcessor
     public var isEditable: Bool
-    /// `true` のとき、インラインマーカーを非表示にしてソースをインプレースレンダリングする
-    /// （Notion スタイルのライブプレビュー）。キャレットが触れる行ではマーカーが表示される。
-    /// `false` のときマーカーはソースハイライト付きで表示される。
+    /// Renders the source in place with the inline markers hidden.
+    ///
+    /// The markers reappear on the lines the selection touches, and stay hidden everywhere while the
+    /// editor is not focused. When `false`, markers stay visible with plain source highlighting.
     public var livePreview: Bool
-    /// テキストビューが作成されたときに受け取るコールバック
-    /// （SwiftUI ツールバーからコントローラがフォーマットアクションを操作できるようにする）。
+
+    /// Called once with the text view, as it is created.
+    ///
+    /// This is how a ``MarkdownEditorController`` gets hold of the view, so that a SwiftUI toolbar
+    /// can drive formatting actions on it.
     public var onMakeTextView: ((PlatformTextView) -> Void)?
 
     public init(
@@ -53,8 +59,9 @@ public struct MarkdownSourceTextView {
         Coordinator(text: $text, theme: theme, inputRules: inputRules, livePreview: livePreview)
     }
 
-    /// スタイルに影響する入力のハッシュ。`updateUIView`/`updateNSView` はこれが変わったときのみ再スタイルし、
-    /// レイアウトパスのたびに実行しない。
+    /// A hash of the inputs that affect styling.
+    ///
+    /// The update methods re-style only when this changes, rather than on every layout pass.
     func styleSignature() -> Int {
         var hasher = Hasher()
         hasher.combine(livePreview)
@@ -68,11 +75,12 @@ public struct MarkdownSourceTextView {
 
 public extension MarkdownSourceTextView {
 
-    /// 新しいテキスト長に収まるように選択範囲を切り詰める。
+    /// Clamps a selection so that it fits inside a new text length.
     ///
-    /// 親がテキストを差し替えたときに使う。差分が分からないので厳密な位置写像はできないが、
-    /// 収まる選択をわざわざ捨てる理由はない。長さを無条件に 0 にすると、正規化・整形・
-    /// 外部 undo・再読込のたびにユーザーの選択が消える。
+    /// Used when the parent replaces the text. There is no diff to map positions through, so this
+    /// cannot be exact, but a selection that still fits is worth keeping: collapsing the length to
+    /// zero unconditionally would wipe the user's selection on every normalization, reformat,
+    /// external undo, and reload.
     static func clampSelection(_ selection: NSRange, toLength length: Int) -> NSRange {
         let location = Swift.max(0, Swift.min(selection.location, length))
         let available = length - location
@@ -90,11 +98,13 @@ public extension MarkdownSourceTextView {
         var theme: MarkdownEditorTheme
         var inputRules: InputRuleProcessor
         var livePreview: Bool
-        /// 自分でテキストをセットしている間の再入バインディング更新を防ぐ。
+        /// Guards against re-entrant binding updates while the view is setting the text itself.
         var isApplyingProgrammaticChange = false
-        /// 最後に適用したスタイル入力。`updateUIView`/`updateNSView` の冪等性を保つため使用。
-        /// テーマ・モードが実際に変わったときのみ再スタイルし、レイアウトパスのたびには実行しない
-        /// （スナップショット計測中のループを防ぐ）。
+
+        /// The style inputs behind the attributes currently applied.
+        ///
+        /// It keeps the update methods idempotent: they re-style only when the theme or the mode
+        /// really changed, not on every layout pass — which would loop during snapshot measurement.
         var appliedStyleSignature: Int?
 
         init(text: Binding<String>, theme: MarkdownEditorTheme, inputRules: InputRuleProcessor, livePreview: Bool) {
@@ -104,9 +114,10 @@ public extension MarkdownSourceTextView {
             self.livePreview = livePreview
         }
 
-        /// `storage` にスタイルをインプレースで適用する。ライブプレビューモードでは
-        /// `selection`/`focused` に応じてマーカーを非表示・表示する。
-        /// それ以外ではプレーンなソースハイライトを適用する。
+        /// Applies styling to the storage in place.
+        ///
+        /// In live preview mode the markers are hidden or revealed according to the selection and
+        /// the focus state; otherwise plain source highlighting is applied.
         func applyStyling(to storage: NSTextStorage, selection: NSRange, focused: Bool) {
             storage.beginEditing()
             if livePreview {
@@ -123,13 +134,13 @@ public extension MarkdownSourceTextView {
             storage.endEditing()
         }
 
-        /// `selection` を保持したままスタイルを再適用する。
+        /// Re-applies the styling, then hands the selection back to the caller to restore.
         func rehighlight(_ storage: NSTextStorage, selection: NSRange, focused: Bool, restore: (NSRange) -> Void) {
             applyStyling(to: storage, selection: selection, focused: focused)
             restore(selection)
         }
 
-        /// 保留中の編集に対応する入力ルール変換を解決する。該当がない場合は `nil`。
+        /// The input rule transform for a pending edit, or `nil` when no rule matches it.
         func ruleTransform(currentText: String, replacing range: NSRange, with replacement: String) -> RuleTransform? {
             let state = EditorState(text: currentText, selection: Selection(range: TextSpan(range)))
             return inputRules.transform(state: state, inserting: replacement, replacing: TextSpan(range))
@@ -153,9 +164,9 @@ extension MarkdownSourceTextView: UIViewRepresentable {
         textView.tintColor = theme.tintColor
         textView.alwaysBounceVertical = true
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-        // 下方向スクロールのドラッグでキーボードを閉じられるようにする。
+        // Let a downward scroll drag dismiss the keyboard.
         textView.keyboardDismissMode = .interactive
-        // 検索・置換。最低要件が iOS 17 なので標準の Find interaction をそのまま使える。
+        // Find and replace. The iOS 17 minimum lets us take the standard find interaction as-is.
         textView.isFindInteractionEnabled = true
 
         // Markdown-safe input: smart substitutions corrupt syntax.
@@ -198,9 +209,7 @@ extension MarkdownSourceTextView: UIViewRepresentable {
         textView.textStorage.setAttributedString(
             NSAttributedString(string: value, attributes: MarkdownSyntaxHighlighter.baseAttributes(theme: theme))
         )
-        // 選択を長さごと保てる範囲で保つ。無条件に length 0 へ潰すと、親がテキストを
-        // 書き換えるたびにユーザーの選択が消える。差分が分からないので厳密な写像はできないが、
-        // 新しいテキストに収まる選択をわざわざ捨てる理由はない。
+        // Keep the selection, length included, as far as it still fits the new text.
         let clamped = Self.clampSelection(selection, toLength: value.utf16.count)
         textView.selectedRange = clamped
         coordinator.applyStyling(to: textView.textStorage, selection: clamped, focused: textView.isFirstResponder)
@@ -213,8 +222,8 @@ extension MarkdownSourceTextView: UIViewRepresentable {
 extension MarkdownSourceTextView.Coordinator: UITextViewDelegate {
 
     public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText replacement: String) -> Bool {
-        // 変換途中（未確定文字列がある状態）では入力ルールを動かさない。
-        // ここで false を返すと合成セッションを外から壊し、変換候補が消える。
+        // Do not run input rules while there is marked text. Returning false here tears down the
+        // composition session from the outside and the candidate list disappears.
         guard textView.markedTextRange == nil else { return true }
         guard let transform = ruleTransform(currentText: textView.text, replacing: range, with: replacement) else {
             return true
@@ -225,8 +234,8 @@ extension MarkdownSourceTextView.Coordinator: UITextViewDelegate {
 
     public func textViewDidChange(_ textView: UITextView) {
         guard !isApplyingProgrammaticChange else { return }
-        // 未確定文字列は下線・変換節ハイライトを属性として持つ。全域に属性を貼り直すと
-        // それらを巻き込んで消してしまう。未確定のかなを親の状態へ流さないためでもある。
+        // Marked text carries its underline and clause highlighting as attributes, which a full
+        // re-attribute pass would wipe out. It also keeps unconfirmed input out of the parent state.
         guard textView.markedTextRange == nil else { return }
         text.wrappedValue = textView.text
         rehighlight(textView.textStorage, selection: textView.selectedRange, focused: textView.isFirstResponder) { textView.selectedRange = $0 }
@@ -263,10 +272,9 @@ extension MarkdownSourceTextView.Coordinator: UITextViewDelegate {
 extension MarkdownSourceTextView: NSViewRepresentable {
 
     public func makeNSView(context: Context) -> NSScrollView {
-        // Phase 1 note: `scrollableTextView()` vends a TextKit 1 NSTextView.
-        // Attribute-only highlighting works identically on TextKit 1, so source
-        // editing is correct here. Phase 2 (inline live preview with layout
-        // fragments) will replace this with an explicit TextKit 2 NSTextView.
+        // `scrollableTextView()` vends a TextKit 1 NSTextView. Highlighting is attribute-only, so
+        // source editing behaves identically here; only inline live preview built on layout
+        // fragments would need an explicit TextKit 2 NSTextView instead.
         let scrollView = NSTextView.scrollableTextView()
         let textView = scrollView.documentView as! NSTextView
 
@@ -278,12 +286,12 @@ extension MarkdownSourceTextView: NSViewRepresentable {
         textView.insertionPointColor = theme.tintColor
         textView.textContainerInset = NSSize(width: 8, height: 12)
 
-        // 検索・置換。標準の Find bar をそのまま使う。
+        // Find and replace, through the standard find bar.
         //
-        // ただし ⌘F はここではなく **ホストアプリの Edit メニュー**から届く。
-        // SwiftUI アプリの既定メニューには Find が含まれないので、
-        // `.commands { TextEditingCommands() }` を宣言しないと ⌘F は無反応になる
-        // （実機で確認済み。README のエディタ章に手順を書いてある）。
+        // ⌘F does not reach the text view from here, though — it arrives from the host app's Edit
+        // menu. A SwiftUI app's default menu carries no Find, so ⌘F does nothing at all unless the
+        // app declares `.commands { TextEditingCommands() }`. The editor chapter of the README has
+        // the steps.
         textView.usesFindBar = true
         textView.isIncrementalSearchingEnabled = true
 
@@ -323,7 +331,7 @@ extension MarkdownSourceTextView: NSViewRepresentable {
         let selection = textView.selectedRange()
         coordinator.isApplyingProgrammaticChange = true
         storage.setAttributedString(NSAttributedString(string: value, attributes: MarkdownSyntaxHighlighter.baseAttributes(theme: theme)))
-        // iOS 側と同じく、収まる範囲で選択を保つ。ここには復元処理自体が無かった。
+        // As on iOS: keep the selection as far as it still fits the new text.
         let clamped = Self.clampSelection(selection, toLength: (value as NSString).length)
         textView.setSelectedRange(clamped)
         coordinator.applyStyling(to: storage, selection: clamped, focused: MarkdownSourceTextView.isFocused(textView))

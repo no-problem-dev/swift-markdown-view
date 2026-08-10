@@ -1,53 +1,57 @@
 import SwiftUI
 
-/// Markdown テキストをレンダリングする SwiftUI View。
+/// A SwiftUI view that renders Markdown.
 ///
-/// CommonMark および GitHub Flavored Markdown 構文を完全サポートし、
-/// Markdown テキストをパースして描画する。
+/// The source is parsed with swift-markdown and drawn through TextKit 2. Headings, paragraphs,
+/// lists (including task-list checkboxes), block quotes and asides, code blocks, thematic breaks,
+/// and tables are rendered, along with the inline styles: emphasis, strong, code, links, images,
+/// and strikethrough. Markup outside that set — raw HTML in particular — is dropped rather than
+/// shown.
 ///
 /// ```swift
-/// // 文字列から直接作成
+/// // Build straight from a string
 /// MarkdownView("# Hello **World**")
 ///
-/// // パフォーマンスのために事前パース済みコンテンツを使用
+/// // Reuse pre-parsed content to avoid parsing the same source twice
 /// let content = MarkdownContent(parsing: markdownString)
 /// MarkdownView(content)
 /// ```
 ///
-/// 色・寸法・文字サイズは ``MarkdownPalette`` / ``MarkdownMetrics`` / ``MarkdownTypeScale``
-/// から解決する。既定はシステムの意味色なので、設定なしでライト/ダークどちらでも読める。
+/// Colors, metrics, and font sizes are resolved from ``MarkdownPalette``, ``MarkdownMetrics``, and
+/// ``MarkdownTypeScale``. The defaults are system semantic colors, so the text stays readable in
+/// both light and dark appearance without any configuration.
 public struct MarkdownView: View {
 
-    /// レンダリング対象のパース済み Markdown コンテンツ。
     public let content: MarkdownContent
 
-    /// Markdown 文字列をパースして MarkdownView を作成する。
+    /// Creates a view by parsing a Markdown string.
     ///
-    /// - Parameter source: パースしてレンダリングする Markdown 文字列。
+    /// - Parameter source: The Markdown to parse and render.
     public init(_ source: String) {
         self.content = MarkdownContent(parsing: source)
     }
 
-    /// パース済みの Markdown コンテンツで MarkdownView を作成する。
+    /// Creates a view from Markdown that has already been parsed.
     ///
-    /// Markdown を一度だけパースして再利用したい場合や、
-    /// レンダリング前にコンテンツを加工したい場合に使用する。
+    /// Use this to parse a source once and reuse the result, or to transform the content before
+    /// it is rendered.
     ///
-    /// - Parameter content: パース済みの Markdown コンテンツ。
+    /// - Parameter content: The parsed Markdown to render.
     public init(_ content: MarkdownContent) {
         self.content = content
     }
 
     public var body: some View {
-        // ドキュメント全体を 1 つの TextKit 2 テキストビューに流し込む。
-        // ブロックを跨いで選択が連続し、コピーで読めるテキストが得られる。
+        // Flow the whole document into a single TextKit 2 text view, so that selection runs
+        // continuously across blocks and a copy yields readable text.
         MarkdownTextKitBackend(content: content)
     }
 }
 
 #if os(iOS) || os(macOS)
-/// 環境からテーマとシンタックスハイライターを読み取り、
-/// 連続選択 TextKit バックエンドでドキュメントをレンダリングする。
+/// Renders the document with the continuous-selection TextKit backend.
+///
+/// The theme, the syntax highlighter, and the Mermaid script all come from the environment.
 private struct MarkdownTextKitBackend: View {
     let content: MarkdownContent
 
@@ -65,7 +69,7 @@ private struct MarkdownTextKitBackend: View {
             theme: .resolved(palette: palette, metrics: metrics, typeScale: typeScale)
         )
             .codeHighlighter(SyntaxHighlighterAdapter(base: highlighter))
-            // `MathRenderer` は `MarkdownAttachmentRendering` を継承するので実行時キャストは不要。
+            // `MathRenderer` refines `MarkdownAttachmentRendering`, so no runtime cast is needed.
             .attachmentRenderer(mathRenderer)
         if let script = MermaidScript.resolve(from: mermaidScriptProvider.scriptSource) {
             view = view.mermaid(script: script, isDark: colorScheme == .dark)

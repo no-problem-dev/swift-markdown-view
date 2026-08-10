@@ -1,4 +1,4 @@
-// `PlatformFont` / `PlatformColor` / `PlatformImage` は本ターゲットの公開型
-// （`MarkdownTextTheme` のフォント・カラー、`MarkdownRenderedImage` の画像）の
-// メンバ型なので、利用者のスコープに名前が届いている必要がある。
+// `PlatformFont` / `PlatformColor` / `PlatformImage` are member types of this
+// target's public API (the fonts and colors of `MarkdownTextTheme`, the image
+// of `MarkdownRenderedImage`), so the names have to reach the client's scope.
 @_exported import MarkdownPlatform

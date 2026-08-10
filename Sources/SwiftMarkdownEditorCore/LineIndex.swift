@@ -1,16 +1,17 @@
 import Foundation
 
-/// ドキュメントの行境界を一度だけ求めて保持し、以降の行範囲問い合わせを二分探索で答える。
+/// Finds a document's line boundaries once, then answers line lookups by binary search.
 ///
-/// `String.lineRange(containing:)` は呼び出しのたびに `Array(utf16)` で全文を複製する。
-/// 1 回だけなら問題ないが、ライブプレビューはインラインスパン 1 件につき 1 回呼ぶため、
-/// 文書長 × スパン数 ＝ 実質二次に膨らむ。打鍵ごとにこれが走るので、長い文書では
-/// 1 打鍵が数秒になる。同じ文書を何度も走査する呼び出し側はこの型を使うこと。
+/// `String.lineRange(containing:)` copies the entire document with `Array(utf16)` on every
+/// call. That is fine once, but the live preview calls it once per inline span, so the work
+/// becomes document length × span count — effectively quadratic. It runs on every
+/// keystroke, which in a long document means a single keystroke takes seconds. Callers that
+/// scan the same document repeatedly should use this type instead.
 package struct LineIndex: Sendable {
 
-    /// 各行の開始位置（UTF-16 オフセット）。常に 0 から始まる。
+    /// The start offset of each line, in UTF-16 code units, always beginning with 0.
     private let lineStarts: [Int]
-    /// 各行の内容の終端（改行を含まない）。`lineStarts` と同じ要素数。
+    /// The end of each line's content, excluding the newline, one entry per line start.
     private let lineEnds: [Int]
 
     package init(_ text: String) {
@@ -26,13 +27,13 @@ package struct LineIndex: Sendable {
         self.lineEnds = ends
     }
 
-    /// `offset` を含む行の範囲（末尾の改行は含まない）。
+    /// The range of the line containing the offset, excluding the trailing newline.
     package func lineRange(containing offset: Int) -> TextSpan {
         let index = lineIndex(containing: offset)
         return TextSpan(lowerBound: lineStarts[index], upperBound: lineEnds[index])
     }
 
-    /// `offset` が乗っている行の番号。範囲外は端にクランプする。
+    /// The number of the line the offset sits on, clamping out-of-range offsets to the ends.
     private func lineIndex(containing offset: Int) -> Int {
         let clamped = Swift.max(0, Swift.min(offset, lineEnds[lineEnds.count - 1]))
         var low = 0

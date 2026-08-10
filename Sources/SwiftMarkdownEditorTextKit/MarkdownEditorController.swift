@@ -7,33 +7,39 @@ import UIKit
 import AppKit
 #endif
 
-/// SwiftUI ツールバーをアクティブなプラットフォームテキストビューに橋渡しする。
+/// Bridges a SwiftUI toolbar to the platform text view that is currently editing.
 ///
-/// SwiftUI エディタがこのオブジェクトを作成し、`onMakeTextView` 経由で ``MarkdownSourceTextView`` に渡し、
-/// ツールバーボタンをコマンドに接続する。各コマンドは純粋な ``EditTransform``（``MarkdownFormatting``）を
-/// 計算し、ネイティブ編集 API を通じてテキストビューに適用するため、システムの undo スタックが使われる。
+/// The editor creates one of these, hands it to ``MarkdownSourceTextView`` through its
+/// `onMakeTextView` callback, and wires toolbar buttons to its commands. Every command computes a
+/// pure `EditTransform` with `MarkdownFormatting` and applies it through the native editing API,
+/// so the edit lands on the system undo stack and the user can undo it like any other typing.
+///
+/// Reach for ``state`` and ``apply(_:)`` to drive that same pipeline from a command of your own.
 @MainActor
 public final class MarkdownEditorController: ObservableObject {
 
     weak var textView: PlatformTextView?
 
-    /// deinit は MainActor 隔離されないため、トークンは箱越しに持つ。
+    /// Holds the observer tokens indirectly, because `deinit` is not MainActor-isolated and so
+    /// cannot reach isolated stored properties.
     private let undoObservers = ObserverBox()
 
     public init() {}
 
-    /// このコントローラが操作するプラットフォームテキストビューを登録する。
-    /// テキストビューの作成時にエディタビューから呼ばれる。
+    /// Registers the platform text view this controller drives.
+    ///
+    /// The editor calls this as the text view is created. Binding a new text view replaces the
+    /// previous one and restarts undo observation.
     public func bind(_ textView: PlatformTextView) {
         self.textView = textView
         observeUndoStack()
     }
 
-    /// undo スタックの変化を `objectWillChange` に流す。
+    /// Forwards changes on the undo stack to `objectWillChange`.
     ///
-    /// ``canUndo`` / ``canRedo`` は `UndoManager` を読む計算プロパティなので、
-    /// これが無いと SwiftUI が再評価せず、**利用者が自作した「元に戻す」ボタンが
-    /// 押せるようにならない**（実機で確認した実際の症状）。
+    /// ``canUndo`` and ``canRedo`` are computed straight from the `UndoManager`, so without this
+    /// SwiftUI never re-evaluates them and a caller's own undo button stays permanently disabled —
+    /// the symptom seen on device.
     private func observeUndoStack() {
         undoObservers.removeAll()
         let center = NotificationCenter.default
@@ -44,10 +50,10 @@ public final class MarkdownEditorController: ObservableObject {
             .NSUndoManagerDidOpenUndoGroup,
             .NSUndoManagerWillCloseUndoGroup
         ]
-        // object を絞らない。`NSTextView.undoManager` はレスポンダチェーン（ウィンドウ）
-        // 経由で解決されるため、`bind(_:)` の時点ではまだ nil で、そこで購読先を
-        // 確定させると**一度も通知が届かない**（実機で確認した実際の症状）。
-        // 他の undo マネージャの通知も拾うが、余分な SwiftUI 無効化が走るだけで害はない。
+        // Observe every object rather than this text view's undo manager. `NSTextView.undoManager`
+        // resolves through the responder chain to the window, so it is still nil at `bind(_:)` time,
+        // and pinning the observation to it there means no notification ever arrives. Picking up
+        // other undo managers too costs only a few redundant SwiftUI invalidations.
         undoObservers.tokens = names.map { name in
             center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated { self?.objectWillChange.send() }
@@ -57,9 +63,7 @@ public final class MarkdownEditorController: ObservableObject {
 
     // MARK: - Toolbar commands
 
-    // 全て toggle。既に適用済みの選択範囲・行に対しては解除する。
-    // 以前は toggleHeading / toggleQuote だけが toggle を名乗り、同じ挙動の
-    // bold / italic / code / strikethrough / bulletList が動詞形だった。
+    // All of these toggle: applying one to a selection or line that already carries it removes it.
     public func toggleBold() { toggleWrap("**") }
     public func toggleItalic() { toggleWrap("*") }
     public func toggleInlineCode() { toggleWrap("`") }
@@ -69,13 +73,13 @@ public final class MarkdownEditorController: ObservableObject {
     public func toggleQuote() { toggleLinePrefix("> ") }
     public func toggleBulletList() { toggleLinePrefix("- ") }
 
-    /// 選択範囲を区切り文字で囲む。既に囲まれていれば外す。
+    /// Wraps the selection in a delimiter, or unwraps it when it is already wrapped.
     public func toggleWrap(_ delimiter: String) {
         guard let (text, selection) = readState() else { return }
         applyTransform(MarkdownFormatting.wrap(text: text, selection: selection, delimiter: delimiter))
     }
 
-    /// 選択行に接頭辞を付ける。全行が既に持っていれば外す。
+    /// Adds a prefix to every selected line, or removes it when every line already has it.
     public func toggleLinePrefix(_ prefix: String) {
         guard let (text, selection) = readState() else { return }
         applyTransform(MarkdownFormatting.toggleLinePrefix(text: text, selection: selection, prefix: prefix))
@@ -93,6 +97,10 @@ public final class MarkdownEditorController: ObservableObject {
     public var canUndo: Bool { undoManager?.canUndo ?? false }
     public var canRedo: Bool { undoManager?.canRedo ?? false }
 
+    /// Makes the text view first responder, so the keyboard appears and typing has a target.
+    ///
+    /// - Returns: `false` when no text view is bound or the text view refused first responder
+    ///   status — on macOS that includes the case where it is not yet in a window.
     @discardableResult
     public func focus() -> Bool {
         #if canImport(UIKit)
@@ -113,11 +121,11 @@ public final class MarkdownEditorController: ObservableObject {
         #endif
     }
 
-    // MARK: - 独自コマンド
+    // MARK: - Custom commands
 
-    /// 現在のドキュメントテキストとセレクション。テキストビュー未接続なら `nil`。
+    /// The current document text and selection, or `nil` when no text view is bound.
     ///
-    /// `MarkdownFormatting` の純関数と組み合わせて独自コマンドを組み立てる:
+    /// Pair it with the pure functions of `MarkdownFormatting` to build a command of your own:
     ///
     /// ```swift
     /// guard let state = controller.state else { return }
@@ -130,10 +138,11 @@ public final class MarkdownEditorController: ObservableObject {
         return EditorState(text: text, selection: selection)
     }
 
-    /// 変換をテキストビューに適用する。
+    /// Applies a transform to the bound text view.
     ///
-    /// 標準コマンド（``toggleBold()`` など）もこれを経由する。undo は
-    /// システムの `UndoManager` が担うため、適用結果はそのまま取り消せる。
+    /// The built-in commands such as ``toggleBold()`` go through here too. The edit is made with the
+    /// native editing API, so the system `UndoManager` records it and the user can undo it. Does
+    /// nothing when no text view is bound.
     public func apply(_ transform: EditTransform) {
         applyTransform(transform)
     }
@@ -169,10 +178,10 @@ public final class MarkdownEditorController: ObservableObject {
 }
 
 
-/// 通知の購読トークンを保持する箱。
+/// Holds notification observer tokens and removes them when it is released.
 ///
-/// `MarkdownEditorController` は `@MainActor` なので、その `deinit` からは隔離された
-/// プロパティに触れない。解除の責務をこの非隔離クラスに逃がす。
+/// `MarkdownEditorController` is `@MainActor`, so its `deinit` cannot touch isolated properties.
+/// Moving the tokens into a non-isolated class puts the removal somewhere `deinit` can reach.
 private final class ObserverBox: @unchecked Sendable {
 
     var tokens: [any NSObjectProtocol] = []

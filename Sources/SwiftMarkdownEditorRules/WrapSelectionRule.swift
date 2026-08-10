@@ -1,15 +1,15 @@
 import Foundation
 import SwiftMarkdownEditorCore
 
-/// セレクション上でデリミタをタイプしたとき、セレクションをデリミタで囲む。
+/// Wraps the selection in a delimiter when the user types that delimiter over it.
 ///
-/// `word` を選択して `*` を押すと `*word*` になり内側のテキストが選択状態を維持する
-/// （Bear/Typora/Ulysses の「スマートラッピング」挙動）。
-/// ツールバーは複数文字の囲み（例：太字の `**`）を明示的に提供し、
-/// このルールは直接タイプする単一文字デリミタを担当する。
+/// Selecting `word` and pressing `*` gives `*word*` with the inner text still selected — the "smart
+/// wrapping" behaviour of Bear, Typora and Ulysses. Multi-character wrapping, such as `**` for bold,
+/// is offered explicitly by the toolbar; this rule covers the single characters a user types
+/// directly.
 public struct WrapSelectionRule: InputRule {
 
-    /// ラッピングを発火させる単一文字デリミタ。
+    /// The single-character delimiters that trigger wrapping.
     public var delimiters: Set<String>
 
     public init(delimiters: Set<String> = ["*", "_", "`"]) {

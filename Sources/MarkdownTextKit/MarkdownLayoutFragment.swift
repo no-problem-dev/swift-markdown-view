@@ -8,7 +8,10 @@ import UIKit
 import AppKit
 #endif
 
-/// レイアウトフラグメントがブロックデコレーションを描画するために必要なカラーとメトリクス。テーマから `CGColor` として解決し、描画をプラットフォーム中立にする。
+/// The colors and metrics a layout fragment needs in order to draw block decorations.
+///
+/// Colors are resolved from the theme into `CGColor` up front, which keeps the drawing code
+/// platform-neutral.
 public struct MarkdownDecorationPalette {
     var codeBackground: CGColor
     var rule: CGColor
@@ -29,9 +32,16 @@ public struct MarkdownDecorationPalette {
     }
 }
 
-/// Markdown ドキュメントのコードブロック背景・水平線・ブロッククォートバーを描画する。``MarkdownBlockDecoration`` 属性でデコレーション範囲を特定する。すべての描画に生の `CGContext` を使用し、UIKit と AppKit で同一コードを動かす。
+/// Draws the block decorations of a Markdown document over its text.
 ///
-/// アクティブな選択と重なるコードブロック塗りつぶしをイーブン・オッド（even-odd）でくり抜き、システムの選択ハイライトを表示する。TextKit 2 はそのままではフラグメントをハイライトの上に描画するため必要。手法は `nodes-app/swift-markdown-engine` を参考にした。
+/// Decoration ranges are located by the ``MarkdownBlockDecoration`` attribute, and everything is drawn
+/// with a raw `CGContext` so UIKit and AppKit run the same code. Horizontal rules, block quote bars, and
+/// table row separators are drawn on both platforms; the code block background is drawn here on macOS
+/// only — see `draw(at:in:)`.
+///
+/// On macOS the code block fill is punched out with the even-odd rule wherever it overlaps the active
+/// selection, so the system's selection highlight shows through: left alone, TextKit 2 draws the fragment
+/// on top of the highlight. The technique is adapted from `nodes-app/swift-markdown-engine`.
 final class MarkdownLayoutFragment: NSTextLayoutFragment {
 
     var palette: MarkdownDecorationPalette?
@@ -128,7 +138,9 @@ final class MarkdownLayoutFragment: NSTextLayoutFragment {
         }
     }
 
-    /// フラグメントと交差するアクティブな選択矩形群。塗りつぶしの垂直スパンに拡張し、イーブン・オッドのくり抜きが幾何学的に合致するようにする。
+    /// The active selection rectangles that intersect this fragment.
+    ///
+    /// Each one is stretched to the fill's vertical span so the even-odd cut-out lines up with it exactly.
     private func selectionRects(point: CGPoint, fillRect: CGRect) -> [CGRect] {
         guard let tlm = textLayoutManager else { return [] }
         var rects: [CGRect] = []
@@ -172,7 +184,10 @@ final class MarkdownLayoutFragment: NSTextLayoutFragment {
 
     // MARK: Table row separators
 
-    /// テーブルの各行の下に細い区切り線を描画し、タブストップの列をグリッドとして読めるようにする。セルテキストはストレージにあるため選択とコピーはすでにセル単位で機能する。この処理は水平線を追加するだけ。
+    /// Draws a hairline under each table row so the tab-stop columns read as a grid.
+    ///
+    /// The cell text lives in the storage, so selection and copy already work cell by cell; this only
+    /// adds the horizontal lines.
     private func drawTableRowSeparators(at point: CGPoint, in context: CGContext) {
         guard let palette, let ts = textStorage, let range = fragmentRange,
               case .table = decoration(at: range.location)?.kind,
@@ -218,7 +233,10 @@ final class MarkdownLayoutFragment: NSTextLayoutFragment {
     }
 }
 
-/// ``MarkdownLayoutFragment`` を生成し、各フラグメントにデコレーションパレットをスタンプする。ビュー層が所有（保持）し、`NSTextLayoutManager.delegate` として設定する。
+/// Creates the decorating layout fragments and stamps each one with the decoration palette.
+///
+/// The view layer owns — and must retain — the provider, and installs it as the
+/// `NSTextLayoutManager.delegate`, which holds it weakly.
 public final class MarkdownLayoutFragmentProvider: NSObject, NSTextLayoutManagerDelegate {
 
     public var palette: MarkdownDecorationPalette?

@@ -5,7 +5,11 @@ import UIKit
 import AppKit
 #endif
 
-/// 画像待機中のアタッチメントリクエスト。ビルダーが `![alt](source)` 向けに生成した `NSTextAttachment` プレースホルダーを `.markdownAttachment` タグで特定し、ビューがレイアウト後に `source` をロードして `attachment.image` を埋める。
+/// An attachment whose image the view still has to load.
+///
+/// The builder emits an `NSTextAttachment` placeholder for every `![alt](source)` and tags it with
+/// `.markdownAttachment`; the view finds it by that tag, loads `source` once layout is done, and fills in
+/// `attachment.image`.
 package struct MarkdownImageRequest {
     public let range: NSRange
     public let source: String
@@ -14,7 +18,10 @@ package struct MarkdownImageRequest {
 
 package enum MarkdownImageAttachments {
 
-    /// ドキュメント順に未充填の画像アタッチメントをすべて返す。
+    /// Every image attachment with a non-empty source, in document order.
+    ///
+    /// Attachments whose image a synchronous renderer already supplied are included too — this does not
+    /// check whether `attachment.image` is filled in.
     public static func requests(in attributed: NSAttributedString) -> [MarkdownImageRequest] {
         var result: [MarkdownImageRequest] = []
         let full = NSRange(location: 0, length: attributed.length)
@@ -29,7 +36,7 @@ package enum MarkdownImageAttachments {
         return result
     }
 
-    /// `image` を `maxWidth` に収めたアスペクトフィット bounds（拡大はしない）。
+    /// Bounds that fit the image inside the given maximum width, preserving aspect ratio and never scaling up.
     public static func bounds(for image: PlatformImage, maxWidth: CGFloat) -> CGRect {
         let size = image.size
         guard size.width > 0, size.height > 0, maxWidth > 0 else {

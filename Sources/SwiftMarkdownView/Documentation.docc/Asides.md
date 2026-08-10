@@ -1,98 +1,84 @@
-# Aside（コールアウト）
+# Asides
 
-ブロッククォートをNote、Warning、Tipなどのコールアウトとして表示する方法を学ぶ。
+Turn a block quote into a labelled callout for notes, warnings, and tips.
 
 ## Overview
 
-SwiftMarkdownViewはMarkdownのブロッククォート（`>`）を解析し、
-特定のキーワードで始まる場合はAside（コールアウト）として表示する。
-Asideは視覚的に強調された情報ブロックで、補足説明、警告、ヒントなどを表現するのに適している。
+A block quote that names a kind is drawn as a callout: a colored, bold label above the content,
+with a colored bar down the side. A block quote that names no kind stays an ordinary quote, so
+adding callouts to a document does not relabel the quotations already in it.
 
-## 基本的な使い方
-
-ブロッククォートの最初の行にキーワードとコロンを記述する：
+Two spellings are recognised. The DocC style puts the kind before a colon:
 
 ```swift
 MarkdownView("""
-> Note: これは補足情報だ。
+> Note: Supplementary information.
 
-> Warning: 注意が必要な内容だ。
+> Warning: This needs attention.
 
-> Tip: 便利なヒントだ。
+> Tip: A useful shortcut.
 """)
 ```
 
-## 対応キーワード
-
-### よく使うコールアウト
-
-| キーワード | 用途 | アイコン |
-|-----------|------|---------|
-| `Note` | 補足情報、メモ | 📝 |
-| `Tip` | ヒント、アドバイス | 💡 |
-| `Important` | 重要な情報 | ❗ |
-| `Warning` | 警告、注意事項 | ⚠️ |
-| `Experiment` | 実験、試してみること | 🧪 |
-
-### ドキュメント用コールアウト
-
-| キーワード | 用途 |
-|-----------|------|
-| `Attention` | 注意を引く情報 |
-| `Author` / `Authors` | 作成者情報 |
-| `Bug` | 既知のバグ |
-| `Complexity` | 計算量の情報 |
-| `Copyright` | 著作権情報 |
-| `Date` | 日付情報 |
-| `Invariant` | 不変条件 |
-| `MutatingVariant` | 変更を伴うバリアント |
-| `NonMutatingVariant` | 変更を伴わないバリアント |
-| `Postcondition` | 事後条件 |
-| `Precondition` | 事前条件 |
-| `Remark` | 備考 |
-| `Requires` | 必要条件 |
-| `Since` | バージョン情報 |
-| `ToDo` | 未実装、今後の対応 |
-| `Version` | バージョン |
-| `Throws` | スローする例外 |
-| `SeeAlso` | 関連情報 |
-
-### カスタムキーワード
-
-定義済みキーワード以外は`custom`として扱われる：
+The GitHub style uses a bracketed marker, which is stripped from the text that gets displayed:
 
 ```swift
 MarkdownView("""
-> MyCustomNote: 独自のコールアウトだ。
+> [!WARNING]
+> This needs attention.
 """)
 ```
 
-## デフォルトスタイル
+Matching ignores case, so `> note:`, `> Note:`, and `> [!NOTE]` all arrive at the same kind.
 
-既定の Aside 表示は以下の特徴を持つ：
+## Kinds
 
-- **アイコン**: SF Symbolsを使用した直感的なアイコン
-- **アクセントカラー**: 種類に応じたセマンティックカラー
-  - Note: 青系
-  - Warning: オレンジ/赤系
-  - Tip: 緑系
-  - Bug: 赤系
-- **背景色**: アクセントカラーの薄い透明版
-- **左ボーダー**: アクセントカラーで強調
+Twenty-four kinds are recognised. The five in the first group are the ones most documents reach
+for; the rest come from DocC's vocabulary and are useful when the Markdown is itself API
+documentation.
 
-## ネストされたコンテンツ
+| Common | Documentation |
+|---|---|
+| `Note`, `Tip`, `Important`, `Warning`, `Experiment` | `Attention`, `Author`, `Authors`, `Bug`, `Complexity`, `Copyright`, `Date`, `Invariant`, `MutatingVariant`, `NonMutatingVariant`, `Postcondition`, `Precondition`, `Remark`, `Requires`, `Since`, `ToDo`, `Version`, `Throws`, `SeeAlso` |
 
-Asideは複数行のコンテンツやネストされた要素を含むことができる：
+Any other tag becomes `AsideKind`, carrying the tag text exactly as written. It is
+displayed as its own label rather than being discarded:
+
+```swift
+MarkdownView("> Migration: Run the schema step before deploying.")
+```
+
+## Color
+
+The label and the bar are tinted by kind, from the system palette so that the tint adapts to
+light and dark on its own:
+
+| Tint | Kinds |
+|---|---|
+| Green | `Tip`, `Experiment` |
+| Orange | `Important`, `Attention` |
+| Red | `Warning`, `Bug` |
+| Purple | `ToDo` |
+| Blue | Everything else |
+
+A custom kind named `caution`, `warning`, `tip`, or `important` picks up the matching tint; any
+other custom kind uses the theme's secondary color, so an unrecognised tag reads as neutral rather
+than borrowing a meaning it was not given.
+
+## Content
+
+An aside holds whole blocks, not just a line of text. Lists, code blocks, and multiple paragraphs
+all nest inside one:
 
 ```swift
 MarkdownView("""
-> Warning: 本番環境での注意事項
+> Warning: Before deploying to production
 >
-> 以下の点に注意してください：
+> Check each of these:
 >
-> - 環境変数の設定
-> - データベース接続の確認
-> - ログレベルの調整
+> - Environment variables are set
+> - The database connection is reachable
+> - The log level is not left on debug
 >
 > ```swift
 > let config = Config.production
@@ -100,10 +86,5 @@ MarkdownView("""
 """)
 ```
 
-## アクセシビリティ
-
-Asideは以下のアクセシビリティ機能をサポートしている：
-
-- VoiceOverでの種類の読み上げ
-- ハイコントラストモードでの視認性確保
-- Dynamic Typeへの対応
+Because the callout is composed into the same text storage as the rest of the document, a
+selection can run from the prose above it, through the aside, and out the other side.

@@ -1,16 +1,17 @@
 import Foundation
 
-/// テキストセレクション：範囲とキャレットのアンカー方向を持つ。
+/// A text selection: a range together with the direction it was made in.
 ///
-/// `anchor` は固定端（セレクション開始位置）、`head` は移動端（キャレット位置）。
-/// `anchor == head` のときセレクションはキャレット（空範囲）になる。
-/// 方向を保持することで Shift 拡張が正しく動作し、入力ルールがどちら端に折り畳むかを把握できる。
+/// `anchor` is the fixed end, where the selection started; `head` is the moving end, where
+/// the caret sits. When the two are equal the selection is a caret — an empty range.
+/// Carrying the direction is what makes shift-extension behave correctly and lets input
+/// rules know which end to collapse to.
 public struct Selection: Equatable, Hashable, Sendable {
 
-    /// セレクションの固定端（UTF-16 オフセット）。
+    /// The fixed end of the selection, as a UTF-16 offset.
     public var anchor: Int
 
-    /// キャレットが位置するセレクションの移動端（UTF-16 オフセット）。
+    /// The moving end of the selection, where the caret sits, as a UTF-16 offset.
     public var head: Int
 
     public init(anchor: Int, head: Int) {
@@ -19,20 +20,20 @@ public struct Selection: Equatable, Hashable, Sendable {
         self.head = head
     }
 
-    /// `offset` 位置のキャレット（空セレクション）を作成する。
+    /// Creates an empty selection — a caret — at the given offset.
     public init(caret offset: Int) {
         self.init(anchor: offset, head: offset)
     }
 
-    /// ``TextSpan`` を範囲とし、キャレットをその上限に置くセレクションを作成する。
+    /// Creates a selection covering the given span, with the caret at its upper bound.
     public init(range: TextSpan) {
         self.init(anchor: range.lowerBound, head: range.upperBound)
     }
 
-    /// セレクションがスパンを持たない単一キャレットかどうか。
+    /// Whether the selection is a single caret rather than a span of text.
     public var isCaret: Bool { anchor == head }
 
-    /// 順序正規化された ``TextSpan`` としてのセレクション。
+    /// The selection as a span, with its two ends put in ascending order.
     public var range: TextSpan {
         TextSpan(lowerBound: Swift.min(anchor, head), upperBound: Swift.max(anchor, head))
     }

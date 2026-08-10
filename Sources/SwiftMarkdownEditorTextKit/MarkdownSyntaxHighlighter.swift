@@ -7,15 +7,17 @@ import UIKit
 import AppKit
 #endif
 
-/// ``MarkdownToken`` をテキスト属性に変換して適用する。
+/// Turns syntax tokens into text attributes and applies them.
 ///
-/// トークン種別が色・フォントになる唯一の場所。テキストビューから分離することで
-/// 属性ロジックが純粋でテスト可能な関数になる：
-/// テストは実行中のビューなしで attributed string を構築して任意のオフセットの色・フォントを検証でき、
-/// スナップショットも同じ文字列をレンダリングできる。
+/// This is the one place a token kind becomes a color and a font. Keeping it out of the text view
+/// leaves the attribute logic a pure, testable function: a test can build the attributed string with
+/// no live view and inspect the color and font at any offset, and snapshots render that same string.
 enum MarkdownSyntaxHighlighter {
 
-    /// トレイトセットに対応するプラットフォームフォントを構築する。
+    /// Builds the platform font for a set of traits.
+    ///
+    /// A monospace font is requested by weight, so `italic` has no effect alongside `monospace`.
+    /// Falls back to the plain system font when the traits cannot be applied to the descriptor.
     static func font(
         size: CGFloat,
         bold: Bool = false,
@@ -48,7 +50,7 @@ enum MarkdownSyntaxHighlighter {
         #endif
     }
 
-    /// ベース（スタイルなし）のテキスト属性。
+    /// The attributes for text that carries no token style. Also used as the typing attributes.
     static func baseAttributes(theme: MarkdownEditorTheme) -> [NSAttributedString.Key: Any] {
         [
             .font: font(size: theme.baseFontSize),
@@ -56,7 +58,10 @@ enum MarkdownSyntaxHighlighter {
         ]
     }
 
-    /// 1 つのトークン種別の属性。
+    /// The attributes for a single token kind.
+    ///
+    /// A foreground color is included only when the style defines one, so a style with no color
+    /// leaves the base text color showing through.
     static func attributes(
         for kind: MarkdownToken.Kind,
         theme: MarkdownEditorTheme
@@ -74,10 +79,10 @@ enum MarkdownSyntaxHighlighter {
         return attrs
     }
 
-    /// `storage` をベーススタイルにリセットしてからすべてのトークン属性を適用する。
+    /// Resets the storage to the base style, then applies the attributes of every token.
     ///
-    /// `tokens` のオフセットは `storage` に有効でなければならない。
-    /// 範囲外のトークンは防御的にスキップする。
+    /// Token offsets must be valid for the storage; a token reaching past its end is skipped rather
+    /// than trapping. Where token ranges overlap, the later token's attributes win.
     static func apply(
         tokens: [MarkdownToken],
         to storage: NSMutableAttributedString,
@@ -92,15 +97,15 @@ enum MarkdownSyntaxHighlighter {
         }
     }
 
-    /// `storage` の文字列をトークナイズしてハイライトをインプレースで再適用する。
+    /// Tokenizes the storage's own string and re-applies the highlighting in place.
     static func highlight(_ storage: NSMutableAttributedString, theme: MarkdownEditorTheme) {
         let tokens = MarkdownTokenizer.tokenize(storage.string)
         apply(tokens: tokens, to: storage, theme: theme)
     }
 
-    /// `text` のハイライト済み attributed string を構築する。
+    /// Builds a highlighted attributed string for the given text.
     ///
-    /// プレビュー・スナップショット・テストに利用できる（テキストビュー不要）。
+    /// No text view is involved, so previews, snapshots, and tests can call it directly.
     static func attributedString(for text: String, theme: MarkdownEditorTheme) -> NSMutableAttributedString {
         let storage = NSMutableAttributedString(string: text)
         highlight(storage, theme: theme)

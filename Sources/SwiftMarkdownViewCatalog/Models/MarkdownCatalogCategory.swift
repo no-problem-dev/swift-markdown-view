@@ -1,29 +1,28 @@
 import SwiftMarkdownView
 import SwiftUI
 
-/// Markdown カタログのカテゴリ。
+/// A top-level grouping of catalog items, and the unit of navigation in the sidebar.
 ///
-/// カタログアイテムをナビゲーション用の論理グループに整理する。
+/// The raw value is the heading shown to the reader.
 internal enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Sendable {
 
-    /// 見出し・コードブロック・リストなどのブロックレベル要素。
+    /// Block-level elements: headings, code blocks, lists, tables, and so on.
     case blockElements = "ブロック要素"
 
-    /// 太字・斜体・リンクなどのインライン要素。
+    /// Inline elements: bold, italic, links, inline code.
     case inlineElements = "インライン要素"
 
-    /// 設定とスタイルオプション。
+    /// Rendering options, such as the syntax highlighter.
     case configuration = "設定"
 
-    /// Markdown を試すインタラクティブなプレイグラウンド。
+    /// A live editor for trying Markdown by hand.
     case playground = "プレイグラウンド"
 
-    /// DesignSystem 統合とテーマ設定。
+    /// Theming and design-token integration.
     case designSystem = "デザインシステム"
 
     internal var id: String { rawValue }
 
-    /// このカテゴリの SF Symbol アイコン名。
     internal var icon: String {
         switch self {
         case .blockElements:
@@ -39,7 +38,6 @@ internal enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Senda
         }
     }
 
-    /// このカテゴリの概要説明。
     internal var description: String {
         switch self {
         case .blockElements:
@@ -55,7 +53,10 @@ internal enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Senda
         }
     }
 
-    /// このカテゴリのカタログアイテム一覧。
+    /// The rows to show for this category, built fresh on every access.
+    ///
+    /// Each call mints new identifiers, so items read from two calls never compare equal.
+    /// Read the list once and keep it if you need the values to stay comparable.
     internal var items: [MarkdownCatalogItem] {
         switch self {
         case .blockElements:
@@ -80,7 +81,10 @@ internal enum MarkdownCatalogCategory: String, CaseIterable, Identifiable, Senda
 
 // MARK: - Block Element Items
 
-/// カタログで使用するブロックレベル要素の種類。
+/// The block-level elements the catalog covers.
+///
+/// The raw value is both the row label and the key the router matches on, so renaming a
+/// case's raw value breaks navigation to its screen.
 internal enum BlockElementItem: String, CaseIterable, Identifiable, Sendable {
     case heading = "見出し"
     case paragraph = "段落"
@@ -139,7 +143,9 @@ internal enum BlockElementItem: String, CaseIterable, Identifiable, Sendable {
 
 // MARK: - Inline Element Items
 
-/// カタログで使用するインライン要素の種類。
+/// The inline elements the catalog covers.
+///
+/// The raw value doubles as the router's lookup key, as in ``BlockElementItem``.
 internal enum InlineElementItem: String, CaseIterable, Identifiable, Sendable {
     case textStyles = "テキストスタイル"
     case inlineCode = "インラインコード"
@@ -177,7 +183,9 @@ internal enum InlineElementItem: String, CaseIterable, Identifiable, Sendable {
 
 // MARK: - Configuration Items
 
-/// カタログで使用する設定・スタイルオプションの種類。
+/// The rendering options the catalog covers.
+///
+/// The raw value doubles as the router's lookup key, as in ``BlockElementItem``.
 internal enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
     case syntaxHighlighter = "シンタックスハイライト"
 
@@ -206,7 +214,9 @@ internal enum ConfigurationItem: String, CaseIterable, Identifiable, Sendable {
 
 // MARK: - DesignSystem Items
 
-/// カタログで使用する DesignSystem 統合アイテムの種類。
+/// The design-system screens reachable from the catalog.
+///
+/// The raw value doubles as the router's lookup key, as in ``BlockElementItem``.
 internal enum DesignSystemItem: String, CaseIterable, Identifiable, Sendable {
     case fullCatalog = "デザインシステムカタログ"
 

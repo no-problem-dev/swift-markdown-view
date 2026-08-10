@@ -1,14 +1,12 @@
 import SwiftUI
 
-/// シンタックスハイライトを適用しないプレーンテキストハイライター。
+/// A highlighter that applies no coloring at all.
 ///
-/// デフォルトのハイライター。コードをカラー書式なしのプレーンテキストとして返す。
-/// 以下のケースで使用する:
-/// - コードブロックのスタイリングを最小限にしたい場合
-/// - シンタックスハイライトが不要な場合
-/// - ユーザーがハイライトをオプトインする設計にしたい場合
+/// This is the default highlighter: it hands the code back as plain text. Use it when you want
+/// code blocks styled minimally, when syntax highlighting is unnecessary, or when highlighting
+/// should be something the app opts into.
 ///
-/// シンタックスハイライトを有効にするには、カスタムハイライターを注入する:
+/// To turn highlighting on, inject a different highlighter:
 ///
 /// ```swift
 /// import SwiftMarkdownViewHighlightJS
@@ -16,21 +14,19 @@ import SwiftUI
 /// MarkdownView(source)
 ///     .markdownSyntaxHighlighter(HighlightJSSyntaxHighlighter())
 ///
-/// // または自動ライト/ダーク対応のアダプティブハイライトを使用
+/// // Or highlight adaptively, following the light and dark appearance
 /// MarkdownView(source)
-///     .adaptiveSyntaxHighlighting()   // 要 import SwiftMarkdownViewHighlightJS
+///     .adaptiveSyntaxHighlighting()   // requires import SwiftMarkdownViewHighlightJS
 /// ```
 public struct PlainTextHighlighter: SyntaxHighlighter, Sendable {
 
-    /// プレーンテキストハイライターを生成する。
     public init() {}
 
-    /// コードをカラー書式なしのプレーンテキストとして返す。
+    /// Returns the code unchanged, with no attributes applied.
     ///
     /// - Parameters:
-    ///   - code: ハイライト対象のソースコード。
-    ///   - language: プログラミング言語。このハイライターでは使用しない。
-    /// - Returns: 書式なしの `AttributedString`。
+    ///   - code: The source code.
+    ///   - language: Ignored by this highlighter.
     public func highlight(_ code: String, language: String?) async throws -> AttributedString {
         AttributedString(code)
     }

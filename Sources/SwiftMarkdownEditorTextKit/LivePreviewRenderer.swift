@@ -7,18 +7,23 @@ import UIKit
 import AppKit
 #endif
 
-/// `NSTextStorage` にライブプレビュースタイルを適用する。コンテンツにフォントトレイトを付与し、
-/// デリミタマーカーを **クリアカラー＋極小フォント＋負カーニング** で非表示にする
-/// （`nodes-app/swift-markdown-engine` の `MarkdownStyler` で検証済み）。
-/// ソーステキストは変更せず、属性のみ変更する。
+/// Applies live preview styling to a text storage, hiding the Markdown delimiters in place.
+///
+/// Content picks up font traits; markers are hidden with a clear foreground color, a near-zero font
+/// size, and negative kerning to cancel the advance the shrunken glyphs would still occupy. Only
+/// attributes change — the source text is left exactly as it is.
 enum LivePreviewRenderer {
 
-    /// 非表示マーカーのグリフをほぼゼロに縮小する極小フォントサイズ。
-    /// 負カーニングが残留アドバンスを除去する。
-    /// `swift-markdown-engine` の `hiddenMarkerFontSize` デフォルト（0.1）に合わせる。
+    /// The font size that shrinks a hidden marker's glyphs to almost nothing.
+    ///
+    /// The advance those shrunken glyphs still occupy is cancelled by the negative kerning applied
+    /// alongside this size.
     static let concealFontSize: CGFloat = 0.1
 
-    /// ドキュメント全体のライブプレビュー属性を再適用する。
+    /// Re-applies the live preview attributes across the whole document.
+    ///
+    /// Markers stay hidden on every line except the ones the selection touches, and passing
+    /// `focused: false` hides them everywhere. Runs reaching past the end of the storage are skipped.
     static func apply(
         text: String,
         selection: Selection?,
@@ -70,7 +75,10 @@ enum LivePreviewRenderer {
 
     // MARK: - Heading sizing
 
-    /// ATX 見出し行のポイントサイズ。ベースフォントサイズからスケールする。
+    /// The point size of an ATX heading, scaled from the base font size.
+    ///
+    /// Levels 1 through 5 step down in size; level 6 and any level out of range render at the base
+    /// size.
     static func headingSize(level: Int, base: CGFloat) -> CGFloat {
         switch level {
         case 1: return base * 1.7
@@ -84,8 +92,9 @@ enum LivePreviewRenderer {
 
     // MARK: - Font trait merge
 
-    /// `range` を覆うフォントにシンボリックトレイトを追加し、bold と italic を合成する
-    /// （例：strong の中の emphasis は bold-italic になる）。
+    /// Adds a symbolic trait to every font already covering the range, so traits compose.
+    ///
+    /// Emphasis nested inside a strong span ends up bold-italic instead of replacing the bold.
     private static func mergeTrait(_ trait: EditorFontTrait, in range: NSRange, storage: NSTextStorage, baseSize: CGFloat) {
         storage.enumerateAttribute(.font, in: range, options: []) { value, subRange, _ in
             let base = (value as? PlatformFont) ?? MarkdownSyntaxHighlighter.font(size: baseSize)
@@ -96,7 +105,7 @@ enum LivePreviewRenderer {
     }
 }
 
-/// ライブプレビュースタイリング用の合成可能なフォントトレイト。
+/// A font trait that live preview styling composes onto whatever font is already in place.
 enum EditorFontTrait { case bold, italic }
 
 private extension PlatformFont {

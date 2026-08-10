@@ -1,3 +1,4 @@
-// `PlatformColor` は `MarkdownEditorTheme` / `TokenStyle` の公開メンバ型、
-// `PlatformTextView` は Representable の公開型なので、名前を再輸出する。
+// Re-export the names: `PlatformColor` appears in the public members of
+// `MarkdownEditorTheme` and `TokenStyle`, and `PlatformTextView` in the public
+// signatures of the representable.
 @_exported import MarkdownPlatform

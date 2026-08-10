@@ -12,25 +12,23 @@ import AppKit
 typealias MermaidPlatformView = NSView
 #endif
 
-/// Mermaid ダイアグラムをライブかつスクロール可能な `WKWebView` でレンダリングするテキストアタッチメント。
-/// コンテナ幅で固定高のボックスを占有し、ダイアグラムが大きい場合はボックス内でスクロールする
-///（大きなダイアグラムでもレイアウトを崩さず、小さいダイアグラムも適切なボックスに収まる）。
-/// WebView に流し込む Mermaid スクリプトの形。
+/// The form the Mermaid script takes when it is handed to the web view.
 ///
-/// `MermaidScriptSource` の 3 ケース（url / inline / localFile）はここで 2 つに畳まれる。
-/// localFile は読み込んでインラインにする — file URL を `<script src>` に渡しても
-/// `loadHTMLString(baseURL:)` の origin では読めないため。
+/// The three cases of `MermaidScriptSource` (url / inline / localFile) fold into two here. A
+/// local file is read and inlined, because a file URL given to `<script src>` cannot be read
+/// from the origin that `loadHTMLString(baseURL:)` establishes.
 enum MermaidScript: Equatable {
-    /// リモート URL を `<script src>` で読み込む。
+    /// Load a remote URL through `<script src>`.
     case remote(URL)
-    /// JavaScript を HTML に直接埋め込む。
+    /// Embed the JavaScript in the HTML directly.
     case inline(String)
 
-    /// プロバイダーが宣言したソースを、そのまま WebView に渡す形へ写す。
+    /// Maps the source a provider declared onto the form the web view takes, and nothing else.
     ///
-    /// 以前は呼び出し側に「解釈できなければ CDN」という無条件フォールバックがあり、
-    /// `.inline` を選んだ利用者のアプリから**気づかないまま外部通信が飛んでいた**。
-    /// 宣言されたソース以外へは絶対に落ちない。読めなければ `nil` を返し、描画しない。
+    /// The caller used to fall back to the CDN unconditionally whenever it could not make sense
+    /// of the source, so apps that had chosen `.inline` **reached out to the network without
+    /// their authors ever knowing**. Nothing here falls back to anything but what was declared:
+    /// if the script cannot be read this returns `nil` and the diagram is not drawn.
     static func resolve(from source: MermaidScriptSource) -> MermaidScript? {
         switch source {
         case .url(let url):
@@ -38,8 +36,8 @@ enum MermaidScript: Equatable {
         case .inline(let javaScript):
             return .inline(javaScript)
         case .localFile(let url):
-            // file URL を `<script src>` に渡しても `loadHTMLString(baseURL:)` の
-            // origin からは読めない。中身を読み込んで埋め込む。
+            // A file URL given to `<script src>` cannot be read from the origin that
+            // `loadHTMLString(baseURL:)` establishes. Read the contents and embed them.
             guard let javaScript = try? String(contentsOf: url, encoding: .utf8) else {
                 logger.warning(
                     "Mermaid スクリプトを読み込めませんでした [\(url.path, privacy: .public)]。ダイアグラムは描画されません"
@@ -56,12 +54,17 @@ enum MermaidScript: Equatable {
     )
 }
 
+/// A text attachment that renders a Mermaid diagram in a live, scrollable web view.
+///
+/// The `WKWebView` takes a box of the container's width at a fixed height, and a diagram too
+/// large for that box scrolls inside it — a big diagram never disturbs the surrounding layout,
+/// and a small one still sits in a box of reasonable size.
 final class MarkdownMermaidAttachment: NSTextAttachment {
 
     let source: String
     let script: MermaidScript
     let isDark: Bool
-    /// ダイアグラムボックスの固定表示高さ（ポイント）。
+    /// The fixed display height of the diagram box, in points.
     let displayHeight: CGFloat
 
     init(source: String, script: MermaidScript, isDark: Bool, displayHeight: CGFloat) {
@@ -108,8 +111,8 @@ final class MermaidAttachmentViewProvider: NSTextAttachmentViewProvider {
         #elseif canImport(AppKit)
         webView.autoresizingMask = [.width, .height]
         #endif
-        // リモート読み込みのときだけ、スクリプトの origin を baseURL にする。
-        // インライン埋め込みには外部 origin が要らない。
+        // Use the script's origin as the baseURL only when it is loaded remotely.
+        // An inline embed needs no external origin.
         let baseURL: URL?
         if case .remote(let url) = attachment.script,
            let scheme = url.scheme, let host = url.host {
@@ -175,7 +178,7 @@ enum MermaidHTML {
         case .remote(let url):
             return "<script src=\"\(url.absoluteString)\"></script>"
         case .inline(let javaScript):
-            // </script> が JS 文字列に含まれると HTML パーサがそこでタグを閉じてしまう。
+            // A `</script>` inside the JavaScript would close the tag early for the HTML parser.
             return "<script>\(javaScript.replacingOccurrences(of: "</script", with: "<\\/script"))</script>"
         }
     }

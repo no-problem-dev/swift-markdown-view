@@ -2,17 +2,18 @@ import SwiftUI
 import SwiftMarkdownEditorTextKit
 
 private struct MarkdownEditorThemeKey: EnvironmentKey {
-    // `MarkdownEditorTheme` は PlatformColor を持つため非 Sendable。格納プロパティにすると
-    // 可変グローバルとして拒否されるので、毎回組み立てる計算プロパティにする。
+    // `MarkdownEditorTheme` holds a PlatformColor and so is not Sendable. A stored
+    // property would be rejected as a mutable global, so build the value each time.
     static var defaultValue: MarkdownEditorTheme { .light }
 }
 
 extension EnvironmentValues {
 
-    /// ソースエディタの着色に使うテーマ。
+    /// The theme that colors the source editor.
     ///
-    /// 既定の ``MarkdownEditorTheme/light`` はシステムの意味色で構成されており、
-    /// ライト/ダークに自動追従する。アプリ固有の配色に合わせたい場合だけ差し替える。
+    /// The default, `MarkdownEditorTheme.light`, is built from system semantic
+    /// colors and follows light and dark appearance on its own. Replace it only to
+    /// match an app-specific palette.
     public var markdownEditorTheme: MarkdownEditorTheme {
         get { self[MarkdownEditorThemeKey.self] }
         set { self[MarkdownEditorThemeKey.self] = newValue }
@@ -21,10 +22,11 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// このビュー階層のソースエディタに着色テーマを設定する。
+    /// Sets the coloring theme for source editors in this view hierarchy.
     ///
-    /// - Parameter theme: 使用するエディタテーマ。
-    /// - Returns: テーマが適用されたビュー。
+    /// - Parameter theme: The theme to apply. ``MarkdownEditor`` uses its colors but
+    ///   not its `baseFontSize`, which it always overwrites with the size passed to
+    ///   its own initializer.
     public func markdownEditorTheme(_ theme: MarkdownEditorTheme) -> some View {
         environment(\.markdownEditorTheme, theme)
     }

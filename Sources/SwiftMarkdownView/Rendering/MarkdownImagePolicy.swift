@@ -1,30 +1,32 @@
 #if os(iOS) || os(macOS)
 import SwiftUI
 
-/// Markdown ドキュメント中の画像ソースをどこまで信頼するかの方針。
+/// How far the image sources in a Markdown document are to be trusted.
 ///
-/// `![alt](source)` の `source` は**ドキュメントが決める文字列**であり、多くの場合は
-/// LLM の出力やユーザー投稿など、アプリが書いたものではない。したがって既定では
-/// ローカルファイルシステムへのアクセスを許さない。許すと、描画するだけで
-/// `![x](file:///…/Documents/secrets.db)` のような指定がアプリのファイルを読みにいく。
+/// The `source` in `![alt](source)` is **a string the document chooses**, and it is often not one
+/// the app wrote — LLM output, user submissions. So the file system is off limits by default:
+/// allow it, and merely drawing `![x](file:///…/Documents/secrets.db)` sends the renderer after
+/// the app's own files.
 ///
-/// アプリ自身が用意した画像を差し込みたい場合は、バンドルリソース名での参照が既定で使える
-/// （バンドルの中身はアプリが決めるものなので、ドキュメント側に主導権が無い）。
+/// To place images the app itself ships, refer to them by bundle resource name, which works by
+/// default — the app decides what is in its bundle, so the document has no say there.
 public struct MarkdownImagePolicy: Sendable, Equatable {
 
-    /// http / https の画像を取得するか。
+    /// Whether http and https images are fetched.
     public var allowsRemoteImages: Bool
 
-    /// `file:` URL および裸のファイルパスを画像として読み込むか。
+    /// Whether `file:` URLs and bare file paths are loaded as images.
     ///
-    /// ドキュメントが指すパスを無条件に開くことになるため、既定は `false`。
-    /// 信頼できるソースの Markdown だけを描画すると分かっている場合にのみ有効にする。
+    /// This opens whatever path the document names, so it is `false` by default. Turn it on only
+    /// where you know the Markdown being drawn comes from a source you trust.
     public var allowsFileSystemAccess: Bool
 
-    /// リモート画像 1 枚あたりの最大バイト数。超えたものは読み込まない。
+    /// The largest a single remote image may be, in bytes.
+    ///
+    /// The transfer is cut off the moment it runs past this, rather than measured afterwards.
     public var maximumRemoteByteCount: Int
 
-    /// リモート取得のタイムアウト（秒）。
+    /// The timeout for a remote fetch, in seconds.
     public var remoteTimeout: TimeInterval
 
     public init(
@@ -39,16 +41,16 @@ public struct MarkdownImagePolicy: Sendable, Equatable {
         self.remoteTimeout = remoteTimeout
     }
 
-    /// 既定。リモート画像とバンドルリソースを許可し、ファイルシステムへのアクセスは許さない。
+    /// The default: remote images and bundle resources are allowed, the file system is not.
     public static let `default` = MarkdownImagePolicy()
 
-    /// ネットワークもファイルシステムも使わない。バンドルリソースのみ。
+    /// Bundle resources only — neither the network nor the file system is touched.
     public static let bundleOnly = MarkdownImagePolicy(
         allowsRemoteImages: false,
         allowsFileSystemAccess: false
     )
 
-    /// ドキュメントを信頼できる場合のみ。ローカルファイルの読み込みを許可する。
+    /// Allows local files to be read. Use only where the document itself is trusted.
     public static let trustedDocument = MarkdownImagePolicy(
         allowsFileSystemAccess: true
     )
@@ -61,7 +63,7 @@ private struct MarkdownImagePolicyKey: EnvironmentKey {
 }
 
 public extension EnvironmentValues {
-    /// Markdown 画像の読み込み方針。
+    /// The policy Markdown images are loaded under.
     var markdownImagePolicy: MarkdownImagePolicy {
         get { self[MarkdownImagePolicyKey.self] }
         set { self[MarkdownImagePolicyKey.self] = newValue }
@@ -69,7 +71,7 @@ public extension EnvironmentValues {
 }
 
 public extension View {
-    /// Markdown 画像の読み込み方針を設定する。
+    /// Sets the policy Markdown images are loaded under.
     ///
     /// ```swift
     /// MarkdownView(source)

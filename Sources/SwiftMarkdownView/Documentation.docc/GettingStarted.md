@@ -1,124 +1,108 @@
-# はじめかた
+# Getting Started
 
-`SwiftMarkdownView` で Markdown をレンダリングする基本を学ぶ。
+Render your first document, then parse ahead of time and adjust the appearance.
 
 ## Overview
 
-`SwiftMarkdownView` はシングルインポートで任意の SwiftUI アプリに Markdown レンダリングを追加できる。CommonMark と GitHub Flavored Markdown を解析し、見出し・コードブロック・テーブル・タスクリスト・Aside・画像などをネイティブ SwiftUI としてレンダリングし、`swift-design-system` テーマを自動的に適用する。
+`MarkdownView` takes a Markdown string and draws it. There is no document type to build and no
+configuration step — the string is the input, and the defaults are chosen so that the result is
+readable in light and dark mode without any setup.
 
-## インストール
+## Render a document
 
-### Swift Package Manager
-
-`Package.swift` に依存関係を追加する:
-
-```swift
-dependencies: [
-    .package(
-        url: "https://github.com/no-problem-dev/swift-markdown-view.git",
-        .upToNextMajor(from: "1.4.3")
-    )
-]
-```
-
-次に、ターゲットにプロダクトを追加する:
-
-```swift
-.target(
-    name: "YourTarget",
-    dependencies: [
-        .product(name: "SwiftMarkdownView", package: "swift-markdown-view")
-    ]
-)
-```
-
-シンタックスハイライトを有効にするには、`SwiftMarkdownViewHighlightJS` も追加する:
-
-```swift
-.product(name: "SwiftMarkdownViewHighlightJS", package: "swift-markdown-view")
-```
-
-## 基本的な使い方
-
-### 文字列をレンダリングする
-
-Markdown 文字列を ``MarkdownView`` に直接渡す:
+Wrap it in a `ScrollView` when the content can exceed the screen. The view sizes itself to its
+content, so it does not scroll on its own.
 
 ```swift
 import SwiftUI
 import SwiftMarkdownView
 
-struct ContentView: View {
+struct ReleaseNotesView: View {
+    let notes: String
+
     var body: some View {
         ScrollView {
-            MarkdownView("""
-            # Hello, Markdown!
-
-            This is **bold**, *italic*, and `inline code`.
-
-            ## Lists
-
-            - Item one
-            - Item two
-            - [x] Completed task
-
-            ```swift
-            let message = "Hello, World!"
-            print(message)
-            ```
-            """)
-            .padding()
+            MarkdownView(notes)
+                .padding(.horizontal)
         }
+        .navigationTitle("What's New")
     }
 }
 ```
 
-### パフォーマンス向上のための事前パース
+Everything in <doc:SupportedElements> works from here. Try a document with a table and a task list
+in it — the interesting part is that you can drag a selection from the prose, through the table,
+and out the other side, and paste something legible.
 
-同じ Markdown を複数箇所で表示する場合やメインスレッド外で解析する場合は、``MarkdownContent`` を直接使用する:
+## Parse ahead of time
+
+`MarkdownView(_:)` parses the string when the view is created. That is the right default, but it
+happens on the main actor, and it happens again for every instance that receives the same string.
+
+`MarkdownContent` is the parsed form. Build it once — off the main actor if the document is
+large, or once per document rather than once per row in a list — and hand the result to the view.
 
 ```swift
-let content = MarkdownContent(parsing: longMarkdownString)
+// Off the main actor, or once when the document is loaded.
+let content = MarkdownContent(parsing: article.body)
 
-// 後でメインスレッドで:
+// Later, on the main actor.
 MarkdownView(content)
 ```
 
-### 見た目を調整する
+This matters most in a `List` or `LazyVStack`, where the same content is re-created as cells are
+recycled.
 
-既定はシステムの意味色なので、設定なしでライト/ダークどちらでも文字が読める。
-自分の配色に合わせるには ``MarkdownPalette`` を実装する:
+## Adjust the appearance
+
+The three theming protocols are separate so that you can override one without restating the
+others. Colors live in ``MarkdownPalette``:
 
 ```swift
-struct BrandPalette: MarkdownPalette {
+struct DocsPalette: MarkdownPalette {
     var text: Color { .primary }
     var secondaryText: Color { .secondary }
     var heading: Color { .indigo }
-    var link: Color { .blue }
-    var codeBackground: Color { Color.gray.opacity(0.12) }
-    var rule: Color { Color.gray.opacity(0.4) }
+    var link: Color { .accentColor }
+    var codeBackground: Color { Color.indigo.opacity(0.08) }
+    var rule: Color { Color.secondary.opacity(0.3) }
 }
 
-MarkdownView(source)
-    .markdownPalette(BrandPalette())
+MarkdownView(content)
+    .markdownPalette(DocsPalette())
 ```
 
-`swift-design-system` を使っているなら `SwiftMarkdownViewDesignSystem` を追加して
-`.markdownTheme(themeProvider)` を呼ぶとアプリテーマに追従する。
+Spacing and type sizes work the same way through ``MarkdownMetrics`` and ``MarkdownTypeScale``.
+See <doc:Theming> for the full picture, including the `swift-design-system` bridge.
 
-### シンタックスハイライトを有効にする
+## Add the optional pieces
 
-ターゲットに `SwiftMarkdownViewHighlightJS` を追加し（上記インストール参照）、次のようにする:
+Two capabilities are separate products, so that documents that do not need them do not pay for
+them:
+
+- Fenced code blocks render without color until a highlighter is installed. Add the
+  `SwiftMarkdownViewHighlightJS` product and call `.adaptiveSyntaxHighlighting()`. See
+  <doc:SyntaxHighlighting>.
+- Math renders as its own source text until a renderer is installed. Add the
+  `SwiftMarkdownViewLaTeX` product and inject `.markdownMathRenderer(LaTeXMathRenderer())`.
+
+## Consider where the Markdown comes from
+
+If the document is not written by your app — model output, user submissions, content fetched from
+a server — then the image sources in it are chosen by whoever wrote it. ``MarkdownImagePolicy``
+governs what those sources may reach. The default already refuses the file system; tighten it to
+`.bundleOnly` when the document should not be able to make network requests either.
 
 ```swift
-import SwiftMarkdownViewHighlightJS
-
-MarkdownView(source)
-    .adaptiveSyntaxHighlighting()   // automatic light/dark theme
+MarkdownView(untrustedSource)
+    .markdownImagePolicy(.bundleOnly)
 ```
 
-## 次のステップ
+## Next steps
 
+- <doc:SupportedElements>
+- <doc:Theming>
 - <doc:SyntaxHighlighting>
 - <doc:Asides>
 - <doc:MermaidDiagrams>
+- <doc:ModuleStructure>

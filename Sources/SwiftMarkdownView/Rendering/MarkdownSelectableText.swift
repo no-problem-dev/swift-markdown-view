@@ -11,14 +11,15 @@ import UIKit
 import AppKit
 #endif
 
-/// ドキュメント全体を**単一の** TextKit 2 テキストビューにレンダリングする Markdown ビュー。
+/// A Markdown view that renders the whole document into a **single** TextKit 2 text view.
 ///
-/// テキスト選択がブロック間（見出し → 段落 → リスト…）を連続して行え、
-/// システムのコピーで選択した可読テキストを取得できる —
-/// SwiftUI のブロック単位 `Text` レンダリングでは構造上実現できない挙動。
+/// Selection runs continuously from one block to the next — heading into paragraph into list —
+/// and the system copy command yields the readable text that was selected. Rendering block by
+/// block into SwiftUI `Text` views cannot do this, as a matter of structure.
 ///
-/// `MarkdownView` の実レンダリングバックエンド。`MarkdownView.body` はこの型に全面委譲する。
-/// 直接使うのは、テーマを注入したい場合など `MarkdownView` の環境値経由では届かないときだけでよい。
+/// This is the rendering backend behind ``MarkdownView``, which delegates its whole body here.
+/// Reach for it directly only when something has to be passed in that the environment values of
+/// ``MarkdownView`` do not carry, such as an explicit theme.
 public struct MarkdownSelectableText {
     public let content: MarkdownContent
     public var theme: MarkdownTextTheme
@@ -37,25 +38,26 @@ public struct MarkdownSelectableText {
         self.init(MarkdownContent(parsing: source), theme: theme)
     }
 
-    /// レイアウト後にコードブロックへ非同期シンタックスハイライターを適用する。
+    /// Applies an asynchronous syntax highlighter to code blocks once layout has happened.
     ///
-    /// `MarkdownCodeHighlighting` は TextKit 層の内部プロトコルなのでパッケージ内に閉じる。
-    /// 利用者は SwiftUI 層の ``SyntaxHighlighter`` を ``SwiftUICore/View/markdownSyntaxHighlighter(_:)``
-    /// で注入する（``SyntaxHighlighterAdapter`` が橋渡しする）。
+    /// `MarkdownCodeHighlighting` is an internal protocol of the TextKit layer, so this stays
+    /// inside the package. Clients inject the SwiftUI-level ``SyntaxHighlighter`` with
+    /// ``SwiftUICore/View/markdownSyntaxHighlighter(_:)``, and ``SyntaxHighlighterAdapter``
+    /// bridges the two.
     package func codeHighlighter(_ highlighter: (any MarkdownCodeHighlighting)?) -> MarkdownSelectableText {
         var copy = self
         copy.highlighter = highlighter
         return copy
     }
 
-    /// 画像/数式アタッチメント（例: LaTeX）に同期レンダラーを適用する。
+    /// Applies a synchronous renderer to image and math attachments, LaTeX among them.
     public func attachmentRenderer(_ renderer: (any MarkdownAttachmentRendering)?) -> MarkdownSelectableText {
         var copy = self
         copy.attachmentRenderer = renderer
         return copy
     }
 
-    /// WebView で Mermaid ダイアグラムをレンダリングする。
+    /// Renders Mermaid diagrams in a web view.
     func mermaid(script: MermaidScript, isDark: Bool) -> MarkdownSelectableText {
         var copy = self
         copy.mermaidConfig = (script, isDark)
@@ -68,8 +70,8 @@ public struct MarkdownSelectableText {
 
     public final class Coordinator {
         let provider = MarkdownLayoutFragmentProvider()
-        /// 最後に適用した入力。コンテンツやフォントサイズが変わらないレイアウトパスは
-        /// 再スタイリングをスキップし、ユーザーの選択をリセットしない。
+        /// The input last applied. A layout pass that leaves the content and font size alone
+        /// skips restyling, which keeps it from throwing away the user's selection.
         var appliedContent: MarkdownContent?
         var appliedFontSize: CGFloat?
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -93,8 +95,9 @@ public struct MarkdownSelectableText {
             category: "SyntaxHighlight"
         )
 
-        /// 各 Mermaid プレースホルダーアタッチメントをライブかつスクロール可能な
-        /// WebView アタッチメントに交換する。冪等 — インストール済みのアタッチメントはスキップする。
+        /// Swaps each Mermaid placeholder attachment for a live, scrollable web view attachment.
+        ///
+        /// Idempotent: attachments already installed are skipped.
         @MainActor
         func installMermaid(in storage: NSTextStorage, script: MermaidScript, isDark: Bool, displayHeight: CGFloat) {
             let full = NSRange(location: 0, length: storage.length)
@@ -114,8 +117,10 @@ public struct MarkdownSelectableText {
             storage.endEditing()
         }
 
-        /// 各画像アタッチメントのソースをメインアクター外でロードし、
-        /// ストレージに画像とアスペクトフィットのバウンドを設定する。進行中のパスはキャンセルする。
+        /// Loads the source of every image attachment off the main actor.
+        ///
+        /// The image and its aspect-fit bounds are written to the storage as each one arrives.
+        /// Any pass still in flight is cancelled first.
         @MainActor
         func startImageLoading(
             in storage: NSTextStorage,
@@ -134,8 +139,8 @@ public struct MarkdownSelectableText {
                     case .success(let loaded):
                         image = loaded
                     case .failure(let failure):
-                        // 読み込めなかった画像は描画されない。原因が分からないと
-                        // 「なぜ出ないのか」を追えないので、握りつぶさず理由を出す。
+                        // An image that failed to load is simply not drawn. Report the reason
+                        // rather than swallowing it — otherwise there is no way to find out why.
                         MarkdownImageLoader.report(failure, source: request.source)
                         continue
                     }
@@ -150,8 +155,9 @@ public struct MarkdownSelectableText {
             }
         }
 
-        /// 各コード領域をメインアクター外でハイライトし、カラーをストレージに適用する。
-        /// 最初に進行中のパスをキャンセルする。
+        /// Highlights every code region off the main actor and applies the colors to the storage.
+        ///
+        /// Any pass still in flight is cancelled first.
         @MainActor
         func startHighlighting(_ highlighter: (any MarkdownCodeHighlighting)?, in storage: NSTextStorage) {
             highlightTask?.cancel()
@@ -165,10 +171,10 @@ public struct MarkdownSelectableText {
                     do {
                         highlighted = try await highlighter.highlightedCode(region.code, language: region.language)
                     } catch {
-                        // ハイライトは装飾なので、失敗しても本文は素のまま描き続ける。
-                        // ただし黙って捨てない — 握り潰すと、自作ハイライターの不具合が
-                        // 「なぜか色が付かない」としてしか観測できなくなる。
-                        // 画像読み込みの失敗報告と同じ作法（Logger）に揃える。
+                        // Highlighting is decoration, so a failure leaves the body drawn plain
+                        // and rendering carries on. It is not dropped silently, though: swallow
+                        // it and a bug in a client's highlighter shows up only as code that
+                        // never gets colored. Same treatment as a failed image load — a Logger.
                         let language = region.language ?? "(なし)"
                         Self.logger.warning(
                             "コードブロックをハイライトできませんでした [language=\(language, privacy: .public)]: \(error, privacy: .public)"
@@ -224,8 +230,10 @@ extension MarkdownSelectableText: UIViewRepresentable {
         }
     }
 
-    /// SwiftUI `ScrollView` / スタック内でスクロールなしテキストビューが正しくサイズ調整できるよう、
-    /// 提案幅に対するコンテンツ高さを返す。
+    /// Returns the content height for the proposed width.
+    ///
+    /// This is what lets a non-scrolling text view size itself correctly inside a SwiftUI
+    /// `ScrollView` or stack.
     public func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
         guard let width = proposal.width, width > 0, width != .infinity else { return nil }
         let fitting = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))

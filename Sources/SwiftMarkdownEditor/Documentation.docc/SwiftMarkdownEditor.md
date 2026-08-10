@@ -1,6 +1,7 @@
 # ``SwiftMarkdownEditor``
 
-ライブシンタックスハイライト・フォーマットツールバー・レンダリングプレビューを備えた SwiftUI Markdown エディタ。
+A SwiftUI Markdown editor with live syntax highlighting, a formatting toolbar, and a rendered
+preview.
 
 @Metadata {
     @PageColor(orange)
@@ -8,13 +9,10 @@
 
 ## Overview
 
-`SwiftMarkdownEditor` は `MarkdownEditor` を提供する。プラットフォーム標準のテキストビューをラップしてソース編集を行い、レンダリングプレビューには `MarkdownView` を再利用するドロップイン SwiftUI `View`。バインドされたプレーン Markdown 文字列が唯一の正であり、中間表現は公開しない。
-
-`MarkdownEditorMode` で制御する 3 つの表示モードをサポートする。`.edit` モードではライブシンタックスハイライトを適用してソースを表示する（iOS は TextKit 2、macOS は TextKit 1。ハイライトは属性の付与だけなので挙動は同じ）。`.preview` モードではレンダリングされた `MarkdownView` がコンテンツ領域を占める。`.split` モード（macOS や幅広 iPad レイアウトに最適）では両パネルがディバイダーで区切られて並列表示される。ユーザーはエディタヘッダーのセグメントコントロールでモードを切り替える。
-
-`.edit` モードと `.split` モードでは、モードスイッチャーの下にスクロール可能なフォーマットツールバーが表示される。各ボタンは太字・斜体・取り消し線・インラインコード・見出し変換・箇条書き・引用・リンク挿入などのフォーマット変換をソーステキストビューの選択範囲に適用する。
-
-オートフォーマット入力ルールはユーザーのタイプに応じて自動的に発火する。デフォルトのルールセットは Return でリストアイテムを継続し、選択テキストを対応する Markdown デリミタで囲む。ルールを拡張・置換するにはカスタムの `InputRuleProcessor` をイニシャライザに渡す。
+`MarkdownEditor` is a drop-in `View` that binds to a plain `String`. There is no document type to
+build, no intermediate model to convert to and from, and nothing to serialise on save — the
+Markdown text is the state, and it stays the single source of truth from the moment the user
+types.
 
 ```swift
 import SwiftUI
@@ -29,11 +27,35 @@ struct NoteEditor: View {
 }
 ```
 
-色とスペーシングは SwiftUI 環境内の `swift-design-system` テーマから取得するため、アプリ全体のデザインに自動的に合わせる。
+It runs the same way on iOS and macOS. The macOS side is a real `NSTextView` implementation rather
+than a compatibility shim over the iOS path, so the platform behaviours users expect — the find
+bar, the standard editing menus, keyboard shortcuts — are the system's own.
+
+Three view modes are available. `.edit` shows the source with live highlighting; `.preview`
+renders the document with `MarkdownView`; `.split` shows both side by side, which suits macOS
+windows and wide iPad layouts. The built-in mode picker offers `.split` on macOS only, though the
+mode itself works anywhere you set it.
+
+Turning on live preview changes what editing looks like rather than adding a second pane: inline
+markers are hidden and the text renders in place as you type, while the line holding the caret
+keeps its markers so you can still edit them.
+
+Everything the toolbar does is also available as a plain function. The editing commands are pure
+transforms over text and selection, so a command you add from your own UI is the same kind of
+thing as a built-in one — and undo works for both, because both go through the system
+`UndoManager`.
+
+See <doc:CustomizingTheEditor> for toolbars, controllers, input rules, and theming.
 
 ## Topics
 
-### エディタビュー
+### Essentials
 
 - ``MarkdownEditor``
 - ``MarkdownEditorMode``
+- <doc:CustomizingTheEditor>
+
+### Toolbar
+
+- ``MarkdownEditorToolbarItem``
+- ``MarkdownFormattingToolbar``

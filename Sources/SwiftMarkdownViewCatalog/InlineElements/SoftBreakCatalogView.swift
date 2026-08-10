@@ -2,7 +2,7 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// 改行要素のカタログ View。
+/// Every way a line ends: soft break, hard break, and paragraph break.
 public struct SoftBreakCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

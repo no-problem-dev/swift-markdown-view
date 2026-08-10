@@ -5,8 +5,17 @@ import SwiftMarkdownEditorTextKit
 
 public extension MarkdownEditorTheme {
 
-    /// デザインシステムのカラーパレットからエディタテーマを構築する。
-    /// これによりソースエディタの着色がアプリテーマと常に同期する。
+    /// Builds an editor theme from a design system color palette.
+    ///
+    /// The roles map straight across: `onSurface` becomes the text color, `surface` the
+    /// background, `onSurfaceVariant` the muted syntax markers, `secondary` the code
+    /// color, and `primary` both the accent and the caret tint.
+    ///
+    /// - Parameters:
+    ///   - palette: The palette to read colors from.
+    ///   - baseFontSize: The point size of body text. It applies when the theme drives
+    ///     `MarkdownSourceTextView` directly. `MarkdownEditor` overrides it with the
+    ///     `baseFontSize` of its own initializer, so set the editor's font size there.
     static func fromDesignSystem(
         palette: any ColorPalette,
         baseFontSize: CGFloat = 16
@@ -24,12 +33,18 @@ public extension MarkdownEditorTheme {
 
 extension View {
 
-    /// 環境の DesignSystem パレットからエディタテーマを導出して適用する。
+    /// Derives an editor theme from the design system palette in the environment.
     ///
     /// ```swift
     /// MarkdownEditor(text: $text)
     ///     .markdownEditorDesignSystemTheme()
     /// ```
+    ///
+    /// - Parameter baseFontSize: The point size of body text. It applies when the
+    ///   derived theme drives `MarkdownSourceTextView` directly. `MarkdownEditor`
+    ///   overrides it with the `baseFontSize` of its own initializer, so
+    ///   `MarkdownEditor(text: $text).markdownEditorDesignSystemTheme(baseFontSize: 20)`
+    ///   still renders at the editor's own size — set the size on the editor instead.
     public func markdownEditorDesignSystemTheme(baseFontSize: CGFloat = 16) -> some View {
         modifier(DesignSystemEditorThemeBridge(baseFontSize: baseFontSize))
     }

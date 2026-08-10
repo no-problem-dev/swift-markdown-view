@@ -4,7 +4,7 @@ import SwiftMarkdownView
 
 // MARK: - Palette
 
-/// `swift-design-system` のカラーパレットを Markdown の色として解釈する。
+/// Reads a `swift-design-system` color palette as Markdown colors.
 public struct DesignSystemMarkdownPalette: MarkdownPalette {
 
     private let palette: any ColorPalette
@@ -23,7 +23,7 @@ public struct DesignSystemMarkdownPalette: MarkdownPalette {
 
 // MARK: - Metrics
 
-/// `swift-design-system` のスペーシングスケールを Markdown の寸法として解釈する。
+/// Reads a `swift-design-system` spacing scale as Markdown metrics.
 public struct DesignSystemMarkdownMetrics: MarkdownMetrics {
 
     private let spacing: any SpacingScale
@@ -38,7 +38,7 @@ public struct DesignSystemMarkdownMetrics: MarkdownMetrics {
 
 // MARK: - Type scale
 
-/// `swift-design-system` の `Typography` を Markdown の文字サイズとして解釈する。
+/// Reads the `swift-design-system` `Typography` tokens as Markdown font sizes.
 public struct DesignSystemMarkdownTypeScale: MarkdownTypeScale {
 
     public init() {}
@@ -61,31 +61,31 @@ public struct DesignSystemMarkdownTypeScale: MarkdownTypeScale {
 
 extension View {
 
-    /// MarkdownView とそのコンテンツに DesignSystem テーマを適用する。
+    /// Applies the design system theme to the Markdown views in this hierarchy.
     ///
-    /// これにより Markdown の色・寸法・文字サイズがアプリのテーマに追従する。
+    /// Markdown colors, metrics, and font sizes then follow the app's theme.
     ///
     /// ```swift
     /// MarkdownView(source)
     ///     .markdownTheme(themeProvider)
     /// ```
     ///
-    /// - Parameter provider: テーマ設定を保持する ThemeProvider。
-    /// - Returns: テーマが適用されたビュー。
+    /// - Parameter provider: The theme provider whose tokens are published to the
+    ///   environment and then mirrored into the Markdown environment values.
     public func markdownTheme(_ provider: ThemeProvider) -> some View {
         self.theme(provider)
             .markdownDesignSystemTokens()
     }
 
-    /// 環境の DesignSystem トークンを Markdown 側の環境値へ写す。
+    /// Mirrors the design system tokens already in the environment into the Markdown environment values.
     ///
-    /// `.theme(_:)` を自前で当てている場合はこちらを直接使う。
+    /// Use this when you apply `.theme(_:)` yourself.
     public func markdownDesignSystemTokens() -> some View {
         modifier(DesignSystemTokenBridge())
     }
 }
 
-/// `ThemeProvider` が環境に流す DesignSystem トークンを読み、Markdown 側の環境値へ写す。
+/// Reads the tokens a theme provider puts in the environment and mirrors them into the Markdown environment values.
 private struct DesignSystemTokenBridge: ViewModifier {
 
     @Environment(\.colorPalette) private var palette

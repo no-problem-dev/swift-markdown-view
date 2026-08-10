@@ -10,7 +10,11 @@ import AppKit
 
 extension MarkdownTextTheme {
 
-    /// 環境から解決した色・寸法・文字サイズを TextKit テーマに束ねる。
+    /// Gathers the colors, metrics, and font sizes from the environment into one TextKit theme.
+    ///
+    /// The palette is wider on the TextKit side than in ``MarkdownPalette``, so some values feed
+    /// two slots: `codeBackground` backs both inline code and code blocks, and `rule` colors both
+    /// the quote bar and thematic breaks.
     @MainActor
     static func resolved(
         palette: any MarkdownPalette,
@@ -41,14 +45,16 @@ extension MarkdownTextTheme {
     }
 }
 
-/// SwiftUI の `SyntaxHighlighter`（`AttributedString` を返す）を
-/// TextKit 向けの ``MarkdownCodeHighlighting`` プロトコルにブリッジする。
+/// Bridges the SwiftUI-facing highlighter protocol to the one the TextKit layer expects.
+///
+/// SwiftUI's ``SyntaxHighlighter`` returns an `AttributedString`; the TextKit side consumes
+/// ``MarkdownCodeHighlighting``.
 struct SyntaxHighlighterAdapter: MarkdownCodeHighlighting {
     let base: any SyntaxHighlighter
 
     func highlightedCode(_ code: String, language: String?) async throws -> AttributedString? {
-        // `try?` で握り潰さない。`SyntaxHighlighter.highlight` は doc でスローを
-        // 約束しており、捨てると利用者は自作ハイライターの失敗を観測できない。
+        // No `try?` here. `SyntaxHighlighter.highlight` documents that it throws, and dropping
+        // the error would leave a client no way to observe a failure in their own highlighter.
         try await base.highlight(code, language: language)
     }
 }

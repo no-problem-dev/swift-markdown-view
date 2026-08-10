@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// 水平線（テーマティックブレーク）要素のカタログ View。
 public struct ThematicBreakCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

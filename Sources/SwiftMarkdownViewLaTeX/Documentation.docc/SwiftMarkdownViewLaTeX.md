@@ -1,6 +1,6 @@
 # ``SwiftMarkdownViewLaTeX``
 
-SwiftLaTeXView による `SwiftMarkdownView` の LaTeX 数式組版モジュール。
+LaTeX typesetting for the math in a rendered Markdown document.
 
 @Metadata {
     @PageColor(purple)
@@ -8,11 +8,17 @@ SwiftLaTeXView による `SwiftMarkdownView` の LaTeX 数式組版モジュー�
 
 ## Overview
 
-`SwiftMarkdownViewLaTeX` は `SwiftMarkdownView` のオプションアドオンで、数式をプレーンなソース表示から本格的な LaTeX 組版にアップグレードする。`LaTeXMathRenderer`（SwiftLaTeXView にレンダリングを委譲する `MathRenderer` 実装）を提供する。SwiftLaTeXView は WebView を使わず、SwiftMath エンジンで LaTeX を直接 Core Text グリフにレンダリングする軽量ラッパーだ。
+Without a math renderer installed, `SwiftMarkdownView` shows math as the source you wrote. This
+module upgrades it to typeset output, supplying ``LaTeXMathRenderer`` — a `MathRenderer` backed by
+SwiftLaTeXView, which draws LaTeX straight to Core Text glyphs through the SwiftMath engine rather
+than going through a web view.
 
-Markdown ソース内のインライン数式（`$...$`）とディスプレイ数式（`$$...$$`）の両方をサポートする。インライン表現は周囲の `Text` 行内にフローし、ディスプレイ数式は全幅ブロックビューとしてレンダリングされる。`MarkdownView` が使用する TextKit 2 パスでは、ディスプレイ数式はデバイス解像度の画像アタッチメントとしてラスタライズされ、連続テキストビュー内で鮮明に表示される。
+Both forms are handled. Inline math (`$…$`) flows within the surrounding line of text, and display
+math (`$$…$$`) becomes a full-width block. In the TextKit 2 path that `MarkdownView` uses, display
+math is rasterised at device resolution as an attachment, so it stays sharp and stays inside the
+document's selection rather than interrupting it.
 
-数式組版を有効にするには、ターゲットの依存関係に `SwiftMarkdownViewLaTeX` を追加し、レンダラーをビュー階層に注入する:
+Add the product to your target and inject the renderer into the view hierarchy:
 
 ```swift
 import SwiftMarkdownView
@@ -26,10 +32,16 @@ $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
 .markdownMathRenderer(LaTeXMathRenderer())
 ```
 
-レンダラーのビジュアルスタイル（フォントファミリー・フォントサイズ・テキストカラー）は SwiftUI 環境の `swift-design-system` テーマから導出される。デフォルトを上書きするには、イニシャライザにカスタム `MathStyle` を渡す。
+The renderer takes its font family, size, and text color from the `swift-design-system` theme in
+the SwiftUI environment, so equations match the prose around them. Pass a custom `MathStyle` to
+the initializer to override that.
+
+This is the one add-on that cannot avoid `swift-design-system`: SwiftLaTeXView's `MathStyle`
+protocol requires its color palette and spacing scale. The core renderer stays free of it, so the
+dependency arrives only if you opt into math.
 
 ## Topics
 
-### 数式レンダラー
+### Math renderer
 
 - ``LaTeXMathRenderer``

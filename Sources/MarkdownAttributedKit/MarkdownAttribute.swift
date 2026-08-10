@@ -1,30 +1,47 @@
 import Foundation
 
 package extension NSAttributedString.Key {
-    /// 段落範囲をデコレーションブロックとしてマークし、TextKit レイアウトフラグメントが背景や装飾（コードブロック塗りつぶし、引用バー、水平線）を描画できるようにする。値は ``MarkdownBlockDecoration``。
+    /// Marks a paragraph range as a decoration block that the TextKit layout fragment paints behind or beside.
+    ///
+    /// Covers code block fills, quote bars, and horizontal rules. The value is a ``MarkdownBlockDecoration``.
     static let markdownBlockDecoration = NSAttributedString.Key("markdownBlockDecoration")
 
-    /// コードブロックの言語文字列（未指定の場合は空文字）。コードの文字範囲をマークし、非同期シンタックスハイライターが初期レイアウト後に範囲を特定して再着色できるようにする。
+    /// The language of a code block, or the empty string when the fence gave none.
+    ///
+    /// Tagged on the code characters only, so an asynchronous syntax highlighter can find the range and
+    /// recolor it after the initial layout.
     static let markdownCodeLanguage = NSAttributedString.Key("markdownCodeLanguage")
 
-    /// リテラルテキスト以外として描画されるテキストラン（画像/数式アタッチメント、リストマーカー）の Markdown ソース。「Markdown としてコピー」コマンドで Markdown を再構築するために使用する。
+    /// The Markdown source of a run that is drawn as something other than its literal text.
+    ///
+    /// Attachments, the readable text they fall back to, and table rows carry it, so a consumer can
+    /// recover the source text behind a range of the rendered string.
     static let markdownSource = NSAttributedString.Key("markdownSource")
 
-    /// アタッチメントラン（画像または数式）を ``MarkdownAttachment`` として識別し、非同期リゾルバーがレイアウト後に画像を埋めたり更新したりできるようにする。
+    /// Identifies an attachment run, either an image or a formula.
+    ///
+    /// An asynchronous resolver uses it to fill in or update the image after layout. The value is a
+    /// ``MarkdownAttachment``.
     static let markdownAttachment = NSAttributedString.Key("markdownAttachment")
 
-    /// ブロッククォート/aside のリーディングバーに使用する `PlatformColor`。パレットのデフォルトを上書きし、aside の種類に応じてバーを着色する。
+    /// The color of the leading bar drawn beside a block quote or aside.
+    ///
+    /// Overrides the palette default so an aside's bar can be tinted by its kind. The value is a
+    /// `PlatformColor`.
     static let markdownDecorationBar = NSAttributedString.Key("markdownDecorationBar")
 }
 
-/// レンダリングテキスト内でアタッチメント文字（U+FFFC）1文字を占めるインラインオブジェクト（画像または数式）。選択が1文字として通過し、Copy-as-Markdown がソースを再構築できる。
+/// An inline object — an image or a formula — occupying one attachment character (U+FFFC) in the text.
+///
+/// Selection passes over it as a single character, and its `.markdownSource` tag holds the Markdown it
+/// was rendered from.
 public final class MarkdownAttachment: NSObject {
 
     public enum Kind: Equatable, Sendable {
         case image(source: String, alt: String)
         case inlineMath(latex: String)
         case displayMath(latex: String)
-        /// Mermaid ダイアグラム。WebView アタッチメントとして描画する。
+        /// A Mermaid diagram, drawn by a web view attachment.
         case mermaid(source: String)
     }
 
@@ -47,17 +64,26 @@ public final class MarkdownAttachment: NSObject {
     }
 }
 
-/// カスタムレイアウトフラグメントによってブロック範囲をどう装飾するかを記述する。参照型（`NSObject`）として `NSTextStorage` の属性値になり、コピー/編集操作でも生き残る。
+/// Describes how the custom layout fragment should decorate a block range.
+///
+/// A reference type (`NSObject`) so it can serve as an `NSTextStorage` attribute value and survive copy
+/// and edit operations.
 package final class MarkdownBlockDecoration: NSObject {
 
     public enum Kind: Equatable, Sendable {
-        /// フェンス/インデント形式のコードブロック。フラグメントが丸角背景を塗りつぶす。
+        /// A fenced or indented code block.
+        ///
+        /// The fragment fills a rounded background behind it.
         case codeBlock(language: String?)
-        /// 指定ネスト深度のブロッククォート（1 = 最上位）。フラグメントが各レベルにリーディングバーを描画する。
+        /// A block quote at the given nesting depth, where 1 is the outermost level.
+        ///
+        /// The fragment draws one leading bar per level.
         case blockQuote(level: Int)
-        /// テーマティックブレーク。フラグメントが水平線を描画する。
+        /// A thematic break, drawn by the fragment as a horizontal rule.
         case thematicBreak
-        /// テーブル。フラグメントがヘッダー下線と行区切りを描画する。
+        /// A table.
+        ///
+        /// The fragment draws the rule under the header and the separators between rows.
         case table(columns: Int)
     }
 

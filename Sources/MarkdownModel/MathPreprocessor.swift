@@ -1,19 +1,23 @@
 import Foundation
 
-/// swift-markdown パーシング前に数式領域を抽出し、パース後に AST ノードとして復元する。
+/// Lifts math regions out before swift-markdown parses, and puts them back as AST nodes after.
 ///
-/// `\(...\)` デリミターはバックスラッシュエスケープ処理で破壊され、`$a_b$` の添字は強調パーシングで消費されるため、Markdown パーシング前に数式を抽出する必要がある。各数式領域はプレースホルダートークン（cmark でもプレーンテキストとして残る私用領域文字）に置き換える。
+/// Math has to come out first: backslash-escape handling destroys the `\(...\)` delimiters, and
+/// emphasis parsing consumes the subscript in `$a_b$`. Each region is replaced by a placeholder
+/// token built from private-use characters, which cmark leaves alone as plain text.
 ///
-/// ディスプレイ数式を独立したブロックへ切り出すのは**復元側**の仕事。抽出時に空行を挿すと、
-/// その数式を包んでいるリスト項目や引用ごと打ち切ってしまう。復元側は AST を見ているので、
-/// 段落の内側だけを分けられる。
+/// Splitting display math into a block of its own is the job of the **restore** side. Inserting
+/// blank lines during extraction would terminate whatever list item or quote encloses the math.
+/// Restore works from the AST, so it can split the inside of a paragraph and nothing else.
 enum MathPreprocessor {
 
     struct Capture: Equatable {
         let latex: String
         let isDisplay: Bool
-        /// デリミターを含む元のソース断片。数式になり得ない位置（リンク宛先など）に
-        /// トークンが落ちた場合に、原文をそのまま書き戻すために使う。
+        /// The original source fragment, delimiters included.
+        ///
+        /// Written back verbatim when a token lands somewhere that cannot hold math, such as a
+        /// link destination.
         let raw: String
     }
 
@@ -38,17 +42,18 @@ enum MathPreprocessor {
         for part in parts {
             switch part {
             case .text(let text):
-                // ソース由来のトークン文字を落とす。残すと復元時に数式プレースホルダーとして
-                // 解釈され、外部入力（LLM 出力・ユーザー投稿）で数式が増殖する。
-                // U+E000/U+E001 は私用領域で Markdown 上の意味を持たないため、除去して差し支えない。
+                // Drop token characters that came from the source. Left in, restore would read
+                // them as math placeholders, letting untrusted input (LLM output, user posts)
+                // conjure extra math. U+E000/U+E001 are private-use and carry no Markdown
+                // meaning, so removing them is harmless.
                 processed += sanitized(text)
             case .math(let latex, let isDisplay, let raw):
                 let token = "\(tokenStart)\(captures.count)\(tokenEnd)"
                 captures.append(Capture(latex: latex, isDisplay: isDisplay, raw: raw))
-                // ディスプレイ数式もここでは素のトークンとして埋める。
-                // 空行を挿してブロックに切り出すと、段落だけでなくリスト項目・引用・
-                // テーブルまで打ち切ってしまう（`- item $$a$$ more` でリストが壊れた）。
-                // ブロックへの切り出しは、構造が分かっている復元側で行う。
+                // Display math gets a bare token here too. Inserting blank lines to split it
+                // into a block would terminate not just the paragraph but the enclosing list
+                // item, quote, or table (`- item $$a$$ more` broke the list). Restore does the
+                // splitting, where the structure is known.
                 processed += token
             }
         }
@@ -92,11 +97,11 @@ enum MathPreprocessor {
         }
     }
 
-    /// 段落をディスプレイ数式の位置で分割し、数式を独立したブロックとして切り出す。
+    /// Splits a paragraph at each display math token, lifting the math into a block of its own.
     ///
-    /// 切り出しは AST 上で行う。抽出時に空行を挿す方式だと、その段落を包んでいる
-    /// リスト項目や引用ごと打ち切ってしまい、構造が壊れる。ここでは段落の内側だけを
-    /// 分けるので、リスト項目の中の数式はその項目の中に残る。
+    /// The split runs on the AST. Inserting blank lines during extraction would instead
+    /// terminate the enclosing list item or quote and break the structure. Splitting only the
+    /// inside of the paragraph keeps math that sits in a list item inside that item.
     private static func splitParagraph(_ inlines: [MarkdownInline], captures: [Capture]) -> [MarkdownBlock] {
         var blocks: [MarkdownBlock] = []
         var pending: [MarkdownInline] = []
@@ -137,8 +142,9 @@ enum MathPreprocessor {
         case display(String)
     }
 
-    /// テキストランをディスプレイ数式トークンの位置で切り分ける。
-    /// インライン数式のトークンはそのまま残し、``restoreInlines`` に任せる。
+    /// Cuts a text run at each display math token.
+    ///
+    /// Inline math tokens are left in place for ``restoreInlines`` to deal with.
     private static func splitOnDisplayTokens(_ text: String, captures: [Capture]) -> [ParagraphPiece] {
         var pieces: [ParagraphPiece] = []
         var pending = ""
@@ -220,10 +226,11 @@ enum MathPreprocessor {
         }
     }
 
-    /// 数式になり得ない位置に落ちたトークンを、デリミター込みの原文へ書き戻す。
+    /// Restores tokens that landed where math cannot go, delimiters and all.
     ///
-    /// スキャナは構文木を持たないため、リンク宛先や画像ソースの中の `$...$` も一律に
-    /// 数式として拾う。そこを復元しないと、表示されているリンクと実際に開く先が食い違う。
+    /// The scanner has no syntax tree, so it picks up `$...$` inside a link destination or an
+    /// image source just as readily as anywhere else. Without this, the link on screen and the
+    /// link that actually opens would differ.
     private static func restoreRawText(_ text: String, captures: [Capture]) -> String {
         guard text.contains(tokenStart) else { return text }
 
@@ -245,7 +252,7 @@ enum MathPreprocessor {
         return result
     }
 
-    /// テキストランをプレースホルダートークンで分割し、テキストと数式インラインに変換する。
+    /// Splits a text run at its placeholder tokens, yielding text and inline math elements.
     private static func splitText(_ text: String, captures: [Capture]) -> [MarkdownInline] {
         guard text.contains(tokenStart) else { return [.text(text)] }
 

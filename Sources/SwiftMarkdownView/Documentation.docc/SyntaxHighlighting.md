@@ -1,15 +1,15 @@
-# シンタックスハイライト
+# Syntax Highlighting
 
-コードブロックのシンタックスハイライトをカスタマイズする方法を学ぶ。
+Color fenced code blocks, with the bundled highlighter or one of your own.
 
 ## Overview
 
-SwiftMarkdownViewはデフォルトで``PlainTextHighlighter``を使用し、コードブロックに色付けは行わない。
-50+言語に対応したシンタックスハイライトを有効にするには、オプションの`SwiftMarkdownViewHighlightJS`モジュールを使用する。
+Out of the box, code blocks render in a monospaced font with no coloring. ``PlainTextHighlighter``
+is the default, and it is a deliberate one: a highlighter is a real dependency, and a document
+whose code blocks are shell transcripts or configuration snippets gains little from it.
 
-## クイックスタート
-
-シンタックスハイライトを有効にするには：
+When your Markdown does contain source code, add the `SwiftMarkdownViewHighlightJS` product. It
+wraps HighlightSwift and covers 50+ languages.
 
 ```swift
 import SwiftMarkdownViewHighlightJS
@@ -18,91 +18,49 @@ MarkdownView(source)
     .adaptiveSyntaxHighlighting()
 ```
 
-これにより、ライト/ダークモードに自動対応し、アクセシビリティに配慮したa11yテーマが適用される。
+`adaptiveSyntaxHighlighting()` follows the environment's color scheme, switching between the light
+and dark variant of a theme as the system does. It defaults to the `a11y` theme, which is tuned
+for contrast — the safe choice when you do not know how your readers have configured their
+displays.
 
-## HighlightJSの使用
+## Choose a theme
 
-`SwiftMarkdownViewHighlightJS`モジュールは50+言語に対応した正確なハイライトを提供する：
+Pass a theme to keep the automatic light/dark switching but change the palette:
 
 ```swift
-import SwiftMarkdownViewHighlightJS
-
-// アダプティブハイライト（推奨）
-MarkdownView(source)
-    .adaptiveSyntaxHighlighting()
-
-// テーマ指定
 MarkdownView(source)
     .adaptiveSyntaxHighlighting(theme: .github)
+```
 
-// 手動設定
+| Theme | Notes |
+|---|---|
+| `.a11y` | Contrast-optimised. The default |
+| `.xcode` | Matches Xcode's own coloring |
+| `.github` | Matches rendered GitHub |
+| `.atomOne` | |
+| `.solarized` | |
+| `.tokyoNight` | Only a dark preset is provided |
+
+To pin one appearance regardless of the system setting — a document rendered for print or export,
+say — construct the highlighter directly:
+
+```swift
 MarkdownView(source)
     .markdownSyntaxHighlighter(
         HighlightJSSyntaxHighlighter(theme: .atomOne, colorMode: .dark)
     )
 ```
 
-### 利用可能なテーマ
+The paired presets are shorthand for exactly that: `.xcodeLight`, `.xcodeDark`, `.githubLight`,
+`.githubDark`, `.atomOneLight`, `.atomOneDark`, `.solarizedLight`, `.solarizedDark`, `.a11yLight`,
+`.a11yDark`, and `.tokyoNightDark`.
 
-| テーマ | 説明 |
-|--------|------|
-| `.a11y` | アクセシビリティ最適化（推奨） |
-| `.xcode` | Xcodeデフォルトスタイル |
-| `.github` | GitHubスタイル |
-| `.atomOne` | Atom Oneスタイル |
-| `.solarized` | Solarizedスタイル |
-| `.tokyoNight` | Tokyo Nightスタイル |
+## Apply it once for the whole app
 
-### テーマプリセット
+The highlighter travels through the environment, so one call high in the hierarchy covers every
+`MarkdownView` below it — including the ones inside `MarkdownEditor`'s preview pane.
 
 ```swift
-HighlightJSSyntaxHighlighter.xcodeLight
-HighlightJSSyntaxHighlighter.xcodeDark
-HighlightJSSyntaxHighlighter.githubLight
-HighlightJSSyntaxHighlighter.githubDark
-HighlightJSSyntaxHighlighter.atomOneLight
-HighlightJSSyntaxHighlighter.atomOneDark
-HighlightJSSyntaxHighlighter.a11yLight
-HighlightJSSyntaxHighlighter.a11yDark
-```
-
-## カスタムハイライター
-
-独自のシンタックスハイライトを実装するには、``SyntaxHighlighter``プロトコルに準拠したハイライターを作成する：
-
-```swift
-struct MyCustomHighlighter: SyntaxHighlighter {
-    func highlight(_ code: String, language: String?) async throws -> AttributedString {
-        var result = AttributedString(code)
-        // カスタムハイライト処理を実装
-        return result
-    }
-}
-
-MarkdownView(source)
-    .markdownSyntaxHighlighter(MyCustomHighlighter())
-```
-
-## シンタックスハイライトの無効化
-
-デフォルトではシンタックスハイライトは適用されない。明示的にプレーンテキストを使用するには：
-
-```swift
-// デフォルト動作 - ハイライトなし
-MarkdownView(source)
-
-// 明示的にPlainTextHighlighterを使用
-MarkdownView(source)
-    .markdownSyntaxHighlighter(PlainTextHighlighter())
-```
-
-## アプリ全体への設定
-
-アプリ全体にシンタックスハイライトを適用するには：
-
-```swift
-import SwiftMarkdownViewHighlightJS
-
 @main
 struct MyApp: App {
     var body: some Scene {
@@ -114,13 +72,48 @@ struct MyApp: App {
 }
 ```
 
-## カタログでの使用
+## Write your own highlighter
 
-Markdownカタログでシンタックスハイライトを有効にするには：
+``SyntaxHighlighter`` is a single async method, so a highlighter can call out to whatever engine
+you like without blocking rendering. Return an `AttributedString` carrying the attributes you
+want; the renderer keeps them and supplies the font and background itself.
 
 ```swift
-import SwiftMarkdownViewHighlightJS
+struct KeywordHighlighter: SyntaxHighlighter {
+    func highlight(_ code: String, language: String?) async throws -> AttributedString {
+        guard language == "swift" else { return AttributedString(code) }
+        var result = AttributedString(code)
+        // Apply your own attributes here.
+        return result
+    }
+}
 
-MarkdownCatalogView()
-    .adaptiveSyntaxHighlighting()
+MarkdownView(source)
+    .markdownSyntaxHighlighter(KeywordHighlighter())
 ```
+
+`language` is the fence's info string, or `nil` for an untagged fence. Return the input unchanged
+for a language you do not handle. Highlighting is never allowed to blank the screen: while the
+work is in flight, and again if it throws, the code is shown as unstyled text.
+
+## Turn it off again
+
+Applying ``PlainTextHighlighter`` explicitly removes highlighting for one subtree without undoing
+the app-wide setting:
+
+```swift
+MarkdownView(untrustedSource)
+    .markdownSyntaxHighlighter(PlainTextHighlighter())
+```
+
+## Topics
+
+### Protocol and defaults
+
+- ``SyntaxHighlighter``
+- ``PlainTextHighlighter``
+- ``HighlightState``
+
+### Code block view
+
+- ``HighlightedCodeView``

@@ -1,27 +1,28 @@
 import Foundation
 
-/// 編集境界上の位置をどう変換するかの指定。
+/// Which way a position sitting on the boundary of an edit is mapped.
 ///
-/// CodeMirror の `assoc` / ProseMirror の `bias` に相当する。
-/// ある位置にテキストが挿入されるとき、その位置にあるキャレットは
-/// 挿入の前（`.left`）か後（`.right`）に留まる。
-/// タイプ入力ではキャレットを入力テキストの右に押し出すため `.right` がデフォルト。
+/// The equivalent of CodeMirror's `assoc` and ProseMirror's `bias`. When text is inserted
+/// at a position, a caret at that exact position either stays before the insertion
+/// (`.left`) or moves after it (`.right`). Typing uses `.right`, the default, so the caret
+/// is pushed along to the right of what was just typed.
 public enum AssociationBias: Sendable {
     case left
     case right
 }
 
-/// 単一のアトミックな編集：旧テキストの `range` を `replacement` で置換する。
+/// A single atomic edit: one range of the old text, replaced by a new string.
 ///
-/// エディタの変更単位（CodeMirror の `ChangeSpec` / ProseMirror の `ReplaceStep`）。
-/// 純粋値として文字列に適用でき、保存済みの位置（キャレット・デコレーション）を
-/// 変更にマッピングでき、undo のために逆変換できる。
+/// This is the editor's unit of change, in the vein of CodeMirror's `ChangeSpec` and
+/// ProseMirror's `ReplaceStep`. Being a pure value, it can be applied to a string, used to
+/// map stored positions such as carets and decorations across the edit, and inverted for
+/// undo.
 public struct TextChange: Equatable, Sendable {
 
-    /// 置換対象の **旧テキスト** における範囲（UTF-16 オフセット）。
+    /// The range being replaced, in UTF-16 offsets into the text **before** the edit.
     public var range: TextSpan
 
-    /// `range` の位置に挿入するテキスト。
+    /// The text that takes the place of the replaced range.
     public var replacement: String
 
     public init(range: TextSpan, replacement: String) {
@@ -29,30 +30,32 @@ public struct TextChange: Equatable, Sendable {
         self.replacement = replacement
     }
 
-    /// キャレットオフセット位置への挿入を作成する。
+    /// Creates an insertion at a caret offset.
     public init(insert text: String, at offset: Int) {
         self.init(range: TextSpan(caret: offset), replacement: text)
     }
 
-    /// 挿入テキストの長さ（UTF-16 コードユニット数）。
+    /// The length of the replacement text, in UTF-16 code units.
     public var insertedLength: Int { replacement.utf16Length }
 
-    /// この編集によるドキュメント長の符号付き変化量。
+    /// The signed change in document length this edit produces.
     public var lengthDelta: Int { insertedLength - range.length }
 
-    /// **新テキスト** における置換後テキストの範囲。
+    /// The range the replacement occupies in the text **after** the edit.
     public var insertedRange: TextSpan {
         TextSpan(location: range.lowerBound, length: insertedLength)
     }
 
     // MARK: - Alignment
 
-    /// `text` の文字境界に揃えた変更を返す。
+    /// Returns this change with its range widened to the character boundaries of the text.
     ///
-    /// `range` が書記素クラスタの途中を指していると、``apply(to:)`` は境界へ広げて置換する一方で
-    /// ``lengthDelta`` や ``insertedRange`` は元の（狭い）範囲で計算されるため、両者が食い違う。
-    /// オフセットを算術で組み立てた場合は、`lengthDelta` を読む前にこれを通すこと。
-    /// `UITextView` / `NSTextView` 由来のセレクションは既に境界に揃っているので影響はない。
+    /// When the range lands in the middle of a grapheme cluster, ``apply(to:)`` widens it to
+    /// the enclosing boundaries before replacing, while ``lengthDelta`` and
+    /// ``insertedRange`` keep reporting the original, narrower range — so the two disagree.
+    /// Put a change through this before reading `lengthDelta` whenever its offsets were
+    /// assembled by arithmetic. Selections that come from `UITextView` or `NSTextView` are
+    /// already aligned, so this leaves them untouched.
     public func aligned(in text: String) -> TextChange {
         let alignedRange = text.alignedSpan(range)
         guard alignedRange != range else { return self }
@@ -61,7 +64,7 @@ public struct TextChange: Equatable, Sendable {
 
     // MARK: - Apply
 
-    /// この変更を適用した `text` を返す。
+    /// Returns the text with this change applied.
     public func apply(to text: String) -> String {
         var result = text
         result.replaceSubrange(text.range(for: range), with: replacement)
@@ -70,12 +73,15 @@ public struct TextChange: Equatable, Sendable {
 
     // MARK: - Position mapping
 
-    /// 旧テキスト上のオフセットを新テキスト上の対応するオフセットにマッピングする。
+    /// Maps an offset in the old text to the matching offset in the new text.
     ///
-    /// - 編集より前の位置は変化しない。
-    /// - 編集より後の位置は `lengthDelta` だけシフトする。
-    /// - 置換範囲の厳密な内部にある位置は挿入の開始（`.left`）または終端（`.right`）に折り畳まれる。
-    /// - 編集開始位置に正確に一致する位置は `.left` でそのまま、`.right` で挿入終端に移動する。
+    /// - Positions before the edit are unchanged.
+    /// - Positions after the edit shift by `lengthDelta`.
+    /// - Positions inside the replaced range collapse to the start of the insertion
+    ///   (`.left`) or to its end (`.right`).
+    /// - Both bounds of the range count as inside. A position exactly at the start of the
+    ///   edit therefore stays put with `.left` and moves to the end of the insertion with
+    ///   `.right`.
     public func mapOffset(_ offset: Int, bias: AssociationBias = .right) -> Int {
         if offset < range.lowerBound { return offset }
         if offset > range.upperBound { return offset + lengthDelta }
@@ -88,7 +94,7 @@ public struct TextChange: Equatable, Sendable {
         }
     }
 
-    /// この変更にわたってセレクションをマッピングし、方向を保持する。
+    /// Maps a selection across this change, preserving its direction.
     public func mapSelection(_ selection: Selection, bias: AssociationBias = .right) -> Selection {
         Selection(
             anchor: mapOffset(selection.anchor, bias: bias),
@@ -98,9 +104,10 @@ public struct TextChange: Equatable, Sendable {
 
     // MARK: - Invert
 
-    /// この変更を取り消す逆変換を返す。
+    /// Returns the change that undoes this one.
     ///
-    /// 逆変換は置換されたバイト列を復元する必要があるため、元のテキストが必要。
+    /// The original text has to be supplied because the inverse must restore the exact
+    /// characters that were replaced.
     public func inverted(in oldText: String) -> TextChange {
         let replaced = oldText.substring(in: range)
         return TextChange(range: insertedRange, replacement: replaced)

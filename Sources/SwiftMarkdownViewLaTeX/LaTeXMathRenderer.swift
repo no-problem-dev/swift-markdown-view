@@ -3,10 +3,10 @@ import DesignSystem
 import SwiftMarkdownView
 import SwiftLaTeXView
 
-/// SwiftLaTeXView で数式を組版する ``MathRenderer`` 実装。
+/// A math renderer that typesets formulas with SwiftLaTeXView.
 ///
-/// ビュー階層に注入することで、Markdown の数式をプレーンなソース表示から
-/// 本格的な組版にアップグレードする:
+/// Inject it into the view hierarchy to upgrade Markdown math from bare source to real
+/// typesetting:
 ///
 /// ```swift
 /// MarkdownView("""
@@ -18,10 +18,12 @@ import SwiftLaTeXView
 /// ```
 public struct LaTeXMathRenderer: MathRenderer {
 
-    /// 組版に使用する数式スタイル。
+    /// The style used when typesetting math inline with the surrounding paragraph.
     ///
-    /// スタイルはレンダラー生成時に固定される（レンダラーメソッドはビュー階層外で実行されるため、
-    /// `mathStyle` 環境値はここには伝播しない）。
+    /// It is fixed when the renderer is created: renderer methods run outside the view hierarchy,
+    /// so the `mathStyle` environment value never reaches them. The TextKit attachment path
+    /// ignores this value and derives its own style from the text theme, so that rasterized math
+    /// matches the text around it.
     public let style: any MathStyle
 
     public init(style: any MathStyle = DefaultMathStyle()) {
@@ -45,8 +47,10 @@ public struct LaTeXMathRenderer: MathRenderer {
 
 // MARK: - TextKit attachment rendering
 
-/// ラスタライズ画像が周囲の Markdown テキストカラーと一致するよう固定カラーを使用する数式スタイル。
-/// アタッチメントはビュー階層外でレンダリングされるため、パレットベースのカラー解決が適用されない。
+/// A style with a fixed color, so the rasterized image matches the Markdown text around it.
+///
+/// Attachments render outside the view hierarchy, where palette-based color resolution does not
+/// apply.
 private struct FixedColorMathStyle: MathStyle {
     var color: Color
     var inline: CGFloat
@@ -59,9 +63,9 @@ private struct FixedColorMathStyle: MathStyle {
 
 extension LaTeXMathRenderer: MarkdownAttachmentRendering {
 
-    /// 数式をデバイス解像度のシャープな画像にラスタライズし、TextKit レンダラーの
-    /// `NSTextAttachment` として埋め込む。SwiftMath はベクターグリフを組版するため、
-    /// 高 DPI ラスターは通常サイズでも鮮明に表示される。
+    /// Rasterizes a formula at device resolution and embeds it as a TextKit attachment.
+    ///
+    /// SwiftMath typesets vector glyphs, so the high-DPI raster stays crisp at ordinary sizes.
     public func renderedImage(for kind: MarkdownAttachment.Kind, theme: MarkdownTextTheme) -> MarkdownRenderedImage? {
         let latex: String
         let mode: MathMode
@@ -87,8 +91,8 @@ extension LaTeXMathRenderer: MarkdownAttachmentRendering {
             guard let image = renderer.nsImage else { return nil }
             #endif
             let size = image.size
-            // インライン数式はテキストベースラインに配置する。組版のディセンダーが
-            // 周囲テキストと揃うよう、わずかに下に下げる。
+            // Inline math sits on the text baseline. Nudge it down so the typeset descenders
+            // line up with the surrounding text.
             let baselineOffset: CGFloat = mode == .inline ? -(size.height * 0.18) : 0
             return MarkdownRenderedImage(image: image, size: size, baselineOffset: baselineOffset)
         }

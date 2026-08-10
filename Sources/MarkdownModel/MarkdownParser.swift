@@ -1,15 +1,18 @@
 import Foundation
 import Markdown
 
-/// swift-markdown AST をドメイン型に変換する内部パーサー。
+/// Converts the swift-markdown AST into this package's own types.
 ///
-/// Apple の swift-markdown ライブラリで Markdown 文字列をパースし、結果の AST を `MarkdownBlock` と `MarkdownInline` 型に変換する。
+/// Apple's swift-markdown does the parsing; this walks the resulting AST and rewrites it as
+/// `MarkdownBlock` and `MarkdownInline` values.
 enum MarkdownParser {
 
-    /// Markdown 文字列をブロック配列にパースする。
+    /// Parses a Markdown string into blocks.
     ///
-    /// - Parameter source: パースする Markdown 文字列。
-    /// - Returns: パース済みコンテンツを表す `MarkdownBlock` 配列。
+    /// Math regions are lifted out before parsing and put back afterwards, since the Markdown
+    /// parser would otherwise consume their delimiters and subscripts.
+    ///
+    /// - Parameter source: The Markdown text to parse.
     static func parse(_ source: String) -> [MarkdownBlock] {
         let extraction = MathPreprocessor.extract(from: source)
         let document = Document(parsing: extraction.processed)
@@ -174,12 +177,12 @@ enum MarkdownParser {
 
     // MARK: - Aside Conversion
 
-    /// swift-markdown の Aside 解釈を使用して BlockQuote を Aside に変換する。
+    /// Converts a block quote into an aside.
     ///
-    /// swift-markdown の `Aside` 構造体で `> Note:`、`> Warning:` などの aside タグを検出し、種類とコンテンツを抽出する。
+    /// swift-markdown's `Aside` does the tag detection, recognising `> Note:`, `> Warning:` and
+    /// the rest, and hands back the kind along with the content that follows it.
     ///
-    /// - Parameter blockQuote: 変換するブロッククォート。
-    /// - Returns: 検出した種類とコンテンツを持つ aside ブロック。
+    /// - Parameter blockQuote: The block quote to convert.
     private static func convertBlockQuoteToAside(_ blockQuote: Markdown.BlockQuote) -> MarkdownBlock {
         // Use swift-markdown's Aside to interpret the blockquote
         let aside = Aside(blockQuote)

@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// 順序付き（番号付き）リスト要素のカタログ View。
 public struct OrderedListCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

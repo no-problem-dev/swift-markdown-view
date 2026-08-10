@@ -1,25 +1,26 @@
 import Foundation
 
-/// テキストバッファ上の範囲を **UTF-16 コードユニットオフセット** で表す。
+/// A range within a text buffer, measured in **UTF-16 code unit offsets**.
 ///
-/// オフセットは UTF-16 コードユニット（`Character` でも Unicode スカラでもない）であるため、
-/// この UI 非依存層で生成した範囲が `NSAttributedString`・`NSRange`・
-/// `UITextView`/`NSTextView` のセレクション API に TextKit 層で再計測なしに直接マッピングできる。
+/// Offsets count UTF-16 code units, not `Character`s and not Unicode scalars. That is what
+/// lets a range produced in this UI-independent layer map directly onto `NSAttributedString`,
+/// `NSRange`, and the `UITextView`/`NSTextView` selection APIs without being remeasured in
+/// the TextKit layer.
 ///
-/// 権威あるエディタのドキュメントモデル規約
-/// （CodeMirror の `EditorState`・ProseMirror の整数位置）を踏襲する。
-/// 位置はバッファへの単純な整数オフセットのため、セレクションとデコレーションの計算が単純な算術になる。
+/// This follows the document-model convention of established editors — CodeMirror's
+/// `EditorState` and ProseMirror's integer positions. A position is a plain integer offset
+/// into the buffer, which keeps selection and decoration math to simple arithmetic.
 public struct TextSpan: Equatable, Hashable, Sendable {
 
-    /// 含む側の開始オフセット（UTF-16 コードユニット）。
+    /// The inclusive start offset, in UTF-16 code units.
     public var lowerBound: Int
 
-    /// 含まない側の終了オフセット（UTF-16 コードユニット）。
+    /// The exclusive end offset, in UTF-16 code units.
     public var upperBound: Int
 
-    /// 明示的な境界値から範囲を作成する。
+    /// Creates a span from explicit bounds.
     ///
-    /// - Precondition: `lowerBound <= upperBound` かつ両者が非負。
+    /// - Precondition: `lowerBound <= upperBound`, and both are non-negative.
     public init(lowerBound: Int, upperBound: Int) {
         precondition(lowerBound >= 0, "lowerBound must be non-negative")
         precondition(lowerBound <= upperBound, "lowerBound must not exceed upperBound")
@@ -27,33 +28,37 @@ public struct TextSpan: Equatable, Hashable, Sendable {
         self.upperBound = upperBound
     }
 
-    /// 位置と長さから範囲を作成する（NSRange スタイル）。
+    /// Creates a span from a start offset and a length.
     public init(location: Int, length: Int) {
         self.init(lowerBound: location, upperBound: location + length)
     }
 
-    /// 指定オフセット位置の空（キャレット）範囲を作成する。
+    /// Creates an empty span — a caret — at the given offset.
     public init(caret offset: Int) {
         self.init(lowerBound: offset, upperBound: offset)
     }
 
-    /// 範囲の長さ（UTF-16 コードユニット数）。
+    /// The length of the span, in UTF-16 code units.
     public var length: Int { upperBound - lowerBound }
 
-    /// 範囲が空（キャレット位置）かどうか。
+    /// Whether the span is empty, which is how a caret position is represented.
     public var isEmpty: Bool { lowerBound == upperBound }
 
-    /// `offset` が `[lowerBound, upperBound)` 内に収まるかどうか。
+    /// Whether the offset falls inside the span.
+    ///
+    /// The span is half-open: the lower bound is included and the upper bound is not.
+    /// Contrast with ``overlaps(_:)``, where both bounds count.
     public func contains(_ offset: Int) -> Bool {
         offset >= lowerBound && offset < upperBound
     }
 
-    /// この範囲が `other` と共有するオフセットを持つかどうか。
+    /// Whether this span shares any offset with another span.
     ///
-    /// 2 つの空範囲、または空範囲と非空範囲が接する場合は、
-    /// キャレットが相手の範囲の厳密な内部にあるか境界を共有するときだけ重複とみなす。
-    /// これはライブプレビューのカーソル対応「表示」に使う述語のため、
-    /// 境界の接触はカウントされなければならない。
+    /// Both bounds are inclusive here, unlike ``contains(_:)``, so spans that merely touch
+    /// count as overlapping: two empty spans at the same offset, or a caret sitting exactly
+    /// on the edge of a span. This is the predicate behind the live preview's
+    /// cursor-follows reveal, where a caret resting on a boundary must still reveal the
+    /// span it borders.
     public func overlaps(_ other: TextSpan) -> Bool {
         lowerBound <= other.upperBound && other.lowerBound <= upperBound
     }
@@ -61,10 +66,10 @@ public struct TextSpan: Equatable, Hashable, Sendable {
 
 public extension TextSpan {
 
-    /// TextKit 層で使用するために Foundation の `NSRange` へ変換する。
+    /// The span as a Foundation range, for handing to the TextKit layer.
     var nsRange: NSRange { NSRange(location: lowerBound, length: length) }
 
-    /// Foundation の `NSRange` から範囲を作成する。
+    /// Creates a span from a Foundation range.
     init(_ nsRange: NSRange) {
         self.init(location: nsRange.location, length: nsRange.length)
     }

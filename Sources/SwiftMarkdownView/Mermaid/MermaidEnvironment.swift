@@ -2,15 +2,14 @@ import SwiftUI
 
 // MARK: - Environment Key
 
-/// Mermaid スクリプトプロバイダーの環境キー。
 private struct MermaidScriptProviderKey: EnvironmentKey {
     static let defaultValue: any MermaidScriptProvider = CDNMermaidScriptProvider()
 }
 
 extension EnvironmentValues {
-    /// ダイアグラムのレンダリングに使用する Mermaid スクリプトプロバイダー。
+    /// The provider that supplies the Mermaid.js script used to draw diagrams.
     ///
-    /// Mermaid.js の読み込み方法をカスタマイズするには以下を使用する:
+    /// To change how Mermaid.js is loaded:
     ///
     /// ```swift
     /// MarkdownView(source)
@@ -25,15 +24,17 @@ extension EnvironmentValues {
 // MARK: - View Extension
 
 extension View {
-    /// このビュー階層に Mermaid スクリプトプロバイダーを設定する。
+    /// Sets the Mermaid script provider for this view hierarchy.
     ///
-    /// - Parameter provider: 使用するスクリプトプロバイダー。
-    /// - Returns: スクリプトプロバイダーが適用されたビュー。
+    /// A diagram is drawn only when the provider's script can be resolved, so a provider that
+    /// cannot supply one leaves Mermaid blocks undrawn rather than reaching for the CDN.
     ///
     /// ```swift
     /// MarkdownView(source)
     ///     .markdownMermaidScriptProvider(CDNMermaidScriptProvider(version: "10"))
     /// ```
+    ///
+    /// - Parameter provider: The script provider to use.
     public func markdownMermaidScriptProvider(_ provider: some MermaidScriptProvider) -> some View {
         environment(\.mermaidScriptProvider, provider)
     }

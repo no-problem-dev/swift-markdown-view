@@ -1,12 +1,14 @@
 #if canImport(UIKit)
 import UIKit
 
-/// 属性文字列ビルダーと TextKit ビューを一度だけ書くためのクロスプラットフォームエイリアス。
-/// UIKit/AppKit に依存するが **SwiftUI-free**。
+/// Cross-platform aliases that let attributed string builders and TextKit views be written once.
 ///
-/// このターゲットが唯一の定義場所。以前は `MarkdownAttributedKit` と
-/// `SwiftMarkdownEditorTextKit` が同名の public typealias を別々に宣言しており、
-/// 両方を import した利用者のスコープで `PlatformColor` / `PlatformFont` が曖昧になった。
+/// They depend on UIKit or AppKit, but never on SwiftUI.
+///
+/// This target is the one place these names are declared. `MarkdownAttributedKit` and
+/// `SwiftMarkdownEditorTextKit` used to each declare their own public typealiases under the same
+/// names, which made `PlatformColor` and `PlatformFont` ambiguous in the scope of anyone
+/// importing both.
 public typealias PlatformFont = UIFont
 public typealias PlatformColor = UIColor
 public typealias PlatformImage = UIImage
@@ -26,9 +28,9 @@ public typealias PlatformTextView = NSTextView
 #if canImport(UIKit) || canImport(AppKit)
 public extension PlatformFont {
 
-    /// 太字/斜体トレイトを適用したフォントを返す。
+    /// Returns the font with bold and italic traits applied.
     ///
-    /// シンボリックトレイトのディスクリプターではなく、専用のシステムフォントコンストラクターを使用する。San Francisco システムフォントは "UI usage" 属性を持ち、ディスクリプター経由で斜体トレイトを指定しても `withSymbolicTraits(.traitItalic)` が無効になる場合がある。`italicSystemFont`/`boldSystemFont` コンストラクターは確実に機能する。
+    /// On UIKit the italic and bold faces come from the dedicated system font constructors rather than from a symbolic trait descriptor. The San Francisco system font carries a "UI usage" attribute that can leave `withSymbolicTraits(.traitItalic)` with no effect when italic is requested through a descriptor, while `italicSystemFont` and `boldSystemFont` are reliable. On AppKit the traits are applied through `NSFontManager`.
     func withTraits(bold: Bool, italic: Bool) -> PlatformFont {
         guard bold || italic else { return self }
         let size = pointSize
@@ -57,7 +59,7 @@ public extension PlatformFont {
         #endif
     }
 
-    /// コードスパン/ブロック用の等幅フォント。
+    /// A monospaced font, for code spans and code blocks.
     static func monospaced(size: CGFloat, weight: PlatformFont.Weight = .regular) -> PlatformFont {
         #if canImport(UIKit)
         return UIFont.monospacedSystemFont(ofSize: size, weight: weight)
@@ -66,9 +68,9 @@ public extension PlatformFont {
         #endif
     }
 
-    /// 指定サイズとウェイトのプレーンシステムフォント。
+    /// A plain system font at the given size and weight.
     ///
-    /// ウェイトが `.regular` の場合はウェイト指定なしの `systemFont(ofSize:)` を意図的に使用する。明示ウェイトで生成したシステムフォントは斜体シンボリックトレイトのラウンドトリップが信頼できず、`withTraits(italic:)` が無音で失敗する可能性がある。
+    /// A `.regular` weight deliberately goes through `systemFont(ofSize:)` with no weight argument. A system font created with an explicit weight does not round-trip the italic symbolic trait reliably, and `withTraits(bold:italic:)` can then fail silently.
     static func system(size: CGFloat, weight: PlatformFont.Weight = .regular) -> PlatformFont {
         #if canImport(UIKit)
         return weight == .regular ? UIFont.systemFont(ofSize: size) : UIFont.systemFont(ofSize: size, weight: weight)

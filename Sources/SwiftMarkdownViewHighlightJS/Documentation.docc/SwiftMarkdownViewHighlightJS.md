@@ -1,6 +1,6 @@
 # ``SwiftMarkdownViewHighlightJS``
 
-HighlightJSを使用した50+言語対応のシンタックスハイライトモジュール。
+Syntax highlighting for 50+ languages in rendered Markdown code blocks.
 
 @Metadata {
     @PageColor(green)
@@ -8,50 +8,57 @@ HighlightJSを使用した50+言語対応のシンタックスハイライトモ
 
 ## Overview
 
-SwiftMarkdownViewHighlightJSは、SwiftMarkdownViewのオプションモジュールだ。
-[HighlightSwift](https://github.com/appstefan/HighlightSwift)ライブラリを使用して、
-50以上の言語に対応した正確なシンタックスハイライトを提供する。
+`SwiftMarkdownView` renders fenced code blocks without color on its own. This module supplies the
+coloring, wrapping [HighlightSwift](https://github.com/appstefan/HighlightSwift) behind the
+renderer's `SyntaxHighlighter` protocol.
 
-### 特徴
-
-- **50+言語対応**: Swift、TypeScript、Python、Go、Rust、Java等
-- **30+テーマ**: Xcode、GitHub、Atom One、Solarized、Tokyo Night等
-- **ライト/ダークモード**: 自動またはマニュアルで切り替え可能
-- **アクセシビリティ**: a11yテーマで高コントラスト表示
-
-### クイックスタート
+It is a separate product so that the core carries no highlighting dependency. Add it when your
+documents actually contain source code.
 
 ```swift
 import SwiftMarkdownView
 import SwiftMarkdownViewHighlightJS
 
-// アダプティブハイライト（推奨）
 MarkdownView(source)
     .adaptiveSyntaxHighlighting()
 ```
 
+`adaptiveSyntaxHighlighting()` tracks the environment's color scheme, so the palette follows the
+system between light and dark. It defaults to the `a11y` theme, which is tuned for contrast — the
+right default when you cannot know how a reader has set up their display.
+
+To pin one appearance regardless of the system setting, construct
+``HighlightJSSyntaxHighlighter`` with an explicit `colorMode`, or use one of the paired presets
+below. Full guidance, including how to write a highlighter of your own, is in the core module's
+syntax highlighting article.
+
 ## Topics
 
-### ハイライター
+### Highlighter
 
 - ``HighlightJSSyntaxHighlighter``
 - ``HighlightJSSyntaxHighlighter/ColorMode``
 
-### テーマプリセット
-
-- ``HighlightJSSyntaxHighlighter/xcodeLight``
-- ``HighlightJSSyntaxHighlighter/xcodeDark``
-- ``HighlightJSSyntaxHighlighter/githubLight``
-- ``HighlightJSSyntaxHighlighter/githubDark``
-- ``HighlightJSSyntaxHighlighter/atomOneLight``
-- ``HighlightJSSyntaxHighlighter/atomOneDark``
-- ``HighlightJSSyntaxHighlighter/a11yLight``
-- ``HighlightJSSyntaxHighlighter/a11yDark``
-
-### View拡張
+### Applying it
 
 - ``SwiftUICore/View/adaptiveSyntaxHighlighting(theme:)``
 
-## 関連モジュール
+### Contrast-optimised presets
 
-このモジュールは**SwiftMarkdownView**（Markdownレンダリングのコアモジュール）と併用して使用する。
+- ``HighlightJSSyntaxHighlighter/a11yLight``
+- ``HighlightJSSyntaxHighlighter/a11yDark``
+
+### Editor-like presets
+
+- ``HighlightJSSyntaxHighlighter/xcodeLight``
+- ``HighlightJSSyntaxHighlighter/xcodeDark``
+- ``HighlightJSSyntaxHighlighter/atomOneLight``
+- ``HighlightJSSyntaxHighlighter/atomOneDark``
+- ``HighlightJSSyntaxHighlighter/solarizedLight``
+- ``HighlightJSSyntaxHighlighter/solarizedDark``
+- ``HighlightJSSyntaxHighlighter/tokyoNightDark``
+
+### Web-like presets
+
+- ``HighlightJSSyntaxHighlighter/githubLight``
+- ``HighlightJSSyntaxHighlighter/githubDark``

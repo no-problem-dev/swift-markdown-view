@@ -1,12 +1,15 @@
 import Foundation
 
-/// UTF-16 オフセット上の行境界ユーティリティ。
+/// Line boundaries over UTF-16 offsets.
 ///
-/// 入力ルールと TextKit 層は「キャレットが乗っている行」を頻繁に必要とする。
-/// これらのヘルパーはドキュメント全体の行ごとの部分文字列を確保せずに行範囲を計算する。
+/// Input rules and the TextKit layer constantly need "the line the caret sits on". These helpers
+/// compute the line range without allocating a substring per line across the whole document.
 public extension String {
 
-    /// `offset` を含む行の範囲（末尾の改行は含まない）。オフセットは UTF-16 コードユニット。
+    /// The range of the line containing the given offset, excluding the trailing newline.
+    ///
+    /// The offset is in UTF-16 code units and is clamped to the string, so an out-of-range value
+    /// returns the first or last line rather than trapping.
     func lineRange(containing offset: Int) -> TextSpan {
         let units = Array(utf16)
         let clamped = Swift.max(0, Swift.min(offset, units.count))
@@ -20,7 +23,7 @@ public extension String {
         return TextSpan(lowerBound: start, upperBound: end)
     }
 
-    /// `offset` を含む行のテキスト（改行は含まない）。
+    /// The text of the line containing the given offset, without the newline.
     func line(containing offset: Int) -> String {
         substring(in: lineRange(containing: offset))
     }

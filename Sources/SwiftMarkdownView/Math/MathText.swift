@@ -1,21 +1,20 @@
 import SwiftUI
 
-/// 埋め込み数式をインラインで組版するシングルラインテキストビュー。
+/// A single-line text view that typesets embedded math inline.
 ///
-/// ``MarkdownView`` と異なり、ブロック構造を解析しない。ソースはテキストと
-/// 数式セグメントのみに分割されるため、呼び出し元のフォントを継承した
-/// `Text` コンポジションが返る。Markdown ボディレイアウトが不要だが
-/// LLM 出力に `$...$` / `$$...$$` デリミタが含まれる可能性がある
-/// 見出し・ラベルなどで使用する:
+/// Unlike ``MarkdownView``, it does not parse block structure. The source is split into text and
+/// math segments only, so what comes back is a `Text` composition that inherits the caller's font.
+/// Use it for headings, labels, and anywhere else that needs no Markdown body layout but where the
+/// text may still contain `$...$` or `$$...$$` delimiters:
 ///
 /// ```swift
-/// MathText("答え: $$-6$$", mathFontSize: 22)
+/// MathText("The answer: $$-6$$", mathFontSize: 22)
 ///     .font(.title2)
 /// ```
 ///
-/// ディスプレイ数式（`$$...$$`、`\[...\]`）はシングルラインにブロックレイアウトがないため、
-/// インラインモードで組版する。数式は環境の ``MathRenderer`` 経由でレンダリングされ、
-/// レンダラーが注入されない場合は LaTeX ソースを等幅テキストで表示する。
+/// Display math (`$$...$$` and `\[...\]`) is typeset in inline mode, because a single line has no
+/// block layout to give it. Math goes through the ``MathRenderer`` in the environment; with no
+/// renderer injected, the LaTeX source shows as monospaced text.
 public struct MathText: View {
 
     private let source: String
@@ -25,10 +24,12 @@ public struct MathText: View {
     @Environment(\.markdownPalette) private var palette
     @Environment(\.markdownRenderingOptions) private var options
 
+    /// Creates a text view that typesets the math delimiters found in the source.
+    ///
     /// - Parameters:
-    ///   - source: 数式デリミタを含む可能性があるテキスト。
-    ///   - mathFontSize: 数式セグメントのポイントサイズ。通常は周囲のフォントのサイズを指定する。
-    ///     `nil` の場合はレンダラーのデフォルトを使用する。
+    ///   - source: Text that may contain math delimiters.
+    ///   - mathFontSize: The point size for math segments, usually the size of the surrounding
+    ///     font. Pass `nil` to use the renderer's default.
     public init(_ source: String, mathFontSize: CGFloat? = nil) {
         self.source = source
         self.mathFontSize = mathFontSize

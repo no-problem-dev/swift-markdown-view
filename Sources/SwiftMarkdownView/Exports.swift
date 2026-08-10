@@ -1,18 +1,18 @@
-// 意味モデル（MarkdownContent / MarkdownBlock / MarkdownInline / テーブル・リスト型）は
-// UI 非依存の `MarkdownModel` ターゲットにあり、SwiftUI レンダラ・TextKit レンダラ・
-// エディタが等しく共有する。第一級のドメイン型なので、`import SwiftMarkdownView` だけで
-// 従来どおり使えるよう再輸出する。
+// The semantic model (MarkdownContent / MarkdownBlock / MarkdownInline / the table and list
+// types) lives in the UI-independent `MarkdownModel` target, shared alike by the SwiftUI
+// renderer, the TextKit renderer, and the editor. They are first-class domain types, so
+// re-export them and `import SwiftMarkdownView` on its own keeps working as before.
 @_exported import MarkdownModel
 
-// TextKit レンダリング層。以前はこの再輸出が実装詳細まで丸ごと利用者スコープへ漏らしていた
-// （ビルダー・コード領域・画像要求・ブロック装飾・属性キーなど）。それらは `package` に
-// 落としたので、ここから見えるのは利用者が実際に触る 4 型だけになった:
+// The TextKit rendering layer. This re-export used to spill the whole implementation into client
+// scope — builders, code regions, image requests, block decorations, attribute keys. Those are
+// `package` now, so all that comes through here are the four types a client actually touches:
 //
-//   - MarkdownTextTheme          … 解決済みのフォント・カラー・スペーシング
-//   - MarkdownAttachment.Kind    … 画像 / 数式 / Mermaid の種別
-//   - MarkdownRenderedImage      … アタッチメント画像 + ベースライン配置
-//   - MarkdownAttachmentRendering… 自作アタッチメントレンダラの適合先
+//   - MarkdownTextTheme          … resolved fonts, colors, and spacing
+//   - MarkdownAttachment         … an image / math / Mermaid run, and its `Kind`
+//   - MarkdownRenderedImage      … an attachment image plus its baseline offset
+//   - MarkdownAttachmentRendering… what a custom attachment renderer conforms to
 //
-// いずれも `MarkdownAttachmentRendering` のシグネチャに現れるため、利用者が自分で
-// 実装するには名前が届いている必要がある。
+// Every one of them appears in the signature of `MarkdownAttachmentRendering`, so the names have
+// to reach anyone writing a renderer of their own.
 @_exported import MarkdownAttributedKit

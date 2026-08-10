@@ -2,33 +2,44 @@ import SwiftUI
 
 // MARK: - MarkdownPalette
 
-/// Markdown の描画に必要な色。
+/// The colors a Markdown document is drawn with.
 ///
-/// 役割で名前が付いており、特定のデザインシステムに依存しない。
-/// `swift-design-system` を使っているなら `SwiftMarkdownViewDesignSystem` を追加すると
-/// `ColorPalette` がそのまま適合する。
+/// The requirements are named by the role they play, not after any one design system. If you
+/// already use `swift-design-system`, add `SwiftMarkdownViewDesignSystem` and its `ColorPalette`
+/// conforms as it stands.
 public protocol MarkdownPalette: Sendable {
 
-    /// 本文の色。
+    /// The color of body text.
+    ///
+    /// It is also the color every inline run starts from, which is how quoting works: inside a
+    /// block quote, the runs still carrying this color are the ones repainted in `secondaryText`.
     var text: Color { get }
 
-    /// 引用本文やコードなど、本文より控えめに見せる要素の色。
+    /// The color for text that should read as subordinate to the body.
+    ///
+    /// It paints quoted body text, list bullets and numbers, and the glyphs of inline code.
     var secondaryText: Color { get }
 
-    /// 見出しの色。
+    /// The color of heading text, at every level.
     var heading: Color { get }
 
-    /// リンクの色。
+    /// The color of link text.
     var link: Color { get }
 
-    /// コードブロックとインラインコードの背景色。
+    /// The background behind code.
+    ///
+    /// It fills both the highlight drawn behind inline code and the rounded box behind a code
+    /// block, so it has to stay legible under `secondaryText` glyphs.
     var codeBackground: Color { get }
 
-    /// 引用バーと水平線の色。
+    /// The color of the vertical bar beside a block quote and of thematic-break lines.
+    ///
+    /// An aside with an explicit kind — `Note`, `Warning`, and the like — overrides the bar with
+    /// a color of its own, so this applies to plain quotes.
     var rule: Color { get }
 }
 
-/// システムの意味色を使う既定パレット。ライト/ダークに自動追従する。
+/// The default palette, built from system semantic colors so it follows light and dark appearance.
 public struct DefaultMarkdownPalette: MarkdownPalette {
 
     public init() {}
@@ -43,17 +54,23 @@ public struct DefaultMarkdownPalette: MarkdownPalette {
 
 // MARK: - MarkdownMetrics
 
-/// Markdown のブロックレイアウトに必要な寸法。
+/// The dimensions Markdown blocks are laid out with.
 public protocol MarkdownMetrics: Sendable {
 
-    /// 段落間の余白。
+    /// The space left below a block.
+    ///
+    /// Blocks other than paragraphs scale it: a heading also takes half of it above itself, list
+    /// items take about a third, and table rows a fifth. Setting it moves all of them together.
     var paragraphSpacing: CGFloat { get }
 
-    /// 引用・リストの 1 段あたりのインデント幅。
+    /// The head indent added for each level of nesting.
+    ///
+    /// It indents block quotes, list content, code blocks, and tables alike, and it is the width
+    /// the vertical quote bar is positioned within.
     var indentStep: CGFloat { get }
 }
 
-/// 既定の寸法。
+/// The default metrics: 16 points below a block, and a 32-point indent per level.
 public struct DefaultMarkdownMetrics: MarkdownMetrics {
 
     public init() {}
@@ -64,17 +81,22 @@ public struct DefaultMarkdownMetrics: MarkdownMetrics {
 
 // MARK: - MarkdownTypeScale
 
-/// Markdown の文字サイズ。
+/// The font sizes Markdown text is set in.
 public protocol MarkdownTypeScale: Sendable {
 
-    /// 本文のポイントサイズ。
+    /// The point size of body text.
+    ///
+    /// Code is set at 92% of it, so raising this raises the monospaced font along with the body.
     var bodySize: CGFloat { get }
 
-    /// 見出し 1〜6 のポイントサイズ。要素数が 6 未満なら不足分は末尾の値が使われる。
+    /// The point sizes for heading levels 1 through 6, in order.
+    ///
+    /// - Important: The heading level indexes this array directly. Supply all six values —
+    ///   a shorter array traps when a heading of a missing level is rendered.
     var headingSizes: [CGFloat] { get }
 }
 
-/// 既定の文字サイズ。
+/// The default type scale: 17-point body text, with headings from 32 points down to 17.
 public struct DefaultMarkdownTypeScale: MarkdownTypeScale {
 
     public init() {}
@@ -99,19 +121,19 @@ private struct MarkdownTypeScaleKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// Markdown の描画に使う色。
+    /// The colors Markdown is drawn with.
     public var markdownPalette: any MarkdownPalette {
         get { self[MarkdownPaletteKey.self] }
         set { self[MarkdownPaletteKey.self] = newValue }
     }
 
-    /// Markdown のブロックレイアウトに使う寸法。
+    /// The dimensions Markdown blocks are laid out with.
     public var markdownMetrics: any MarkdownMetrics {
         get { self[MarkdownMetricsKey.self] }
         set { self[MarkdownMetricsKey.self] = newValue }
     }
 
-    /// Markdown の文字サイズ。
+    /// The font sizes Markdown text is set in.
     public var markdownTypeScale: any MarkdownTypeScale {
         get { self[MarkdownTypeScaleKey.self] }
         set { self[MarkdownTypeScaleKey.self] = newValue }
@@ -122,17 +144,17 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// このビュー階層の Markdown に色を設定する。
+    /// Sets the colors Markdown is drawn with in this view hierarchy.
     public func markdownPalette(_ palette: some MarkdownPalette) -> some View {
         environment(\.markdownPalette, palette)
     }
 
-    /// このビュー階層の Markdown に寸法を設定する。
+    /// Sets the dimensions Markdown blocks are laid out with in this view hierarchy.
     public func markdownMetrics(_ metrics: some MarkdownMetrics) -> some View {
         environment(\.markdownMetrics, metrics)
     }
 
-    /// このビュー階層の Markdown に文字サイズを設定する。
+    /// Sets the font sizes Markdown text is set in for this view hierarchy.
     public func markdownTypeScale(_ scale: some MarkdownTypeScale) -> some View {
         environment(\.markdownTypeScale, scale)
     }

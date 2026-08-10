@@ -1,24 +1,24 @@
 import SwiftMarkdownView
 import Foundation
 
-/// Markdown カタログの単一アイテム。
-///
-/// 名前・アイコン・説明を持つ、カタログ内のナビゲーション可能なエントリー。
+/// One navigable entry in the catalog.
 struct MarkdownCatalogItem: Identifiable, Hashable, Sendable {
 
-    /// このアイテムの一意識別子。
+    /// A fresh identifier minted at initialization, not derived from the other properties.
+    ///
+    /// Because equality and hashing include it, two items describing the same element
+    /// compare unequal. Hold on to an instance rather than rebuilding one to match it.
     let id: UUID
 
-    /// このアイテムの表示名。
+    /// The label shown in list rows, and the key the router matches against.
     let name: String
 
-    /// このアイテムの SF Symbol アイコン名。
+    /// The name of the SF Symbol shown alongside the label.
     let icon: String
 
-    /// このアイテムの概要説明。
+    /// One-line summary shown under the label.
     let description: String
 
-    /// カタログアイテムを作成する。
     init(
         name: String,
         icon: String,

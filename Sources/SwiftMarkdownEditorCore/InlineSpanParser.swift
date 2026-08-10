@@ -1,18 +1,18 @@
 import Foundation
 
-/// ライブプレビュー用にインライン Markdown デリミタをペアリングし ``InlineSpan`` を生成する。
+/// Pairs up inline Markdown delimiters into the spans live preview needs.
 ///
-/// 対象（Phase 2 increment 1）：コードスパン（`` ` ``）・strong（`**`/`__`）・
-/// emphasis（`*`/`_`）・取り消し線（`~~`）。
-/// マッチングは行スコープ（CommonMark では emphasis は改行を越えない）で、
-/// ランの長さが一致したときのみペアになる（`**a**` は対応し、`**a*` は対応しない）。
-/// デリミタ幅ごとに独立したスタックを持つため、`**a *b* c**` のような単純なネストを解決できる。
-/// コードスパンが優先され、その内部は emphasis スキャンから除外される。
+/// Produces an ``InlineSpan`` per match. Covers code spans (`` ` ``), strong (`**`, `__`), emphasis (`*`, `_`) and strikethrough (`~~`).
+/// Matching is scoped to a single line, because CommonMark emphasis never spans a newline, and two
+/// runs only pair when their lengths agree: `**a**` matches, `**a*` does not. Open runs are kept on
+/// one stack and matched by delimiter character *and* run length, which resolves simple nesting such
+/// as `**a *b* c**`; when a run closes, any inner opens still waiting are discarded. Code spans win,
+/// and their interiors are excluded from the emphasis scan.
 ///
-/// 完全な CommonMark emphasis リゾルバ（フランキングルール・`***` のような混合幅ラン）は
-/// 意図的に実装しない。支配的なケースをカバーする実用的なサブセットであり、
-/// 非表示／表示メカニズムはマッチャーの精度と独立しているため、
-/// レンダリングパスを変更せずに後からマッチャーを強化できる。
+/// A full CommonMark emphasis resolver — flanking rules, mixed-width runs like `***` — is
+/// deliberately out of scope. This is the practical subset that covers the dominant cases, and the
+/// conceal/reveal machinery does not depend on how precise the matcher is, so the matcher can be
+/// strengthened later without touching the rendering path.
 package enum InlineSpanParser {
 
     private enum C {
@@ -49,7 +49,7 @@ package enum InlineSpanParser {
         var codeRanges: [Range<Int>] = []
         var i = start
         while i < end {
-            // バックスラッシュエスケープ。`\`` はコードスパンを開かない（CommonMark 6.1）。
+            // Backslash escape: `\`` does not open a code span (CommonMark 6.1).
             if u[i] == C.backslash {
                 i += 2
                 continue
@@ -85,9 +85,9 @@ package enum InlineSpanParser {
         i = start
         while i < end {
             let c = u[i]
-            // エスケープされたデリミターは文字そのもの。`\*not em\*` を強調にすると、
-            // プレビュー側（swift-markdown）がリテラルとして描くのと食い違う。
-            // コードスパンの中ではバックスラッシュはエスケープしない（CommonMark 6.1）。
+            // An escaped delimiter is just the character. Emphasising `\*not em\*` would disagree
+            // with the preview side (swift-markdown), which draws it literally.
+            // Inside a code span a backslash escapes nothing (CommonMark 6.1).
             if c == C.backslash, !inAnyRange(i, codeRanges) {
                 i += 2
                 continue

@@ -2,18 +2,21 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// カタログ View 間のナビゲーションを担当するルーター。
+/// Maps a selected category and item onto the detail screen that presents it.
 ///
-/// カテゴリとアイテムの選択に基づき、型安全に Detail ビューへ遷移する。
+/// The lookup is by string: an item resolves to a screen only when its name equals the raw
+/// value of a case in the category's item enum. Anything else lands on a "not found" screen.
 @MainActor
 enum MarkdownCatalogRouter {
 
-    /// カテゴリとアイテムに対応する Detail ビューを返す。
+    /// The detail screen for a selection.
+    ///
+    /// Falls back to a "not found" placeholder when the item's name matches no case in the
+    /// category's item enum.
     ///
     /// - Parameters:
-    ///   - category: 選択されたカテゴリ。
-    ///   - item: カテゴリ内で選択されたアイテム。
-    /// - Returns: 対応する Detail ビュー。
+    ///   - category: The selected category.
+    ///   - item: The item selected within that category.
     @ViewBuilder
     static func destination(
         for category: MarkdownCatalogCategory,

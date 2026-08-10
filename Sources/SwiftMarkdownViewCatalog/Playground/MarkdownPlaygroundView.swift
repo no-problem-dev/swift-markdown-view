@@ -2,7 +2,10 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// Markdown の編集とプレビューを同時に行えるインタラクティブなプレイグラウンド。
+/// An editor and a live preview of the same Markdown, side by side or stacked.
+///
+/// Either pane can be hidden from the toolbar, which also offers preset documents that
+/// replace whatever is in the editor.
 public struct MarkdownPlaygroundView: View {
 
     @Environment(\.colorPalette) private var colorPalette

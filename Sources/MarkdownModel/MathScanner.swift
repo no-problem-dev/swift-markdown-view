@@ -1,30 +1,32 @@
 import Foundation
 
-/// 生の Markdown ソースから数式デリミターをスキャンする。
+/// Scans raw Markdown source for math delimiters.
 ///
-/// 主要な LLM が出力するデリミタースタイルを認識する:
-/// - `$$...$$` と `\[...\]` — ディスプレイ数式（複数行対応）
-/// - `\(...\)` — インライン数式
-/// - `$...$` — インライン数式。通貨の誤検知を防ぐ Pandoc ルールを適用
+/// It recognises the delimiter styles the major LLMs emit:
+/// - `$$...$$` and `\[...\]` — display math, which may span lines
+/// - `\(...\)` — inline math
+/// - `$...$` — inline math, under the Pandoc rule that keeps currency from matching
 ///
-/// コード領域は数式として解釈せず、そのまま素通しする。対象は CommonMark のコード構文 4 種:
-/// バッククォートフェンス（```` ``` ````）・チルダフェンス（`~~~`）・4 スペース以上の
-/// インデントコードブロック・インラインコードスパン（`` ` ``）。
+/// Code is passed straight through and never read as math. All four of CommonMark's code
+/// constructs are handled: backtick fences (```` ``` ````), tilde fences (`~~~`), indented code
+/// blocks of four spaces or more, and inline code spans (`` ` ``).
 ///
-/// ここを取りこぼすとコードブロックの中身が数式に置換されて表示が原文と食い違うため、
-/// 4 種すべてを認識する責務がこのスキャナにある。デリミター仕様は LaTeXCore の
-/// `MathSegmenter`（swift-latex-view）と共通であり、このポートでコアモジュールの依存をゼロに保つ。
+/// Missing any one of them would replace the contents of a code block with math and show
+/// something other than what the author wrote, which is why recognising all four belongs here.
+/// The delimiter rules match `MathSegmenter` in swift-latex-view; they are restated here so this
+/// module needs no dependency on that package.
 package enum MathScanner {
 
     public enum Part: Equatable, Sendable {
-        /// ソーステキスト。そのまま保持する。
+        /// Source text, kept exactly as it was.
         case text(String)
-        /// デリミターを除去した数式領域。
+        /// A math region with its delimiters removed.
         ///
-        /// `raw` はデリミターを含む元のソース断片。スキャンは構文木を持たないため、
-        /// リンク宛先のようにドキュメント構造上は数式になり得ない位置も一律に拾う。
-        /// そうした位置では `latex` ではなく `raw` を書き戻して原文を復元する必要がある
-        /// （`latex` だけでは `$x$` と `\(x\)` を区別できず、URL が別物になる）。
+        /// `raw` is the original source fragment, delimiters included. The scan has no syntax
+        /// tree, so it picks up positions that cannot hold math in document terms, such as a
+        /// link destination. At those positions the caller has to write `raw` back rather than
+        /// `latex`, since `latex` alone cannot tell `$x$` from `\(x\)` and the URL would come
+        /// out different.
         case math(latex: String, isDisplay: Bool, raw: String)
     }
 
@@ -41,10 +43,12 @@ private struct Scanner {
     var i = 0
     var textStart = 0
     var parts: [MathScanner.Part] = []
-    /// インデントコードブロックの継続中か。空行では解除されない（CommonMark 4.4）ため、
-    /// 行単位のスキャンでは状態として持つ必要がある。
+    /// Whether an indented code block is still open.
+    ///
+    /// A blank line does not close one (CommonMark 4.4), so a line-by-line scan has to carry
+    /// this as state.
     var inIndentedCode = false
-    /// 走査済みで、ソース内に 1 つも存在しないと判明した `\]` / `\)` の閉じ文字。
+    /// Closers of `\]` / `\)` already searched for and found to occur nowhere in the source.
     var exhaustedBackslashClosers: Set<Character> = []
 
     mutating func run() -> [MathScanner.Part] {
@@ -101,9 +105,9 @@ private struct Scanner {
     }
 
     private mutating func matchBackslashDelimited(closer: Character, isDisplay: Bool) {
-        // 閉じデリミターが 1 つも無いことが既に分かっているなら、走査し直さない。
-        // 下の while は必ず末尾まで走るので、一度失敗した closer は以降どの開始位置からも
-        // 見つからない。これを覚えないと `\(` の連続で走査が O(n^2) に膨らむ。
+        // Don't rescan for a closer already known to be absent. The loop below always runs to
+        // the end of the source, so a closer that failed once cannot be found from any later
+        // start either. Without remembering that, a run of `\(` makes the scan O(n^2).
         guard !exhaustedBackslashClosers.contains(closer) else {
             i += 2
             return
@@ -151,9 +155,9 @@ private struct Scanner {
                 j += 2
                 continue
             }
-            // ディスプレイ数式は複数行にまたがれるが、ブロックの境界は越えられない。
-            // 打ち切らないと `He paid $$ for it.` の後ろにあるコードブロックが丸ごと
-            // 数式として飲み込まれる（インライン版は `\n` と `` ` `` で打ち切っている）。
+            // Display math may span lines but not block boundaries. Without stopping here,
+            // `He paid $$ for it.` would swallow a code block that follows it whole as math.
+            // (The inline form stops at `\n` and at `` ` ``.)
             if chars[j] == "\n", isBlockBoundary(afterNewlineAt: j) {
                 break
             }
@@ -179,19 +183,20 @@ private struct Scanner {
             return
         }
         var j = contentStart
-        // 数式が「自分で開いていない括弧」を閉じたら、Markdown の構造を跨いだ証拠として打ち切る。
-        // このスキャナはパース前に生ソースを走るため、`[a](url$x)` の `)` のような構造文字が
-        // 数式の内側に入りうる。飲み込むとリンクそのものがプレースホルダーに消え、復元では
-        // 構造を戻せない（Pandoc は先にリンクを消費するのでこの問題が起きない）。
-        // `$f(x)$` のような均衡した括弧は数式として正しいので、深さで区別する。
+        // Closing a bracket the math never opened is evidence of crossing Markdown structure,
+        // so stop there. This scanner runs over raw source before parsing, so a structural
+        // character like the `)` in `[a](url$x)` can end up inside the math. Swallowing it
+        // dissolves the whole link into a placeholder, and restore cannot rebuild the structure.
+        // (Pandoc consumes the link first, so it never hits this.) Balanced brackets such as
+        // `$f(x)$` are legitimate math, so depth is what tells the two apart.
         var parenDepth = 0
         var bracketDepth = 0
         while j < chars.count {
             let c = chars[j]
             if c == "\n" { break }
-            // コードスパンの開始を跨いで閉じデリミターを探さない。跨ぐと
-            // `The fee is $5, see ` + "`$HOME`" のような文で、コードスパン内の `$` を
-            // 閉じデリミターと誤認してコードスパンごと数式に飲み込んでしまう。
+            // Don't look past the start of a code span for a closing delimiter. In a sentence
+            // like `The fee is $5, see ` + "`$HOME`", the `$` inside the code span would be
+            // mistaken for the closer and the span swallowed as math.
             if c == "`" { break }
             if c == "\\" {
                 j += 2
@@ -223,10 +228,10 @@ private struct Scanner {
         i = start + 1
     }
 
-    /// `newline` の直後の行が、ディスプレイ数式を打ち切るブロック境界か。
+    /// Whether the line after the given newline is a block boundary that ends display math.
     ///
-    /// 空行は段落を終わらせ、フェンス行はコードブロックを開く。どちらも数式の内側には
-    /// 入り得ないので、ここで閉じデリミターの探索をやめる。
+    /// A blank line ends the paragraph and a fence line opens a code block. Neither can sit
+    /// inside math, so the search for a closing delimiter stops there.
     private func isBlockBoundary(afterNewlineAt newline: Int) -> Bool {
         var k = newline + 1
         var indent = 0
@@ -234,11 +239,11 @@ private struct Scanner {
             indent += chars[k] == "\t" ? 4 : 1
             k += 1
         }
-        // 空行（次も改行、または文書末）。
+        // Blank line (another newline, or the end of the document).
         if k >= chars.count || chars[k] == "\n" { return true }
-        // インデントコードブロックの開始。
+        // Start of an indented code block.
         if indent >= 4 { return true }
-        // フェンスの開始（``` または ~~~）。
+        // Start of a fence (``` or ~~~).
         guard chars[k] == "`" || chars[k] == "~" else { return false }
         let fence = chars[k]
         var run = 0
@@ -265,8 +270,10 @@ private struct Scanner {
         }
     }
 
-    /// チルダフェンス（`~~~`）を読み飛ばす。バッククォートと違いチルダにコードスパンは無く、
-    /// 3 本未満の連続は打ち消し線（`~~text~~`）なので、フェンスに該当しない場合は素通しする。
+    /// Skips a tilde fence (`~~~`).
+    ///
+    /// Unlike backticks, tildes have no code span form: a run shorter than three is
+    /// strikethrough (`~~text~~`), so anything that is not a fence is passed through.
     private mutating func scanTilde() {
         let runStart = i
         var runLength = 0
@@ -332,20 +339,22 @@ private struct Scanner {
         return ("0"..."9").contains(chars[index])
     }
 
-    // MARK: Indented code blocks（4 スペース以上・CommonMark 4.4）
+    // MARK: Indented code blocks (four spaces or more, CommonMark 4.4)
 
-    /// 行頭ちょうどか（直前が改行、または文書先頭）。`isAtLineStart(_:)` が
-    /// 先行する空白を許すのに対し、こちらは行の判定を 1 度だけ行うための厳密版。
+    /// Whether the index sits exactly at a line start: right after a newline, or at index 0.
+    ///
+    /// The strict counterpart to `isAtLineStart(_:)`, which allows leading whitespace. It runs
+    /// at the top of the scan loop, where the line check has to fire exactly once per line.
     private func isAtLineStart(exactly index: Int) -> Bool {
         index == 0 || chars[index - 1] == "\n"
     }
 
-    /// 行頭で、インデントコードブロックの継続状態を更新する。
+    /// Updates whether an indented code block is open, called at the start of a line.
     ///
-    /// CommonMark の規則を 2 点反映している:
-    /// - 空行はインデントコードを終了させない（間に空行を挟んでも 1 つのコードブロック）
-    /// - インデントコードは段落を中断できない。直前が段落なら、4 スペース以上でも
-    ///   段落の継続行であってコードではない
+    /// Two CommonMark rules are honoured here:
+    /// - A blank line does not end indented code; blank lines in the middle still leave one block
+    /// - Indented code cannot interrupt a paragraph, so after a paragraph line, four spaces or
+    ///   more is a continuation of that paragraph rather than code
     private mutating func updateIndentedCodeState(at index: Int) {
         if lineIsBlank(at: index) { return }
         guard indentWidth(at: index) >= 4 else {
@@ -356,7 +365,7 @@ private struct Scanner {
         inIndentedCode = previousLineIsBlankOrAbsent(before: index)
     }
 
-    /// タブ幅 4 として行頭のインデント幅を測る。
+    /// Measures the indent at the start of a line, counting a tab as four columns.
     private func indentWidth(at index: Int) -> Int {
         var width = 0
         var j = index
@@ -384,13 +393,15 @@ private struct Scanner {
         guard index > 0 else { return true }
         var start = index - 1
         guard chars[start] == "\n" else { return true }
-        // 直前の行の開始位置まで戻る。
+        // Walk back to the start of the previous line.
         start -= 1
         while start >= 0 && chars[start] != "\n" { start -= 1 }
         return lineIsBlank(at: start + 1)
     }
 
-    /// 現在行を改行の直後まで読み飛ばす。`textStart` は動かさないので本文は保全される。
+    /// Skips to just past the newline that ends the current line.
+    ///
+    /// `textStart` is left where it was, so the skipped text is still emitted as source text.
     private mutating func skipLine() {
         while i < chars.count && chars[i] != "\n" { i += 1 }
         if i < chars.count { i += 1 }

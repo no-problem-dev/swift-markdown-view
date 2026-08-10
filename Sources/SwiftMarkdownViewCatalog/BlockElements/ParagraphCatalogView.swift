@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// 段落要素のカタログ View。
 public struct ParagraphCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

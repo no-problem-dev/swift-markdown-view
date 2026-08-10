@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// インラインコード要素のカタログ View。
 public struct InlineCodeCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

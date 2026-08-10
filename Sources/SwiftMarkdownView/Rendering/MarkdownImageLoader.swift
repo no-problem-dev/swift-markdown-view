@@ -9,27 +9,28 @@ import UIKit
 import AppKit
 #endif
 
-/// Markdown 画像ソースをプラットフォーム画像に読み込む。
+/// Loads a Markdown image source into a platform image.
 ///
-/// ソース文字列はドキュメント由来で信頼できないため、``MarkdownImagePolicy`` で
-/// 許可された経路だけを使う。既定ではリモート（http/https）とバンドルリソース名のみで、
-/// ファイルシステムへのアクセスは行わない。
+/// The source string comes from the document and is not to be trusted, so only the routes
+/// ``MarkdownImagePolicy`` permits are taken. By default that means remote (http/https) URLs and
+/// bundle resource names, and never the file system.
 enum MarkdownImageLoader {
 
-    /// 読み込みに失敗した理由。呼び出し側が握りつぶさずに扱えるよう型で表す。
+    /// Why a load failed, as a type, so the caller has to face it rather than swallow it.
     enum Failure: Error {
-        /// 方針で許可されていない経路だった。
+        /// The route was not one the policy permits.
         case disallowedSource(String)
-        /// リモート取得が失敗した。
+        /// The remote fetch failed.
         case transport(any Error)
-        /// 応答が上限バイト数を超えた。
+        /// The response ran past the byte limit.
         case tooLarge(byteCount: Int, limit: Int)
-        /// 取得はできたが画像としてデコードできなかった。
+        /// The bytes arrived but did not decode as an image.
         case undecodable
     }
 
-    /// - Parameter session: 取得に使うセッション。テストが `URLProtocol` を差し込むための seam で、
-    ///   通常は既定のまま。グローバルな可変状態を作らないよう引数で渡す。
+    /// - Parameter session: The session to fetch with. This is a seam for tests to inject a
+    ///   `URLProtocol`; leave it at the default otherwise. It is passed in rather than held
+    ///   globally so there is no shared mutable state.
     static func load(
         _ source: String,
         policy: MarkdownImagePolicy,
@@ -48,26 +49,27 @@ enum MarkdownImageLoader {
                 }
                 return decode(contentsOfFile: url.path)
             default:
-                // data: や独自スキームは扱わない。
+                // data: and custom schemes are not handled.
                 return .failure(.disallowedSource(source))
             }
         }
 
-        // スキームなしの文字列。まずアプリバンドルのリソース名として解決する
-        // （バンドルの中身はアプリが決めるものなので、ドキュメントに主導権が無い）。
+        // No scheme. Resolve it as an app bundle resource name first — the app decides what is
+        // in its bundle, so the document has no say there.
         if let bundled = bundledImage(named: source) {
             return .success(bundled)
         }
 
-        // 裸のファイルパスとしての解釈は、方針で明示的に許可された場合のみ。
+        // Read it as a bare file path only where the policy says so explicitly.
         guard policy.allowsFileSystemAccess else {
             return .failure(.disallowedSource(source))
         }
         return decode(contentsOfFile: source)
     }
 
-    /// 失敗をログに出す。画像が出ない原因を利用者が追えるようにするためで、
-    /// 握りつぶすと「なぜか画像が表示されない」だけが残る。
+    /// Logs a failure so that a client can find out why an image is missing.
+    ///
+    /// Swallowing these leaves nothing behind but an image that never appears.
     static func report(_ failure: Failure, source: String) {
         let reason: String
         switch failure {
@@ -91,7 +93,7 @@ enum MarkdownImageLoader {
         category: "ImageLoader"
     )
 
-    // MARK: - 経路ごとの読み込み
+    // MARK: - Loading per route
 
     private static func loadRemote(_ url: URL, policy: MarkdownImagePolicy, session: URLSession) async -> Result<PlatformImage, Failure> {
         var request = URLRequest(url: url)
@@ -99,15 +101,15 @@ enum MarkdownImageLoader {
 
         let data: Data
         do {
-            // 上限に達した時点で受信を打ち切る。`data(for:)` は本文を全部メモリに載せてから
-            // 返すので、そのあとで大きさを見ても遅い。悪意ある `![x](https://…/2gb.bin)` を
-            // 描画しようとしただけでメモリを使い切れてしまう。
-            // Content-Length は詐称できるので、判定は常に実受信バイト数で行う。
+            // Stop receiving the moment the limit is passed. `data(for:)` puts the whole body in
+            // memory before returning, so checking the size afterwards is already too late: a
+            // hostile `![x](https://…/2gb.bin)` could exhaust memory just by being drawn.
+            // Content-Length can lie, so the decision always rests on bytes actually received.
             let (bytes, response) = try await session.bytes(for: request)
 
             let limit = policy.maximumRemoteByteCount
-            // 申告が正直で上限超えなら、1 バイトも読まずに終わる。
-            // 詐称されていてもこの下のストリーミング判定で守られる。
+            // An honest declaration over the limit ends this without reading a single byte.
+            // A dishonest one is still caught by the streaming check below.
             let declared = response.expectedContentLength
             if declared > 0 && declared > Int64(limit) {
                 return .failure(.tooLarge(byteCount: Int(declared), limit: limit))

@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// 画像要素のカタログ View。
 public struct ImageCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

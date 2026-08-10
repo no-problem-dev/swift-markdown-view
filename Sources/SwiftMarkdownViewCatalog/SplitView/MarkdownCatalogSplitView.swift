@@ -2,9 +2,10 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// レギュラーレイアウト向けのスプリットビューカタログ。
+/// The three-column catalog layout, used at a regular horizontal size class.
 ///
-/// システムリストスタイルではなくカスタムのプレーンスタイルを使用する。
+/// The sidebar and content columns are built from scroll views rather than `List`, so their
+/// rows draw from the design system's palette and spacing instead of the system list style.
 struct MarkdownCatalogSplitView: View {
 
     @State private var selectedCategory: MarkdownCatalogCategory? = .blockElements

@@ -5,49 +5,51 @@ import UIKit
 import AppKit
 #endif
 
-/// レンダリング済み属性文字列を構築するためのフォント・カラー・スペーシングの解決値。SwiftUI / DesignSystem に依存しないプレーン値のため、このレイヤーは自己完結しヘッドレステスト可能。`SwiftMarkdownView` が DesignSystem トークンをこのテーマにマップする。
+/// The fonts, colors, and spacing resolved for building the rendered attributed string.
+///
+/// These are plain values with no dependency on SwiftUI or the design system, which keeps this layer
+/// self-contained and testable headlessly. `SwiftMarkdownView` maps design system tokens onto a theme.
 public struct MarkdownTextTheme: @unchecked Sendable {
 
     // Fonts
-    /// 本文テキストに使用するベースフォント。
+    /// The font for body text, and the size the default heading sizes are scaled from.
     public var baseFont: PlatformFont
-    /// コードブロックおよびインラインコードに使用する等幅フォント。
+    /// The monospaced font, used for code blocks and inline code alike.
     public var codeFont: PlatformFont
 
     // Colors
-    /// 本文テキストの前景色。
+    /// The foreground color for body text.
+    ///
+    /// Quoting works by matching this exact color, so a run only dims to ``secondaryColor`` inside a
+    /// block quote if it was painted with it.
     public var textColor: PlatformColor
-    /// 補助テキスト（キャプション等）の前景色。
+    /// The foreground color for de-emphasized text: list markers, and body text inside a block quote.
     public var secondaryColor: PlatformColor
-    /// 見出しテキストの前景色。
     public var headingColor: PlatformColor
-    /// リンクテキストの前景色。
     public var linkColor: PlatformColor
-    /// インラインコードの前景色。
+    /// The foreground color for inline code, also used for code block text and for math fallback text.
     public var inlineCodeForeground: PlatformColor
-    /// インラインコードの背景色。
     public var inlineCodeBackground: PlatformColor
-    /// コードブロックの背景色。
     public var codeBlockBackground: PlatformColor
-    /// ブロッククォートのリーディングバーの色。
+    /// The default color of the leading bar beside a block quote; an aside's kind overrides it.
     public var quoteBarColor: PlatformColor
-    /// 水平線（`---`）の描画色。
+    /// The color of thematic breaks and of the separators between table rows.
     public var ruleColor: PlatformColor
 
     // Spacing
-    /// 兄弟ブロック間の垂直ギャップ（ポイント単位）。
+    /// The vertical gap between sibling blocks, in points.
     public var paragraphSpacing: CGFloat
-    /// 本文テキストに適用するライン高さ倍率。
+    /// The line height multiple for body text; code blocks always use 1.0 instead.
     public var lineHeightMultiple: CGFloat
-    /// リストおよびクォートのネストレベルごとのインデント幅（ポイント単位）。
+    /// The indent added per nesting level of a list or quote, in points.
     public var indentStep: CGFloat
-    /// コードテキストと丸角背景ボックスの端との内側余白（ポイント単位）。
+    /// The inset between code text and the edges of its rounded background box, in points.
     public var codeBlockPadding: CGFloat
-    /// コードテキストの上下に追加する垂直余白（ポイント単位）。
+    /// The extra vertical room above and below code text, in points.
     public var codeBlockVerticalPadding: CGFloat
-    /// コードブロック背景ボックスの角丸半径（ポイント単位）。
+    /// The corner radius of a code block's background box, in points.
     public var codeBlockCornerRadius: CGFloat
-    /// ブロッククォートの各レベルに描画するリーディングバーの幅（ポイント単位）。
+    /// The width of the leading bar drawn for each block quote level, in points.
     public var quoteBarWidth: CGFloat
 
     public init(
@@ -94,31 +96,30 @@ public struct MarkdownTextTheme: @unchecked Sendable {
         self.headingWeight = headingWeight
     }
 
-    /// 本文フォントのポイントサイズ。
     public var baseFontSize: CGFloat { baseFont.pointSize }
 
-    /// オプションの太字/斜体トレイトを適用した本文フォント。
+    /// The body font with optional bold and italic traits applied.
     public func bodyFont(bold: Bool = false, italic: Bool = false) -> PlatformFont {
         baseFont.withTraits(bold: bold, italic: italic)
     }
 
-    /// ATX 見出しレベル 1–6 のポイントサイズ。
+    /// Point sizes for ATX heading levels 1 through 6.
     public var headingSizes: [CGFloat]
-    /// すべての見出しに適用するウェイト。
+    /// The weight applied to every heading level.
     public var headingWeight: PlatformFont.Weight
 
-    /// 指定レベル（1–6）の ATX 見出しフォント。
+    /// The ATX heading font for the given level, clamped to the range 1 through 6.
     public func headingFont(level: Int) -> PlatformFont {
         let index = max(1, min(6, level)) - 1
         return PlatformFont.system(size: headingSizes[index], weight: headingWeight)
     }
 
-    /// DesignSystem のサイズが指定されていない場合にベースサイズから比率で算出した見出しサイズ。
+    /// Heading sizes derived from the base size by ratio, used when the design system supplies none.
     public static func scaledHeadingSizes(base: CGFloat) -> [CGFloat] {
         [1.7, 1.45, 1.28, 1.15, 1.07, 1.0].map { base * $0 }
     }
 
-    /// DesignSystem なしで使用できる、ライトモード向けのデフォルト設定。
+    /// A default theme built from dynamic system colors, for use without a design system.
     public static var `default`: MarkdownTextTheme {
         let base: CGFloat = 16
         return MarkdownTextTheme(

@@ -2,15 +2,16 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// シンタックスハイライト付きでコードスニペットを表示する View。
+/// A code block with a language label and a copy-to-clipboard button.
 ///
-/// クリップボードへのコピーボタンを内蔵する。
+/// Coloring comes from the syntax highlighter in the environment. The default highlighter
+/// adds none, so the code renders as plain text until one is installed.
 public struct CodeSnippetView: View {
 
-    /// 表示するコード。
+    /// The code shown in the block, and the text the copy button puts on the clipboard.
     public let code: String
 
-    /// シンタックスハイライトに使用するプログラミング言語名。
+    /// The language passed to the highlighter, and the label shown in the header.
     public let language: String
 
     @Environment(\.colorPalette) private var colorPalette
@@ -19,11 +20,11 @@ public struct CodeSnippetView: View {
 
     @State private var copied = false
 
-    /// コードスニペット View を作成する。
+    /// Creates a code snippet view.
     ///
     /// - Parameters:
-    ///   - code: 表示するコード。
-    ///   - language: プログラミング言語名。デフォルトは "swift"。
+    ///   - code: The code to show.
+    ///   - language: The language to highlight and label the block with.
     public init(code: String, language: String = "swift") {
         self.code = code
         self.language = language

@@ -1,22 +1,23 @@
 import SwiftUI
 import SwiftMarkdownEditorTextKit
 
-/// フォーマットツールバーに並ぶ 1 項目。
+/// One item in the formatting toolbar.
 ///
-/// ``MarkdownEditor/init(text:mode:baseFontSize:livePreview:inputRules:toolbar:controller:)``
-/// に順序付き配列で渡す。既定は ``standard``:
+/// Pass an ordered array to
+/// ``MarkdownEditor/init(text:mode:baseFontSize:livePreview:inputRules:toolbar:controller:)``.
+/// The default is `.standard`:
 ///
 /// ```swift
 /// MarkdownEditor(text: $text, toolbar: .standard)
 /// ```
 ///
-/// 既定の一部だけ使い、独自コマンドを足すこともできる:
+/// You can also keep part of the default set and add commands of your own:
 ///
 /// ```swift
 /// MarkdownEditor(text: $text, toolbar: [
 ///     .bold, .italic,
 ///     .separator,
-///     .item(icon: "highlighter", label: "マーカー", key: "h") { controller in
+///     .item(icon: "highlighter", label: "Highlight", key: "h") { controller in
 ///         guard let state = controller.state else { return }
 ///         controller.apply(MarkdownFormatting.wrap(
 ///             text: state.text, selection: state.selection, delimiter: "=="
@@ -25,13 +26,20 @@ import SwiftMarkdownEditorTextKit
 /// ])
 /// ```
 ///
-/// `label` は省略できない。アイコンだけのボタンには読み上げ名が無く、
-/// 付け忘れると VoiceOver で項目が区別できなくなるため。
-/// `key` を与えるとキーボードショートカットも付く。ショートカットは項目定義から
-/// 供給されるので、ツールバーを差し替えても失われない。
+/// `label` has no default. An icon-only button has no spoken name, so leaving the
+/// label out would make the items indistinguishable under VoiceOver. Passing `key`
+/// adds a keyboard shortcut, which works on macOS and on iPad with a hardware
+/// keyboard.
+///
+/// - Important: The shortcut is registered by the rendered toolbar button, so it is
+///   live only while the item is on screen. Passing `toolbar: []` hides the toolbar,
+///   and ``MarkdownEditorMode/preview`` hides it as well; the shortcuts go with it.
 public struct MarkdownEditorToolbarItem: Identifiable, Sendable {
 
-    /// 同一項目を識別するキー。SwiftUI の差分計算に使う。
+    /// A stable key that identifies the item across view updates.
+    ///
+    /// SwiftUI uses it to diff the toolbar. When ``item(id:icon:label:key:modifiers:action:)``
+    /// is called without an `id`, it is derived from the icon name and the label.
     public let id: String
 
     let kind: Kind
@@ -49,15 +57,15 @@ public struct MarkdownEditorToolbarItem: Identifiable, Sendable {
         let action: @Sendable @MainActor (MarkdownEditorController) -> Void
     }
 
-    /// 独自のツールバー項目を作る。
+    /// Creates a toolbar item of your own.
     ///
     /// - Parameters:
-    ///   - id: 識別子。省略するとアイコン名とラベルから導出する。
-    ///   - icon: SF Symbols 名。
-    ///   - label: 読み上げラベル。必須。
-    ///   - key: キーボードショートカット。`nil` なら付けない。
-    ///   - modifiers: ショートカットの修飾キー。既定は `.command`。
-    ///   - action: 押下時に実行する処理。エディタのコントローラを受け取る。
+    ///   - id: A stable identifier. Derived from the icon name and the label when omitted.
+    ///   - icon: An SF Symbols name.
+    ///   - label: The accessibility label, spoken by VoiceOver in place of the icon.
+    ///   - key: A keyboard shortcut, or `nil` for none.
+    ///   - modifiers: The modifier keys the shortcut is pressed with.
+    ///   - action: Runs when the button is pressed, receiving the editor's controller.
     public static func item(
         id: String? = nil,
         icon: String,
@@ -72,11 +80,14 @@ public struct MarkdownEditorToolbarItem: Identifiable, Sendable {
         )
     }
 
-    /// 項目のグループを区切る縦線。
+    /// A vertical rule that separates groups of items.
     public static let separator = MarkdownEditorToolbarItem(id: "separator", kind: .separator)
 }
 
-// MARK: - 既定の項目
+// MARK: - Default items
+
+// The labels below are Japanese literals, and VoiceOver speaks them as written.
+// Apps shipping in another language should build their items with `item(...)`.
 
 public extension MarkdownEditorToolbarItem {
 
@@ -112,11 +123,11 @@ public extension MarkdownEditorToolbarItem {
     static let link = item(id: "link", icon: "link", label: "リンクを挿入", key: "k") { $0.insertLink() }
 }
 
-// MARK: - 既定の並び
+// MARK: - Default arrangement
 
 public extension Array where Element == MarkdownEditorToolbarItem {
 
-    /// 標準のツールバー構成。インライン装飾 4 つ、区切り、ブロック操作 4 つ。
+    /// The standard toolbar: four inline styles, a separator, then heading, list, quote, and link.
     static var standard: [MarkdownEditorToolbarItem] {
         [
             .bold, .italic, .strikethrough, .inlineCode,

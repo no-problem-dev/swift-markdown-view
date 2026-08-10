@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// H1〜H6 の見出し要素のカタログ View。
 public struct HeadingCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

@@ -1,135 +1,73 @@
-# Mermaidダイアグラム
+# Mermaid Diagrams
 
-Markdownコードブロック内でMermaidダイアグラムを表示する方法を学ぶ。
+Draw flowcharts, sequence diagrams, and the rest from fenced `mermaid` code blocks.
 
 ## Overview
 
-SwiftMarkdownViewはMermaidダイアグラムをサポートしている。
-コードブロックの言語に`mermaid`を指定すると、コードがダイアグラムとしてレンダリングされる。
-
-## 基本的な使い方
+A code block tagged `mermaid` is drawn as a diagram rather than as source:
 
 ```swift
 MarkdownView("""
 ```mermaid
 graph TD
-    A[開始] --> B{判断}
-    B -->|はい| C[OK]
-    B -->|いいえ| D[キャンセル]
+    A[Start] --> B{Decision}
+    B -->|Yes| C[OK]
+    B -->|No| D[Cancel]
 ```
 """)
 ```
 
-## 対応ダイアグラム
+Rendering happens in a `WKWebView` attachment placed inline in the document, driven by the real
+Mermaid.js library. Whatever Mermaid.js can draw, this can draw — flowcharts, sequence, class,
+state, entity-relationship, Gantt, journey, timeline, and mindmap among them — because the diagram
+grammar is Mermaid's, not this package's.
 
-以下のMermaidダイアグラムタイプがサポートされている：
+The web view follows the surrounding color scheme, so a diagram in a dark-mode document is drawn
+with Mermaid's dark theme.
 
-| タイプ | 説明 | 例 |
-|--------|------|-----|
-| flowchart | フローチャート | `graph TD` |
-| sequence | シーケンス図 | `sequenceDiagram` |
-| class | クラス図 | `classDiagram` |
-| state | 状態遷移図 | `stateDiagram-v2` |
-| gantt | ガントチャート | `gantt` |
-| journey | ユーザージャーニー | `journey` |
-| timeline | タイムライン | `timeline` |
-| mindmap | マインドマップ | `mindmap` |
+## Supplying the script
 
-## 動作環境
+Mermaid.js itself is not bundled. A ``MermaidScriptProvider`` says where to get it, and the
+default is ``CDNMermaidScriptProvider``, which fetches from jsDelivr.
 
-Mermaidダイアグラムのレンダリングはプラットフォームのバージョンによって異なる：
-
-### iOS 26+、macOS 26+、tvOS 26+、watchOS 26+
-
-WebKitを使用したネイティブレンダリングが行われる。
-ダイアグラムは完全にインタラクティブに表示され、ライト/ダークモードに自動対応する。
-
-### それ以前のバージョン
-
-フォールバック表示が使用される。
-ダイアグラムはコードブロックとして表示され、Mermaidコードがそのまま見える状態になる。
-
-## ダイアグラムの例
-
-### フローチャート
+That default needs a network connection. For an app that must draw diagrams offline, ship
+`mermaid.min.js` in your bundle and use ``BundledMermaidScriptProvider``:
 
 ```swift
-MarkdownView("""
-```mermaid
-graph LR
-    A[入力] --> B[処理]
-    B --> C[出力]
-    B --> D[ログ]
-```
-""")
+MarkdownView(source)
+    .markdownMermaidScriptProvider(BundledMermaidScriptProvider() ?? .cdn)
 ```
 
-### シーケンス図
+`BundledMermaidScriptProvider` returns `nil` when the resource is missing rather than reaching for
+the CDN behind your back, which is why the fallback above is written out in the open. Choosing to
+fall back to the network is a decision worth seeing in the code, particularly in an app that
+claims to work offline.
 
-```swift
-MarkdownView("""
-```mermaid
-sequenceDiagram
-    participant User
-    participant App
-    participant Server
-    User->>App: タップ
-    App->>Server: リクエスト
-    Server-->>App: レスポンス
-    App-->>User: 表示
-```
-""")
-```
+## When a diagram is not drawn
 
-### クラス図
+There is no OS-version gate — diagrams render on every platform version the package supports. What
+can go wrong is the script.
 
-```swift
-MarkdownView("""
-```mermaid
-classDiagram
-    class Animal {
-        +String name
-        +makeSound()
-    }
-    class Dog {
-        +bark()
-    }
-    Animal <|-- Dog
-```
-""")
-```
+If the script cannot be resolved — a bundled file that is missing or unreadable — **the diagram
+area is empty**. It does not degrade into a visible code block. Copying still yields the original
+fenced `mermaid` source, so the content is not lost from the text, but nothing is shown on screen.
+Verify the bundled resource actually ships in your target if diagrams come up blank.
 
-### 状態遷移図
+## Size and performance
 
-```swift
-MarkdownView("""
-```mermaid
-stateDiagram-v2
-    [*] --> Idle
-    Idle --> Loading: fetch
-    Loading --> Success: done
-    Loading --> Error: fail
-    Success --> [*]
-    Error --> Idle: retry
-```
-""")
-```
+Each diagram takes a fixed-height box the width of the container. A diagram larger than that box
+scrolls inside it, so one oversized diagram cannot disturb the layout of the document around it.
 
-## テーマ
+Every diagram is a live web view. A document with many of them pays for many web views, so prefer
+splitting a diagram-heavy document across screens rather than rendering all of it at once.
 
-Mermaidダイアグラムはシステムのカラースキームに自動対応する：
+Interactive Mermaid features such as click bindings are not wired to anything.
 
-- **ライトモード**: デフォルトのMermaidテーマ
-- **ダークモード**: ダークテーマが自動適用
+## Topics
 
-## パフォーマンス
+### Script providers
 
-Mermaidダイアグラムは内部でWebKitのWebViewを使用してレンダリングされる。
-複雑なダイアグラムや多数のダイアグラムを含むドキュメントでは、
-パフォーマンスに影響が出る場合がある。
-
-## 制限事項
-
-- iOS 26未満ではダイアグラムとしてレンダリングされない
-- 非常に大きなダイアグラムはスクロールが必要になる場合がある
-- インタラクティブな機能（クリックイベントなど）はサポートされていない
+- ``MermaidScriptProvider``
+- ``MermaidScriptSource``
+- ``CDNMermaidScriptProvider``
+- ``BundledMermaidScriptProvider``

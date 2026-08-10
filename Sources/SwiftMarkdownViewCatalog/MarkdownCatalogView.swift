@@ -2,15 +2,13 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// Markdown カタログのメインエントリーポイント。
+/// A browsable tour of every Markdown element, style, and configuration option, each with a live preview.
 ///
-/// Markdown の全要素・スタイル・設定オプションをライブプレビュー付きで網羅するカタログを表示する。
+/// The layout follows the horizontal size class:
+/// - Regular: a three-column `NavigationSplitView`.
+/// - Compact: a list inside a `NavigationStack`.
 ///
-/// 画面サイズに応じて自動的にレイアウトを切り替える:
-/// - Regular 横幅クラス: 3カラム NavigationSplitView
-/// - Compact 横幅クラス: NavigationStack ベースのリスト
-///
-/// ## 基本的な使い方
+/// ## Getting started
 ///
 /// ```swift
 /// struct ContentView: View {
@@ -21,10 +19,10 @@ import DesignSystem
 /// }
 /// ```
 ///
-/// ## シンタックスハイライトを有効にする
+/// ## Turning on syntax highlighting
 ///
-/// カタログ内のすべてのコード例でシンタックスハイライトを有効にするには、
-/// `SwiftMarkdownViewHighlightJS` モジュールを使用する:
+/// Code samples render as plain text unless a highlighter is in the environment. Import the
+/// `SwiftMarkdownViewHighlightJS` module to color them:
 ///
 /// ```swift
 /// import SwiftMarkdownViewHighlightJS
@@ -38,8 +36,8 @@ import DesignSystem
 /// }
 /// ```
 ///
-/// カタログ全体のコードスニペットにシンタックスハイライトを適用し、
-/// ライト/ダークモードを自動検出する。
+/// The modifier reaches every code snippet in the catalog and picks a light or dark theme
+/// from the current color scheme.
 public struct MarkdownCatalogView: View {
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass

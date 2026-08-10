@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// SyntaxHighlighter 設定のカタログ View。
 public struct SyntaxHighlighterCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

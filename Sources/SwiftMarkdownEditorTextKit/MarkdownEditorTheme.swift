@@ -2,14 +2,14 @@ import Foundation
 import CoreGraphics
 import SwiftMarkdownEditorCore
 
-/// ソースエディタの外観スタイル：ベースフォント・色と各 ``MarkdownToken/Kind`` の着色設定。
+/// The appearance of the source editor: a base font size, the editor colors, and a style per token kind.
 ///
-/// フレームワーク依存を意図的に最小化（プラットフォームカラー＋フォントサイズ）し、
-/// SwiftUI 層がデザインシステムから構築でき、
-/// TextKit ブリッジとユニットテストは組み込みの `.light` / `.dark` プリセットを使えるようにする。
+/// The type deliberately depends on nothing beyond platform colors and a font size, so a SwiftUI
+/// layer can build one from its own design system while the TextKit bridge and the unit tests use
+/// the built-in ``light`` and ``dark`` presets.
 public struct MarkdownEditorTheme {
 
-    /// トークンごとのスタイル：色とフォントトレイトのトグル。
+    /// The color and font traits applied to one kind of syntax token.
     public struct TokenStyle {
         public var color: PlatformColor?
         public var bold: Bool
@@ -32,10 +32,29 @@ public struct MarkdownEditorTheme {
         }
     }
 
+    /// The point size of unstyled body text.
+    ///
+    /// Heading sizes are scaled from it. It takes effect when the theme drives
+    /// ``MarkdownSourceTextView`` directly: `MarkdownEditor` overwrites it with the `baseFontSize`
+    /// of its own initializer, so a theme placed in the environment is not where the editor's font
+    /// size is set. Pass the size to the editor instead.
     public var baseFontSize: CGFloat
+
+    /// The foreground color of the whole document, showing through wherever a token style defines no
+    /// color of its own.
     public var textColor: PlatformColor
+
+    /// The background color of the text view.
     public var backgroundColor: PlatformColor
+
+    /// The color of the caret and the selection.
     public var tintColor: PlatformColor
+
+    /// The style applied to each kind of syntax token. Kinds absent here render with no styling.
+    ///
+    /// Honored in full only while live preview is off. Live preview derives its font traits from the
+    /// document structure instead and reads just two entries from here: the heading color and the
+    /// inline code color.
     public var styles: [MarkdownToken.Kind: TokenStyle]
 
     public init(
@@ -52,7 +71,7 @@ public struct MarkdownEditorTheme {
         self.styles = styles
     }
 
-    /// トークン種別のスタイルを返す。未指定の場合は空のスタイル。
+    /// The style for a token kind, or an all-default style when the theme defines none.
     public func style(for kind: MarkdownToken.Kind) -> TokenStyle {
         styles[kind] ?? TokenStyle()
     }
@@ -60,7 +79,19 @@ public struct MarkdownEditorTheme {
 
 public extension MarkdownEditorTheme {
 
-    /// ベーステキスト色・ミュート色・アクセント色・コード色の 4 役割からトークン着色を導出するテーマを構築する。
+    /// Builds a theme by deriving a style for every token kind from four color roles.
+    ///
+    /// - Parameters:
+    ///   - baseFontSize: The point size of unstyled body text. It takes effect when the theme
+    ///     drives ``MarkdownSourceTextView`` directly; `MarkdownEditor` overwrites it with the
+    ///     `baseFontSize` of its own initializer.
+    ///   - textColor: The color of body text, and of heading text.
+    ///   - backgroundColor: The background color of the text view.
+    ///   - muted: The color of markers and delimiters: heading hashes, emphasis and strong runs,
+    ///     strikethrough runs, code fences, quote markers, thematic breaks, and link URLs.
+    ///   - accent: The color of list markers, task checkboxes, and link text. It also becomes the
+    ///     caret and selection color.
+    ///   - code: The color of inline code and of the contents of fenced code blocks.
     static func make(
         baseFontSize: CGFloat,
         textColor: PlatformColor,
@@ -94,7 +125,7 @@ public extension MarkdownEditorTheme {
         )
     }
 
-    /// システムセマンティックカラーから構築したデフォルトのライトプリセット。
+    /// The default light preset, built from the system's semantic colors.
     static var light: MarkdownEditorTheme {
         make(
             baseFontSize: 16,
@@ -106,8 +137,10 @@ public extension MarkdownEditorTheme {
         )
     }
 
-    /// デフォルトのダークプリセット。システムセマンティックカラーが自動適応するため `.light` と同値。
-    /// ダーク専用の調整を加えるための明示的なフックとして存在する。
+    /// The default dark preset.
+    ///
+    /// Identical to ``light``, because the system semantic colors both are built from already adapt
+    /// to the interface style. It exists as a named hook for dark-only adjustments.
     static var dark: MarkdownEditorTheme { light }
 }
 

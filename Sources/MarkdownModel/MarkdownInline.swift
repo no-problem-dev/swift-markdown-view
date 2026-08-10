@@ -1,39 +1,37 @@
 import Foundation
 
-/// Markdown ブロック内のインライン要素。
+/// An inline element inside a Markdown block.
 ///
-/// 段落やその他のブロック内のコンテンツ（テキスト・強調・リンク・インラインコードなど）を表す。
+/// The content that sits within a paragraph or any other block: text, emphasis, links,
+/// inline code, and so on.
 public enum MarkdownInline: Sendable, Equatable {
 
-    /// プレーンテキスト。
     case text(String)
 
-    /// 強調（斜体）コンテンツ。
+    /// Emphasized content, drawn in italic.
     case emphasis([MarkdownInline])
 
-    /// 強い強調（太字）コンテンツ。
+    /// Strongly emphasized content, drawn in bold.
     case strong([MarkdownInline])
 
-    /// インラインコードスパン。
+    /// An inline code span, as opposed to a code block.
     case code(String)
 
-    /// ハイパーリンク。
     case link(destination: String, title: String?, content: [MarkdownInline])
 
-    /// 画像。
     case image(source: String, alt: String, title: String?)
 
-    /// ソフト改行（コンテキストに応じてスペースまたは改行として描画）。
+    /// A soft line break, drawn as a space or a newline depending on context.
     case softBreak
 
-    /// ハード改行（明示的な改行）。
+    /// An explicit line break.
     case hardBreak
 
-    /// 取り消し線テキスト（GFM 拡張）。
+    /// Struck-through text, from the GitHub Flavored Markdown extension.
     case strikethrough([MarkdownInline])
 
-    /// LaTeX ソース（デリミターなし）を含むインライン数式。
+    /// Inline math holding LaTeX source, with the delimiters stripped.
     ///
-    /// `$...$`（Pandoc ルール）および `\(...\)` で生成する。レンダリングは環境の ``MathRenderer`` に委譲する。
+    /// Produced by `$...$` (under the Pandoc rule) and by `\(...\)`. Rendering is left to the math renderer in the environment.
     case inlineMath(String)
 }

@@ -1,14 +1,14 @@
 import Foundation
 
-/// ソース側ハイライト用の軽量シングルパス Markdown トークナイザ。
+/// A light single-pass Markdown tokenizer for highlighting the source side.
 ///
-/// CommonMark パーサでは意図的になく、レンダリング構造の解析は `SwiftMarkdownView` のパーサの役割。
-/// このスキャナはソースエディタが着色する構文マーカー（`#`・`*`・コードスパン・フェンス・リスト箇条書き・リンクなど）の
-/// 位置を特定するだけでよい（Phase 1 の実用的アプローチ）。
+/// Deliberately not a CommonMark parser — parsing the rendered structure is the job of
+/// `SwiftMarkdownView`'s parser. This scanner only has to locate the syntax markers a source editor
+/// colours: `#`, `*`, code spans, fences, list bullets, links and so on.
 ///
-/// ソースの UTF-16 コードユニット上で動作する。Markdown のデリミタはすべて ASCII（1 コードユニット）のため、
-/// 出力範囲は `NSAttributedString` に直接マッピングできる正確な UTF-16 オフセット。
-/// 非 ASCII コンテンツ（絵文字・CJK）は不透明なテキストとして扱う。
+/// It works over the source's UTF-16 code units. Every Markdown delimiter is ASCII, one code unit
+/// wide, so the emitted ranges are exact UTF-16 offsets that map straight onto an
+/// `NSAttributedString`. Non-ASCII content such as emoji and CJK is treated as opaque text.
 public enum MarkdownTokenizer {
 
     // ASCII code units we test against.
@@ -36,16 +36,17 @@ public enum MarkdownTokenizer {
         static let nine: UInt16 = 0x39
     }
 
-    /// フェンスコードが占める範囲を昇順・非重複にまとめる。
+    /// The regions occupied by fenced code, merged into an ascending, non-overlapping list.
     ///
-    /// フェンスの開閉を状態として追えるのはトークナイザだけなので、ブロック文脈を必要とする
-    /// 層（ライブプレビューのインライン装飾・入力ルール）はここから受け取る。
-    /// インラインコードは含めない。
+    /// Only the tokenizer can track fences opening and closing as state, so the layers that need
+    /// block context — live preview's inline decoration, the input rules — get it from here.
+    /// Inline code is not included.
     package static func fencedCodeRanges(_ tokens: [MarkdownToken]) -> [TextSpan] {
         var merged: [TextSpan] = []
         for token in tokens where token.kind == .codeFence || token.kind == .codeBlock {
-            // トークンは行末の改行を含まないので、連続する行の間には必ず 1 文字の隙間ができる。
-            // 橋渡ししないと、行末にキャレットがあるときフェンスの外と判定される。
+            // Tokens stop short of the trailing newline, so consecutive lines always leave a
+            // one-character gap. Without bridging it, a caret at the end of a line reads as
+            // being outside the fence.
             if let last = merged.last, token.range.lowerBound <= last.upperBound + 1 {
                 merged[merged.count - 1] = TextSpan(
                     lowerBound: last.lowerBound,
@@ -58,13 +59,14 @@ public enum MarkdownTokenizer {
         return merged
     }
 
-    /// `offset` がフェンスコードの内側にあるか。
-    /// 指定オフセットがフェンスコードの内側かどうか。
+    /// Whether the given offset falls inside a fenced code block.
     ///
-    /// 独自の ``InputRule`` を書くときに要る — コードブロックの中では
-    /// オートフォーマットを効かせたくないため（同梱の `ListContinuationRule` が実例）。
-    /// トークン列そのものを扱う `tokenize` / `fencedCodeRanges` はハイライタ内部の
-    /// 都合なのでパッケージ内に閉じている。
+    /// This is what you need when writing your own input rule, because autoformatting should not
+    /// fire inside a code block — the bundled `ListContinuationRule` is a worked example.
+    /// Working with the token list itself, through `tokenize` and `fencedCodeRanges`, is an internal
+    /// concern of the highlighter and stays inside the package.
+    ///
+    /// - Note: Each call tokenizes the whole text. Call it once per edit rather than per character.
     public static func isInsideFencedCode(_ text: String, offset: Int) -> Bool {
         let ranges = fencedCodeRanges(tokenize(text))
         var low = 0
@@ -100,14 +102,14 @@ public enum MarkdownTokenizer {
             || u > 0x7F                 // treat non-ASCII as "word" to avoid intraword false positives
     }
 
-    /// Markdown ソースを重複しないハイライトトークン列にトークナイズする。
+    /// Tokenizes Markdown source into a list of non-overlapping highlight tokens.
     package static func tokenize(_ source: String) -> [MarkdownToken] {
         let units = Array(source.utf16)
         var tokens: [MarkdownToken] = []
         var fence: (char: UInt16, length: Int)? = nil
         var inIndentedCode = false
-        // 文書の先頭は「直前が空行」と同じ扱い。インデントコードは段落を中断できない
-        // （CommonMark 4.4）ので、開始できるかどうかは直前行が空かで決まる。
+        // The start of the document counts as "the previous line was blank". Indented code cannot
+        // interrupt a paragraph (CommonMark 4.4), so whether it can start depends on that.
         var previousLineWasBlank = true
 
         var lineStart = 0
@@ -115,8 +117,9 @@ public enum MarkdownTokenizer {
         while lineStart <= n {
             var lineEnd = lineStart
             while lineEnd < n && units[lineEnd] != C.newline { lineEnd += 1 }
-            // CRLF の \r は行の内容ではない。含めたままスキャンすると、行末まで伸びる
-            // トークン（見出し本文・コードブロック等）が 1 コードユニット余計に色づく。
+            // The \r of a CRLF is not line content. Scanning with it included would colour one
+            // extra code unit in every token that runs to the end of the line, such as heading
+            // text and code block lines.
             var contentEnd = lineEnd
             if contentEnd > lineStart && units[contentEnd - 1] == C.carriageReturn {
                 contentEnd -= 1
@@ -135,7 +138,7 @@ public enum MarkdownTokenizer {
         return tokens
     }
 
-    /// 行頭のインデント幅。タブは 4 に展開する（CommonMark のタブストップ）。
+    /// The width of a line's leading indentation, expanding tabs to 4 (the CommonMark tab stop).
     private static func indentWidth(_ u: [UInt16], _ start: Int, _ end: Int) -> Int {
         var width = 0
         var i = start
@@ -161,9 +164,9 @@ public enum MarkdownTokenizer {
 
         // Inside a fenced code block: everything is code until the closing fence.
         if let active = fence {
-            // 閉じフェンスもインデントを許す。開きフェンス（下の contentStart 経由）と
-            // 揃えていないと、リスト項目の中など字下げされた閉じフェンスを認識できず、
-            // 以降のドキュメント全体がコードとして着色され続ける。
+            // The closing fence may be indented too. Without matching the opening fence here (which
+            // goes through contentStart below), an indented closer — inside a list item, say —
+            // is never recognised and the rest of the document stays coloured as code.
             let fenceStart = skipLeadingWhitespace(u, start, end)
             if let fenceRun = leadingFenceRun(u, fenceStart, end), fenceRun.char == active.char, fenceRun.length >= active.length, onlyWhitespaceAfter(u, fenceRun.endIndex, end) {
                 tokens.append(MarkdownToken(range: TextSpan(lowerBound: start, upperBound: end), kind: .codeFence))
@@ -178,9 +181,9 @@ public enum MarkdownTokenizer {
         let indent = indentWidth(u, start, end)
         let isBlank = contentStart == end
 
-        // インデントコードブロック。プレビュー側（swift-markdown）はこれをコードとして描くので、
-        // ここで拾わないと同じ行が左では見出し・右ではコードになる。
-        // 空行は状態を変えない（CommonMark 4.4）。
+        // Indented code blocks. The preview side (swift-markdown) draws these as code, so missing
+        // them here would render the same line as a heading on the left and code on the right.
+        // Blank lines leave the state alone (CommonMark 4.4).
         if !isBlank {
             if indent >= 4 {
                 if inIndentedCode || previousLineWasBlank {
@@ -196,9 +199,9 @@ public enum MarkdownTokenizer {
         }
 
         // Opening code fence.
-        // 開きフェンスのインデントは 3 まで（CommonMark 4.5）。上限を設けないと、
-        // 段落の継続行にある字下げされた ``` でフェンスが開き、以降の文書全体が
-        // コードとして着色され続ける。閉じフェンス側の無制限は意図的なので触らない。
+        // An opening fence may be indented by at most 3 (CommonMark 4.5). Without that limit, an
+        // indented ``` on a paragraph continuation line opens a fence and the rest of the document
+        // stays coloured as code. The closing side is unbounded on purpose; leave it alone.
         if indent <= 3, let fenceRun = leadingFenceRun(u, contentStart, end) {
             tokens.append(MarkdownToken(range: TextSpan(lowerBound: start, upperBound: end), kind: .codeFence))
             fence = (fenceRun.char, fenceRun.length)
@@ -253,9 +256,9 @@ public enum MarkdownTokenizer {
             let c = u[i]
             switch c {
             case C.backslash:
-                // エスケープされた文字はデリミターにならない（CommonMark 6.1）。
-                // 拾うと `\*not em\*` の `*` が強調マーカーとして着色され、
-                // プレビュー側がリテラルとして描くのと食い違う。
+                // An escaped character is never a delimiter (CommonMark 6.1). Picking it up would
+                // colour the `*` in `\*not em\*` as an emphasis marker, disagreeing with the
+                // preview side, which draws it literally.
                 i += 2
 
             case C.backtick:
@@ -273,12 +276,12 @@ public enum MarkdownTokenizer {
                     tokens.append(MarkdownToken(range: TextSpan(lowerBound: link.urlStart, upperBound: link.urlEnd), kind: .linkURL))
                     i = link.urlEnd
                 } else if let close = firstIndex(of: C.rbracket, u, i, end) {
-                    // この `]` は i 以降のどの `[` から見ても「最初の `]`」なので、
-                    // その手前から始めても同じ理由で失敗する。1 文字ずつ進めると
-                    // 閉じない `[` が多い行で行長に対して二次に膨らむ。
+                    // This `]` is the first one for every `[` at or after i, so restarting before
+                    // it would fail for the same reason. Advancing one unit at a time would grow
+                    // quadratically in line length on lines full of unclosed `[`.
                     i = close + 1
                 } else {
-                    // 行内に `]` が無い。以降どこから始めてもリンクにはならない。
+                    // No `]` left on the line, so nothing from here on can become a link.
                     i = end
                 }
 
@@ -326,7 +329,7 @@ public enum MarkdownTokenizer {
         return i
     }
 
-    /// `start` から始まる 3 個以上のバッククォートまたはチルダのラン。
+    /// A run of three or more backticks or tildes starting at `start`.
     private static func leadingFenceRun(_ u: [UInt16], _ start: Int, _ end: Int) -> (char: UInt16, length: Int, endIndex: Int)? {
         guard start < end, u[start] == C.backtick || u[start] == C.tilde else { return nil }
         let c = u[start]
@@ -351,7 +354,7 @@ public enum MarkdownTokenizer {
         return count >= 3
     }
 
-    /// ATX 見出しの `#` マーカーランの終端インデックスを返す。該当しない場合は `nil`。
+    /// The end index of an ATX heading's `#` marker run, or `nil` when the line is not a heading.
     private static func atxHeading(_ u: [UInt16], _ start: Int, _ end: Int) -> Int? {
         guard start < end, u[start] == C.hash else { return nil }
         let e = runEnd(u, start, end, of: C.hash)
@@ -362,7 +365,7 @@ public enum MarkdownTokenizer {
         return e
     }
 
-    /// リストマーカー（`.`/`)`/箇条書き文字の直後）の終端インデックスを返す。該当しない場合は `nil`。
+    /// The end index of a list marker, just past the bullet or the `.` or `)`, or `nil` if absent.
     private static func listMarker(_ u: [UInt16], _ start: Int, _ end: Int) -> Int? {
         guard start < end else { return nil }
         let c = u[start]
@@ -395,7 +398,7 @@ public enum MarkdownTokenizer {
         return start + 3
     }
 
-    /// `start` から始まるバッククォートコードスパンにマッチする。終端インデックスを返す。
+    /// Matches a backtick code span starting at `start` and returns its end index.
     private static func codeSpan(_ u: [UInt16], _ start: Int, _ end: Int) -> Int? {
         let openEnd = runEnd(u, start, end, of: C.backtick)
         let fenceLen = openEnd - start
@@ -421,7 +424,7 @@ public enum MarkdownTokenizer {
         var urlEnd: Int
     }
 
-    /// `start` から始まる `[text](url)` または `![alt](url)` にマッチする。
+    /// Matches `[text](url)` or `![alt](url)` starting at `start`. Brackets do not nest.
     private static func linkOrImage(_ u: [UInt16], _ start: Int, _ end: Int) -> LinkMatch? {
         var i = start
         let textStart = i
@@ -441,7 +444,7 @@ public enum MarkdownTokenizer {
         return LinkMatch(textStart: textStart, textEnd: textEnd, urlStart: textEnd, urlEnd: urlEnd)
     }
 
-    /// `_` ランの両側に単語文字があるかどうか（`snake_case` のように emphasis とみなさない場合）。
+    /// Whether a `_` run has word characters on both sides, as in `snake_case`, so it is not emphasis.
     private static func isIntraword(_ u: [UInt16], _ runStart: Int, _ runEnd: Int, _ end: Int) -> Bool {
         let before = runStart - 1
         let after = runEnd

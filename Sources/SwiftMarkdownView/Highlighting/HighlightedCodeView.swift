@@ -1,26 +1,26 @@
 import SwiftUI
 
-/// シンタックスハイライトを非同期で適用してコードをレンダリングする SwiftUI ビュー。
+/// A SwiftUI view that renders source code with syntax highlighting applied asynchronously.
 ///
-/// 環境から注入した `SyntaxHighlighter` を使用してコードをハイライトし結果を表示する。
-/// ローディング状態とエラー状態を適切に処理する。
+/// Highlighting runs through the ``SyntaxHighlighter`` injected into the environment. While the
+/// work is in flight, and again if it fails, the code is shown as unstyled text, so the view
+/// never goes blank.
 ///
 /// Example:
 /// ```swift
 /// HighlightedCodeView(code: swiftCode, language: "swift")
 /// ```
 ///
-/// カスタムハイライターを使用する場合:
+/// With a custom highlighter:
 /// ```swift
 /// HighlightedCodeView(code: swiftCode, language: "swift")
 ///     .markdownSyntaxHighlighter(HighlightJSSyntaxHighlighter())
 /// ```
 public struct HighlightedCodeView: View {
 
-    /// ハイライト対象のソースコード。
     public let code: String
 
-    /// シンタックスルールに使用するプログラミング言語。
+    /// The language whose syntax rules apply, or `nil` to let the highlighter detect it.
     public let language: String?
 
     @Environment(\.syntaxHighlighter) private var highlighter
@@ -28,11 +28,11 @@ public struct HighlightedCodeView: View {
 
     @State private var state: HighlightState = .idle
 
-    /// ハイライト済みコードビューを生成する。
+    /// Creates a view that highlights the given code.
     ///
     /// - Parameters:
-    ///   - code: ハイライト対象のソースコード。
-    ///   - language: プログラミング言語（例: "swift"、"python"）。
+    ///   - code: The source code to highlight.
+    ///   - language: The programming language, such as `"swift"` or `"python"`.
     public init(code: String, language: String?) {
         self.code = code
         self.language = language
@@ -82,7 +82,7 @@ public struct HighlightedCodeView: View {
 // MARK: - Task Identifier
 
 extension HighlightedCodeView {
-    /// タスク無効化のための Hashable 識別子。
+    /// Identifies the highlighting task so that a new code or language value restarts it.
     private struct TaskIdentifier: Hashable {
         let code: String
         let language: String?

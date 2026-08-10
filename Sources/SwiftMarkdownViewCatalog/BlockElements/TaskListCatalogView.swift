@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// タスクリスト（チェックボックス）要素のカタログ View。
 public struct TaskListCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

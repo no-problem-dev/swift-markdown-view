@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// Mermaid ダイアグラム要素のカタログ View。
 public struct MermaidCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

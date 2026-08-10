@@ -1,12 +1,12 @@
 import Foundation
 import SwiftMarkdownEditorCore
 
-/// リストアイテム内で Enter を押したときに Markdown リストを継続する。
+/// Carries a Markdown list on when Return is pressed inside a list item.
 ///
-/// - 空でないアイテムでは改行を挿入し、マーカーを引き継ぐ
-///   （順序付きリストでは番号をインクリメントし、タスクチェックボックスは未チェックにリセット）。
-/// - *空* のアイテム（マーカーのみ）では Enter でマーカーを削除してアウトデント —
-///   「Enter を 2 回押してリストを抜ける」という普遍的な挙動。
+/// - On a non-empty item it inserts the newline and repeats the marker, incrementing the number of
+///   an ordered list and resetting a task checkbox to unchecked.
+/// - On an *empty* item — marker only — Return clears the whole line, indentation included, which
+///   is the universal "press Return twice to leave the list" behaviour.
 public struct ListContinuationRule: InputRule {
 
     public init() {}
@@ -20,8 +20,8 @@ public struct ListContinuationRule: InputRule {
         guard text == "\n", range.isEmpty else { return nil }
         let caret = range.lowerBound
 
-        // フェンスコードの中ではリスト記法はただの文字列。マーカーを自動挿入すると
-        // ユーザーが書いているコードが書き換わる。
+        // Inside fenced code, list syntax is just text. Inserting a marker would rewrite the code
+        // the user is writing.
         guard !MarkdownTokenizer.isInsideFencedCode(state.text, offset: caret) else { return nil }
 
         let lineRange = state.text.lineRange(containing: caret)
@@ -32,8 +32,8 @@ public struct ListContinuationRule: InputRule {
         let contentStartGlobal = lineStart + prefix.contentStart
         let contentEndGlobal = lineRange.upperBound
 
-        // キャレットがマーカーより前にあるなら、これは「項目の継続」ではなく行の分割。
-        // 内容の有無だけで判定すると、行頭で Enter を押したときにマーカーが二重になる。
+        // A caret before the marker is splitting the line, not continuing the item. Deciding on
+        // content alone would duplicate the marker when Return is pressed at the start of a line.
         guard caret >= contentStartGlobal else { return nil }
 
         let content = state.text.substring(in: TextSpan(lowerBound: contentStartGlobal, upperBound: contentEndGlobal))
@@ -57,7 +57,7 @@ public struct ListContinuationRule: InputRule {
     }
 }
 
-/// リストアイテム行の先頭マーカーのパース結果。
+/// The leading marker of a list item line, as parsed.
 struct ListPrefix {
 
     enum Kind {
@@ -68,10 +68,10 @@ struct ListPrefix {
     var indentation: String
     var kind: Kind
     var hasCheckbox: Bool
-    /// アイテムコンテンツが始まる行内の UTF-16 オフセット。
+    /// The UTF-16 offset within the line where the item's content begins.
     var contentStart: Int
 
-    /// 次のアイテムを開始するマーカーを構築する（番号インクリメント・チェックボックスリセット）。
+    /// Builds the marker that starts the next item, incrementing the number and clearing the checkbox.
     func nextMarker() -> String {
         var marker = indentation
         switch kind {
@@ -86,7 +86,7 @@ struct ListPrefix {
         return marker
     }
 
-    /// `line` の先頭のリストマーカーをパースする。該当しない場合は `nil`。
+    /// Parses the list marker at the start of a line, or returns `nil` when there isn't one.
     static func parse(_ line: String) -> ListPrefix? {
         let u = Array(line.utf16)
         var i = 0

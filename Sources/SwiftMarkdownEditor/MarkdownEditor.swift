@@ -4,7 +4,7 @@ import SwiftMarkdownEditorCore
 import SwiftMarkdownEditorRules
 import SwiftMarkdownEditorTextKit
 
-/// ライブシンタックスハイライト・フォーマットツールバー・レンダリングプレビューを備えた SwiftUI Markdown エディタ。
+/// A SwiftUI Markdown editor with live syntax highlighting, a formatting toolbar, and a rendered preview.
 ///
 /// ```swift
 /// @State private var text = "# Hello"
@@ -13,11 +13,13 @@ import SwiftMarkdownEditorTextKit
 /// }
 /// ```
 ///
-/// `text` のプレーン Markdown 文字列が唯一の正。
-/// 編集は TextKit 2 テキストビュー上で行われ、プレビューは ``MarkdownView`` を再利用するため
-/// パッケージ全体でレンダリング結果が一致する。
-/// 着色は環境の ``MarkdownEditorTheme`` から取得する。既定はシステムの意味色で
-/// ライト/ダークに自動追従し、外部のデザインシステムを必要としない。
+/// The plain Markdown string in `text` is the single source of truth. Editing happens
+/// in a TextKit 2 text view, and the preview reuses `MarkdownView`, so what you see
+/// while editing matches what the rest of the package renders.
+///
+/// Coloring comes from the `MarkdownEditorTheme` in the environment. The default is
+/// built from system semantic colors and follows light and dark appearance on its own,
+/// so no external design system is required.
 public struct MarkdownEditor: View {
 
     @Binding private var text: String
@@ -26,11 +28,11 @@ public struct MarkdownEditor: View {
     private let livePreview: Bool
     private let toolbarItems: [MarkdownEditorToolbarItem]
 
-    /// 呼び出し側が渡さなかった場合に使う内部コントローラ。
+    /// The controller used when the caller does not supply one.
     @StateObject private var ownedController = MarkdownEditorController()
     private let injectedController: MarkdownEditorController?
 
-    /// 呼び出し側が `mode` を持たない場合に使う内部状態。
+    /// The mode used when the caller does not supply a binding.
     @State private var ownedMode: MarkdownEditorMode
     private let injectedMode: Binding<MarkdownEditorMode>?
 
@@ -39,20 +41,27 @@ public struct MarkdownEditor: View {
     private var controller: MarkdownEditorController { injectedController ?? ownedController }
     private var mode: Binding<MarkdownEditorMode> { injectedMode ?? $ownedMode }
 
-    /// `text` にバインドした Markdown エディタを作成する。
+    /// Creates a Markdown editor bound to `text`.
     ///
-    /// モードはエディタ内部で保持する。外から観測・制御したい場合は
-    /// ``init(text:mode:baseFontSize:livePreview:inputRules:toolbar:controller:)`` を使う。
+    /// The editor keeps the mode to itself. To observe or drive it from outside, use
+    /// ``init(text:mode:baseFontSize:livePreview:inputRules:toolbar:controller:)``.
     ///
     /// - Parameters:
-    ///   - text: 編集対象の Markdown ソース。
-    ///   - initialMode: 初期表示モード。
-    ///   - baseFontSize: エディタのベースフォントサイズ。
-    ///   - livePreview: `true` のとき、編集面でインラインマーカーを非表示にしてソースをインプレースレンダリングする
-    ///     （Notion スタイル）。キャレット行ではマーカーが表示される。プレーン `.md` テキストが唯一の正を維持する。
-    ///   - inputRules: オートフォーマットルール（既定は標準セット）。
-    ///   - toolbar: フォーマットツールバーの項目。空配列を渡すとツールバーを表示しない。
-    ///   - controller: プログラムからコマンドを送るためのコントローラ。省略すると内部で生成する。
+    ///   - text: The Markdown source to edit.
+    ///   - initialMode: The mode shown when the editor first appears.
+    ///   - baseFontSize: The point size of body text, and the only place to set it. It
+    ///     overrides the font size carried by the theme in the environment, whichever
+    ///     way that theme was built.
+    ///   - livePreview: When `true`, the editing surface conceals inline markers and
+    ///     renders the source in place, Notion style. Markers reappear on the line
+    ///     holding the caret while the editor is focused, and the plain `.md` text stays
+    ///     the single source of truth.
+    ///   - inputRules: The autoformatting rules applied while typing, such as list
+    ///     continuation.
+    ///   - toolbar: The formatting toolbar items. Pass an empty array to hide the
+    ///     toolbar; the items' keyboard shortcuts are hidden with it.
+    ///   - controller: A controller for sending commands programmatically. One is
+    ///     created internally when omitted.
     public init(
         text: Binding<String>,
         initialMode: MarkdownEditorMode = .edit,
@@ -72,18 +81,27 @@ public struct MarkdownEditor: View {
         self.injectedController = controller
     }
 
-    /// モードを外部の `Binding` で制御する Markdown エディタを作成する。
+    /// Creates a Markdown editor whose mode is driven by an external binding.
     ///
-    /// ツールバーやモード切替を自前の UI に置きたい場合に使う。
+    /// Use it to put the mode switcher, or the whole toolbar, in your own UI.
     ///
     /// - Parameters:
-    ///   - text: 編集対象の Markdown ソース。
-    ///   - mode: 表示モード。エディタ内のピッカーと双方向に同期する。
-    ///   - baseFontSize: エディタのベースフォントサイズ。
-    ///   - livePreview: ライブプレビューを有効にするか。
-    ///   - inputRules: オートフォーマットルール（既定は標準セット）。
-    ///   - toolbar: フォーマットツールバーの項目。空配列を渡すとツールバーを表示しない。
-    ///   - controller: プログラムからコマンドを送るためのコントローラ。省略すると内部で生成する。
+    ///   - text: The Markdown source to edit.
+    ///   - mode: The display mode, kept in sync both ways with the editor's own picker.
+    ///     That picker offers ``MarkdownEditorMode/split`` on macOS only, but selecting
+    ///     it through this binding lays out the split on iOS too.
+    ///   - baseFontSize: The point size of body text, and the only place to set it. It
+    ///     overrides the font size carried by the theme in the environment, whichever
+    ///     way that theme was built.
+    ///   - livePreview: When `true`, the editing surface conceals inline markers and
+    ///     renders the source in place. See
+    ///     ``init(text:initialMode:baseFontSize:livePreview:inputRules:toolbar:controller:)``.
+    ///   - inputRules: The autoformatting rules applied while typing, such as list
+    ///     continuation.
+    ///   - toolbar: The formatting toolbar items. Pass an empty array to hide the
+    ///     toolbar; the items' keyboard shortcuts are hidden with it.
+    ///   - controller: A controller for sending commands programmatically. One is
+    ///     created internally when omitted.
     public init(
         text: Binding<String>,
         mode: Binding<MarkdownEditorMode>,
@@ -145,8 +163,8 @@ public struct MarkdownEditor: View {
             .padding(.horizontal, 8)
             .padding(.top, 6)
 
-            // Formatting toolbar row. プレビュー専用モードではソーステキストビュー自体が
-            // マウントされていないので、フォーマットコマンドは適用先を持たない。
+            // Formatting toolbar row. In preview-only mode the source text view is
+            // not mounted, so formatting commands would have nothing to act on.
             if mode.wrappedValue != .preview && !toolbarItems.isEmpty {
                 MarkdownFormattingToolbar(controller: controller, items: toolbarItems)
             }

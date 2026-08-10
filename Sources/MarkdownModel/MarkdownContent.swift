@@ -1,8 +1,9 @@
 import Foundation
 
-/// Markdown ドキュメントをブロックのコレクションとして表したパース済みの値型。
+/// A parsed Markdown document, held as a collection of blocks.
 ///
-/// 一度生成すれば複数のレンダリングに使い回せる。
+/// Parsing happens once, when the value is created, so a single value can be reused
+/// across as many renders as you like.
 ///
 /// ```swift
 /// let content = MarkdownContent(parsing: "# Hello **World**")
@@ -10,20 +11,19 @@ import Foundation
 /// ```
 public struct MarkdownContent: Sendable, Equatable {
 
-    /// このコンテンツのブロックレベル要素。
     public let blocks: [MarkdownBlock]
 
-    /// Markdown 文字列をパースして MarkdownContent を生成する。
+    /// Creates a document by parsing a Markdown string.
     ///
-    /// - Parameter source: パースする Markdown 文字列。
+    /// - Parameter source: The Markdown text to parse.
     public init(parsing source: String) {
         self.blocks = MarkdownParser.parse(source)
     }
 
-    /// ブロックを直接指定して MarkdownContent を生成する。
+    /// Creates a document from blocks you already have.
     ///
-    /// パース結果を加工してから描画したい場合に使う。たとえば見出しレベルを
-    /// 一段下げる、特定のブロックを差し替える、複数ドキュメントを連結する:
+    /// Use it to reshape a parse before rendering: to demote every heading by one level,
+    /// to swap out particular blocks, or to concatenate several documents.
     ///
     /// ```swift
     /// let parsed = MarkdownContent(parsing: source)
@@ -35,7 +35,7 @@ public struct MarkdownContent: Sendable, Equatable {
     /// MarkdownView(withoutImages)
     /// ```
     ///
-    /// - Parameter blocks: ブロックレベル要素。
+    /// - Parameter blocks: The block-level elements of the document.
     public init(blocks: [MarkdownBlock]) {
         self.blocks = blocks
     }

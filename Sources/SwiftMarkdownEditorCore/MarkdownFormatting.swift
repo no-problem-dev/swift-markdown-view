@@ -1,6 +1,6 @@
 import Foundation
 
-/// 適用する変更と結果のセレクションをまとめた計算済み編集。
+/// A computed edit: the change to apply, and where the selection ends up afterwards.
 public struct EditTransform: Equatable, Sendable {
     public var change: TextChange
     public var selection: Selection
@@ -11,17 +11,17 @@ public struct EditTransform: Equatable, Sendable {
     }
 }
 
-/// ツールバー・キーボードのフォーマットコマンド（純粋関数）。
+/// The formatting commands behind a toolbar or keyboard shortcut, written as pure functions.
 ///
-/// 各コマンドは `(text, selection) -> EditTransform` の純粋関数のため、
-/// フォーマット全体の挙動（囲み・トグル・行プレフィックス・リンク）を
-/// テキストビューなしでユニットテストできる。
-/// TextKit 層は結果の変更をプラットフォームテキストビューに適用するだけでよい（ネイティブ undo が得られる）。
+/// Every command is a pure `(text, selection) -> EditTransform`, so the whole formatting
+/// behaviour — wrapping, toggling, line prefixes, links — can be unit tested without a text view.
+/// The TextKit layer only has to apply the resulting change to the platform text view, which is
+/// what gives it native undo.
 public enum MarkdownFormatting {
 
-    /// セレクションを `delimiter` で囲む。すでに囲まれている場合は取り外す。
+    /// Wraps the selection in a delimiter, or unwraps it when it is already wrapped.
     ///
-    /// キャレット上ではデリミタのペアを挿入し、キャレットをその間に置く。
+    /// At a caret, it inserts the delimiter pair and leaves the caret between the two halves.
     public static func wrap(text: String, selection: Selection, delimiter: String) -> EditTransform {
         let range = selection.range
         let delimLen = delimiter.utf16Length
@@ -57,8 +57,9 @@ public enum MarkdownFormatting {
         return EditTransform(change: change, selection: selection)
     }
 
-    /// セレクションが触れる全行の行プレフィックス（`# ` ・`> ` ・`- `）をトグルする。
-    /// 対象の全行が既にプレフィックスを持つ場合は削除する。
+    /// Toggles a line prefix such as `# `, `> ` or `- ` on every line the selection touches.
+    ///
+    /// The prefix is removed when all of the affected lines already carry it, and added otherwise.
     public static func toggleLinePrefix(text: String, selection: Selection, prefix: String) -> EditTransform {
         let range = selection.range
         let blockStart = text.lineRange(containing: range.lowerBound).lowerBound
@@ -102,7 +103,9 @@ public enum MarkdownFormatting {
         return EditTransform(change: change, selection: newSelection)
     }
 
-    /// セレクションを Markdown リンクとして挿入し、URL プレースホルダを選択状態にしてユーザーが宛先を入力できるようにする。
+    /// Turns the selection into a Markdown link and selects the URL placeholder.
+    ///
+    /// Leaving the placeholder selected means the user can type the destination straight away.
     public static func insertLink(text: String, selection: Selection, urlPlaceholder: String = "url") -> EditTransform {
         let range = selection.range
         let selected = text.substring(in: range)

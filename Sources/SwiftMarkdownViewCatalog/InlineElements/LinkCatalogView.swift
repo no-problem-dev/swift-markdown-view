@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// リンク要素のカタログ View。
 public struct LinkCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

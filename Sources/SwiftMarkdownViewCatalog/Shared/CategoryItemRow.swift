@@ -2,18 +2,16 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// リスト内でカタログアイテムを表示する行。
+/// A catalog item as a row: icon, name, one-line description, and a trailing chevron.
+///
+/// The row pads itself vertically only, and takes its horizontal insets from the container.
 struct CategoryItemRow: View {
 
-    /// 表示するカタログアイテム。
     let item: MarkdownCatalogItem
 
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.spacingScale) private var spacing
 
-    /// カテゴリアイテム行を作成する。
-    ///
-    /// - Parameter item: 表示するカタログアイテム。
     init(item: MarkdownCatalogItem) {
         self.item = item
     }

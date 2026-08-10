@@ -1,12 +1,12 @@
 import SwiftUI
 import SwiftMarkdownEditorTextKit
 
-/// ソースエディタ上部に表示されるフォーマットバー。
+/// The formatting bar shown above the source editor.
 ///
-/// 項目は ``MarkdownEditorToolbarItem`` の配列で与える。各ボタンは
-/// ``MarkdownEditorController`` を受け取り、テキストビューに変換を適用する。
+/// Items are given as an array of ``MarkdownEditorToolbarItem``. Each button receives
+/// a `MarkdownEditorController` and applies its transform to the bound text view.
 ///
-/// 自前のモード UI と組み合わせたい場合は直接使ってよい:
+/// Use it directly to pair the bar with a mode switcher of your own:
 ///
 /// ```swift
 /// MarkdownFormattingToolbar(controller: controller, items: .standard)
@@ -25,9 +25,11 @@ public struct MarkdownFormattingToolbar: View {
     @ObservedObject private var controller: MarkdownEditorController
     private let items: [MarkdownEditorToolbarItem]
 
+    /// Creates a formatting bar driving the given controller.
+    ///
     /// - Parameters:
-    ///   - controller: 操作対象のコントローラ。
-    ///   - items: 表示する項目。既定は ``Swift/Array/standard``。
+    ///   - controller: The controller the buttons send their commands to.
+    ///   - items: The items to show, in order. The default set is ``Swift/Array/standard``.
     public init(
         controller: MarkdownEditorController,
         items: [MarkdownEditorToolbarItem] = .standard
@@ -53,11 +55,11 @@ public struct MarkdownFormattingToolbar: View {
         }
     }
 
-    /// アイコンだけのボタンにラベルとショートカットを与える。
+    /// Builds an icon-only button carrying its accessibility label and shortcut.
     ///
-    /// - アイコンには読み上げ名が無いので `accessibilityLabel` を必ず付ける。
-    ///   付けないと VoiceOver ではボタン群が区別できない。
-    /// - ショートカットはハードウェアキーボードのある iPad と macOS の双方で効く。
+    /// - An icon has no spoken name, so `accessibilityLabel` is always attached.
+    ///   Without it VoiceOver cannot tell the buttons apart.
+    /// - The shortcut works on macOS and on iPad with a hardware keyboard.
     @ViewBuilder
     private func toolbarButton(_ button: MarkdownEditorToolbarItem.Button) -> some View {
         let base = Button {

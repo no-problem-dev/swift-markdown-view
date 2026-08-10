@@ -6,13 +6,17 @@ import UIKit
 import AppKit
 #endif
 
-/// Markdown アタッチメント用に生成された画像。テキストベースラインを基準とした配置メトリクスを保持し、`NSTextAttachment` として埋め込む際に使用する。
+/// An image rendered for a Markdown attachment, with the metrics that place it against the text baseline.
 ///
-/// `@unchecked Sendable`: 画像はレンダラー（多くの場合メインアクター上）が生成し、その後変更されない。そのため、isolation 境界をまたいで安全に受け渡せる。
+/// The renderer — usually on the main actor — produces the image and never mutates it afterwards, which is
+/// what makes the `@unchecked Sendable` conformance safe: a value can cross isolation boundaries on its way
+/// into an `NSTextAttachment`.
 public struct MarkdownRenderedImage: @unchecked Sendable {
     public var image: PlatformImage
     public var size: CGSize
-    /// 画像底辺のテキストベースラインからの垂直オフセット（負値でベースライン下に沈む）。インライン数式の垂直整列に使用する。
+    /// Vertical offset of the image's bottom edge from the text baseline; a negative value sinks it below.
+    ///
+    /// Inline math uses this to sit on the same baseline as the surrounding text.
     public var baselineOffset: CGFloat
 
     public init(image: PlatformImage, size: CGSize, baselineOffset: CGFloat = 0) {
@@ -22,13 +26,18 @@ public struct MarkdownRenderedImage: @unchecked Sendable {
     }
 }
 
-/// 画像/数式アタッチメント用の画像をレンダリングするプロトコル。同期的に動作し、数式組版（SwiftLaTeXView/SwiftMath）とローカル画像はビルド時に即座に解決する。リモート画像のロードはビュー層が別途担う。
+/// Renders the images that back image and math attachments.
 ///
-/// UI 非依存の抽象（このターゲットに置く）。具体的なレンダラーはサテライトターゲット（数式は `SwiftMarkdownViewLaTeX`）に置き、注入する。
-/// 戻り値の ``MarkdownRenderedImage`` が `@unchecked Sendable` を名乗る一方、
-/// 生成側には並行性の契約が無かった。レンダラーはレイアウトパスから
-/// isolation 境界をまたいで参照されるため、`Sendable` を要求する。
+/// Rendering is synchronous: math typesetting (SwiftLaTeXView/SwiftMath) and local images resolve on the
+/// spot while the string is being built. Loading remote images is the view layer's job instead.
+///
+/// This is the UI-independent abstraction, which is why it lives in this target; concrete renderers live in
+/// satellite targets — `SwiftMarkdownViewLaTeX` for math — and are injected. The `Sendable` requirement
+/// gives the producing side a concurrency contract to match the `@unchecked Sendable` of the returned
+/// ``MarkdownRenderedImage``: the layout pass reaches a renderer across isolation boundaries.
 public protocol MarkdownAttachmentRendering: Sendable {
-    /// アタッチメント用のレンダリング済み画像を返す。`nil` を返すと読み取り可能なフォールバックテキスト（`[alt]` / `$latex$`）にフォールバックする。
+    /// Returns the rendered image for an attachment.
+    ///
+    /// Returning `nil` falls back to readable text — `[alt]` for an image, `$latex$` for math.
     func renderedImage(for kind: MarkdownAttachment.Kind, theme: MarkdownTextTheme) -> MarkdownRenderedImage?
 }

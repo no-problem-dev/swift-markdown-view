@@ -1,53 +1,57 @@
 import Foundation
 import MarkdownModel
 
-/// ある時点のエディタ状態を表す不変値。
+/// An immutable snapshot of the editor at one point in time.
 ///
-/// CodeMirror の `EditorState` / ProseMirror の `EditorState` に倣い、
-/// ドキュメントテキストと現在のセレクションのみを持つ純粋値型。
-/// 編集はインプレース変更ではなく *新しい* `EditorState` を返すため、
-/// undo・デコレーションマッピング・将来の協調編集が単一の変換パイプラインで動く。
+/// After the `EditorState` of CodeMirror and ProseMirror, this is a pure value type holding
+/// nothing but the document text and the current selection. An edit returns a *new* state
+/// rather than mutating in place, which is what lets undo, decoration mapping, and eventual
+/// collaborative editing all run through a single transformation pipeline.
 ///
-/// パース済み Markdown ドキュメントは `text` からオンデマンドで *導出* される。
-/// プレーンな `.md` 文字列が唯一の正であり（リッチツリーを持たない）、
-/// フォーマットのラウンドトリップ安全性と diff との相性を保つ。
+/// The parsed Markdown document is *derived* from the text on demand. The plain `.md` string
+/// is the single source of truth — there is no rich tree — which keeps formatting
+/// round-trips safe and diffs well behaved.
 public struct EditorState: Equatable, Sendable {
 
-    /// ドキュメントのフルテキスト（唯一の正）。
+    /// The full text of the document, from which everything else is derived.
     public private(set) var text: String
 
-    /// `text` 上の現在のセレクション。
+    /// The current selection, in UTF-16 code unit offsets into the document text.
+    ///
+    /// Nothing here clamps it to the document length.
     public var selection: Selection
 
-    /// エディタ状態を作成する。
+    /// Creates an editor state.
     ///
     /// - Parameters:
-    ///   - text: ドキュメントテキスト。
-    ///   - selection: セレクション。省略するとテキスト末尾のキャレットになる。
+    ///   - text: The document text.
+    ///   - selection: The initial selection. Defaults to a caret at the end of the text.
     public init(text: String, selection: Selection? = nil) {
         self.text = text
         self.selection = selection ?? Selection(caret: text.utf16Length)
     }
 
-    /// ドキュメントの長さ（UTF-16 コードユニット数）。
+    /// The length of the document, in UTF-16 code units.
     public var length: Int { text.utf16Length }
 
-    /// `text` を共有パーサでパースし、レンダリング可能なブロック列を返す。
+    /// Parses the text with the shared parser and returns the blocks to render.
     ///
-    /// `SwiftMarkdownView` のパーサを再利用するため、エディタとレンダラーの構造解釈が常に一致する。
-    /// オンデマンドで計算されるため、キーストロークごとにレンダリングする場合は結果をキャッシュすること。
+    /// Reusing the parser from `SwiftMarkdownView` keeps the editor and the renderer in
+    /// agreement about document structure. The result is computed on demand, so cache it if
+    /// you render on every keystroke.
     public func parsedContent() -> MarkdownContent {
         MarkdownContent(parsing: text)
     }
 
     // MARK: - Transforms
 
-    /// `change` を適用した新しい状態を返す。セレクションはマッピングまたは置換される。
+    /// Returns a new state with the change applied and the selection mapped or replaced.
     ///
     /// - Parameters:
-    ///   - change: 適用する編集。
-    ///   - selection: 新しい状態の明示的なセレクション。`nil` のとき、現在のセレクションを
-    ///     変更にマッピングする（タイプ入力では挿入テキストの右にキャレットが移動する）。
+    ///   - change: The edit to apply.
+    ///   - newSelection: An explicit selection for the new state. When `nil`, the current
+    ///     selection is mapped across the change, which for typing moves the caret to the
+    ///     right of the inserted text.
     public func applying(_ change: TextChange, selection newSelection: Selection? = nil) -> EditorState {
         var next = self
         next.text = change.apply(to: text)
@@ -55,14 +59,19 @@ public struct EditorState: Equatable, Sendable {
         return next
     }
 
-    /// `range` を `replacement` で置換し、挿入テキストの後ろにキャレットを置いた新しい状態を返す。
+    /// Returns a new state with the range replaced and the caret left after the new text.
+    ///
+    /// The caret is derived from the range exactly as passed in. A range whose lower bound
+    /// cuts a grapheme cluster is widened when the replacement is applied, but the caret is
+    /// not adjusted to follow, so pass a span already aligned to character boundaries — see
+    /// ``TextChange/aligned(in:)``.
     public func replacing(_ range: TextSpan, with replacement: String) -> EditorState {
         let change = TextChange(range: range, replacement: replacement)
         let caret = range.lowerBound + replacement.utf16Length
         return applying(change, selection: Selection(caret: caret))
     }
 
-    /// 現在のセレクションを `replacement` で置換した新しい状態を返す。
+    /// Returns a new state with the current selection replaced by the given text.
     public func replacingSelection(with replacement: String) -> EditorState {
         replacing(selection.range, with: replacement)
     }

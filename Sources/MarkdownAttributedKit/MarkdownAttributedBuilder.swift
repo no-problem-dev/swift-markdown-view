@@ -6,13 +6,21 @@ import UIKit
 import AppKit
 #endif
 
-/// セマンティックモデルから、ドキュメント全体を覆う単一の描画済み `NSAttributedString` を生成する。TextKit ビューがホストし、選択がブロックをまたいで連続し、デフォルトのコピーが読み取り可能なテキストを返す。
+/// Renders the semantic model into one attributed string that spans the whole document.
 ///
-/// フェーズ1は散文を担う: 見出し、段落、強調/太字/取り消し線、インラインコード、リンク、改行、順序あり/なし（タスク含む）リスト、ブロッククォート、水平線、コードブロックのプレーンフォールバック。コードブロック背景・画像/数式アタッチメント・テーブルは後続フェーズで追加する。
+/// A TextKit view hosts the result. Because everything lives in a single string, selection runs
+/// continuously across blocks and the system's default copy returns readable text.
+///
+/// Covers headings, paragraphs, emphasis, strong, strikethrough, inline code, links, line breaks, ordered
+/// and unordered lists (including task lists), block quotes and asides, thematic breaks, code blocks,
+/// tables, and image, math, and Mermaid attachments.
 package struct MarkdownAttributedBuilder {
 
     public var theme: MarkdownTextTheme
-    /// 画像/数式アタッチメントの同期レンダラー（省略可）。画像を返した場合は要素が1文字の `NSTextAttachment` になり、返さない場合は Markdown ソースタグ付きの読み取り可能テキストにフォールバックする。
+    /// The optional synchronous renderer for image and math attachments.
+    ///
+    /// When it returns an image the element becomes a one-character `NSTextAttachment`; when it does not,
+    /// the element falls back to readable text tagged with its Markdown source.
     public var attachmentRenderer: (any MarkdownAttachmentRendering)?
 
     public init(theme: MarkdownTextTheme = .default, attachmentRenderer: (any MarkdownAttachmentRendering)? = nil) {
@@ -35,7 +43,10 @@ package struct MarkdownAttributedBuilder {
 
     // MARK: - Blocks
 
-    /// 1ブロックを段落として構築する。各段落は `\n` で終端し、ブロックの最後の段落がブロック間スペースを持つ。
+    /// Builds one block as a run of paragraphs.
+    ///
+    /// Every paragraph is terminated with `\n`, and the spacing that separates blocks lives in the
+    /// paragraph style rather than in extra newlines.
     private func attributed(for block: MarkdownBlock, indent: Int) -> NSAttributedString {
         switch block {
         case .paragraph(let inlines):
@@ -112,7 +123,7 @@ package struct MarkdownAttributedBuilder {
 
     private func blockQuote(_ content: [MarkdownBlock], indent: Int) -> NSAttributedString {
         // Render nested content one indent level deeper; the bar is drawn by the
-        // layout fragment in Phase 2. Body text uses the secondary color.
+        // layout fragment. Body text uses the secondary color.
         let inner = NSMutableAttributedString()
         for block in content {
             inner.append(attributedQuoted(for: block, indent: indent + 1))
@@ -131,7 +142,10 @@ package struct MarkdownAttributedBuilder {
         return inner
     }
 
-    /// `attributed(for:)` と同様だが、引用として読めるよう本文テキストをセカンダリカラーに変更する。
+    /// Builds a block with its body text recolored to the secondary color, so it reads as quoted.
+    ///
+    /// Only runs already painted in the theme's text color are recolored, which leaves inline code,
+    /// links, and headings with their own colors intact.
     private func attributedQuoted(for block: MarkdownBlock, indent: Int) -> NSAttributedString {
         let piece = attributed(for: block, indent: indent)
         let mutable = NSMutableAttributedString(attributedString: piece)
@@ -143,7 +157,10 @@ package struct MarkdownAttributedBuilder {
         return mutable
     }
 
-    /// aside を種類付き色付きコールアウト（色付きラベルヘッダー + 着色リーディングバー）としてレンダリングする。明示的な種類がある場合のみ適用し、それ以外はプレーンクォートとして扱う。GitHub スタイルの `[!NOTE]` マーカーを検出・使用し、表示テキストから除去する。
+    /// Renders an aside as a tinted callout: a colored label header above the content, with a colored bar.
+    ///
+    /// Only an aside with an explicit kind gets this treatment; anything else stays a plain quote. A
+    /// GitHub-style `[!NOTE]` marker counts as an explicit kind and is stripped from the displayed text.
     private func aside(kind modelKind: AsideKind, content: [MarkdownBlock], indent: Int) -> NSAttributedString {
         var kind = modelKind
         var content = content
@@ -206,7 +223,10 @@ package struct MarkdownAttributedBuilder {
         return (color, kind.displayName)
     }
 
-    /// 先頭テキストランから `[!KIND]` マーカーを検出し、一致した種類とマーカーを除去したインラインを返す。
+    /// Detects a `[!KIND]` marker at the start of the leading text run.
+    ///
+    /// - Returns: The kind it names together with the inlines minus the marker, or `nil` when the run
+    ///   does not open with one.
     private func strippedAlertMarker(_ inlines: [MarkdownInline]) -> (AsideKind, [MarkdownInline])? {
         guard case .text(let text) = inlines.first else { return nil }
         let body = text.drop(while: { $0 == " " || $0 == "\t" })
@@ -287,7 +307,8 @@ package struct MarkdownAttributedBuilder {
 
     private func mermaid(_ source: String, indent: Int) -> NSAttributedString {
         // A zero-bounds placeholder attachment the view layer swaps for a WebView
-        // attachment that renders the diagram; copy yields the fenced source.
+        // attachment that renders the diagram; the fenced source is kept in
+        // `.markdownSource`.
         let style = paragraphStyle(indent: indent, spacingAfter: theme.paragraphSpacing)
         let body = makeAttachment(
             image: nil,
@@ -312,7 +333,11 @@ package struct MarkdownAttributedBuilder {
         return NSAttributedString(string: " \n", attributes: attrs)
     }
 
-    /// テーブルをタブ区切りの行として計算済み列タブストップで配置する。セルは実テキストのため選択がセル単位で機能し、デフォルトのコピーがタブ区切り行（スプレッドシートへの貼り付けに最適）を返す。フラグメントがグリッドを描画し、`.markdownSource` で pipe テーブルを再構築できる。
+    /// Lays a table out as tab-separated rows at computed column tab stops.
+    ///
+    /// The cells are real text, so selection works cell by cell and the default copy yields tab-separated
+    /// rows that paste straight into a spreadsheet. The fragment draws the grid, and `.markdownSource`
+    /// carries the equivalent pipe table over the whole range.
     private func table(_ data: TableData, indent: Int) -> NSAttributedString {
         let rows = [data.headerRow] + data.bodyRows
         let columnCount = rows.map(\.cells.count).max() ?? 0
@@ -385,7 +410,7 @@ package struct MarkdownAttributedBuilder {
         return plainText(inlineText(row.cells[column], context: .body(theme)))
     }
 
-    /// Copy-as-Markdown のために GFM pipe テーブルをモデルから再構築する。
+    /// Rebuilds a GFM pipe table from the model, to be stored as the table's Markdown source.
     private func pipeTableSource(_ data: TableData, columnCount: Int) -> String {
         func cells(_ row: TableRow) -> String {
             let values = (0..<columnCount).map { cellPlainText(row, column: $0) }
@@ -418,7 +443,9 @@ package struct MarkdownAttributedBuilder {
 
     // MARK: - Inlines
 
-    /// インラインコンテンツを明示フォント・カラー付きの属性文字列に変換する（ビューレベルのフォントで先頭ランが上書きされない）。
+    /// Converts inline content into an attributed string carrying an explicit font and color on every run.
+    ///
+    /// Being explicit keeps a view-level font from overriding the leading run.
     func inlineText(_ inlines: [MarkdownInline], context: InlineContext) -> NSAttributedString {
         let out = NSMutableAttributedString()
         for inline in inlines {
@@ -484,7 +511,9 @@ package struct MarkdownAttributedBuilder {
         return ctx
     }
 
-    /// レンダラーが画像を生成した場合は1文字の `NSTextAttachment`（U+FFFC）を返し、それ以外は読み取り可能な `fallback` テキストを返す。両者とも `.markdownSource` タグを持ち、Copy-as-Markdown で再構築できる。
+    /// Returns a one-character attachment (U+FFFC) when the renderer produced an image, readable text otherwise.
+    ///
+    /// Either way the run carries a `.markdownSource` tag holding the Markdown it came from.
     private func attachmentOrFallback(
         kind: MarkdownAttachment.Kind,
         source: String,
@@ -505,7 +534,9 @@ package struct MarkdownAttributedBuilder {
         return NSAttributedString(string: fallback, attributes: attrs)
     }
 
-    /// 画像はビューが非同期に埋めるアタッチメントになる（読み込みまでは bounds がゼロ）。同期レンダラーが優先し、source が空の場合は alt テキストに降格する。
+    /// Builds an image as an attachment the view fills in asynchronously, with zero bounds until it loads.
+    ///
+    /// A synchronous renderer takes precedence, and an empty source degrades to the alt text in brackets.
     private func imageInline(source: String, alt: String, context: InlineContext) -> NSAttributedString {
         let kind = MarkdownAttachment.Kind.image(source: source, alt: alt)
         let markdownSource = "![\(alt)](\(source))"
@@ -567,7 +598,9 @@ package struct MarkdownAttributedBuilder {
         return style
     }
 
-    /// コードブロック用の段落スタイル: 塗りつぶしボックスの内側にインデントし、丸角背景の上下に余白を設ける。
+    /// Paragraph style for code blocks, indenting the text inside its filled background box.
+    ///
+    /// The vertical breathing room around the box is added when the background is drawn, not here.
     private func codeParagraphStyle(indent: Int) -> NSParagraphStyle {
         let style = NSMutableParagraphStyle()
         style.paragraphSpacing = theme.paragraphSpacing
@@ -606,7 +639,7 @@ package struct MarkdownAttributedBuilder {
 
 // MARK: - Inline styling context
 
-/// 具体的なフォント・カラーに解決されたインラインスタイルの集積。
+/// The inline styles in effect, already resolved to a concrete font and color.
 struct InlineContext {
     var font: PlatformFont
     var color: PlatformColor

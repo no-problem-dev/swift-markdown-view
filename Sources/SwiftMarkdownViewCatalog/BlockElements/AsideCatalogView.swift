@@ -2,7 +2,7 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// Aside（コールアウト/注釈）要素のカタログ View。
+/// Callout blocks: Note, Tip, Warning, and the other aside kinds.
 public struct AsideCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

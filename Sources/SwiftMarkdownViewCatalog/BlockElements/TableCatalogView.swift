@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// テーブル要素のカタログ View。
 public struct TableCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

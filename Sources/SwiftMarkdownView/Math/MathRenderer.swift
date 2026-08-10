@@ -3,49 +3,49 @@ import MarkdownAttributedKit
 
 // MARK: - MathRenderer Protocol
 
-/// Markdown コンテンツ内の数式をレンダリングする型。
+/// A type that renders the math in Markdown content.
 ///
-/// コアモジュールは LaTeX ソースを組版なしで表示する ``PlainMathRenderer`` を同梱する。
-/// 本格的な組版を行うには `SwiftMarkdownViewLaTeX` モジュールを追加して
-/// `LaTeXMathRenderer` を注入する:
+/// The core module ships ``PlainMathRenderer``, which shows LaTeX source without typesetting it.
+/// For real typesetting, add the `SwiftMarkdownViewLaTeX` module and inject `LaTeXMathRenderer`:
 ///
 /// ```swift
 /// MarkdownView(source)
 ///     .markdownMathRenderer(LaTeXMathRenderer())
 /// ```
 ///
-/// ``SyntaxHighlighter`` パターンを踏襲し、コアは依存なしのままで
-/// 実装を環境経由で注入する設計。
+/// The design follows ``SyntaxHighlighter``: the core stays free of dependencies and the
+/// implementation arrives through the environment.
 ///
-/// TextKit のアタッチメント描画（ディスプレイ数式の画像化）も同じ実装が担うため、
-/// ``MarkdownAttachmentRendering`` を継承する。以前は無関係な 2 プロトコルを
-/// 実行時の `as?` で繋いでおり、**自作レンダラーを注入しても無言で無視されて
-/// 数式が `$latex$` のまま表示される**という失敗の仕方をした。継承にすることで
-/// 適合漏れがコンパイルエラーになる。
+/// The same implementation also draws TextKit attachments, which is how display math becomes an
+/// image, so this protocol inherits `MarkdownAttachmentRendering`. The two used to be unrelated
+/// protocols joined by a runtime `as?`, and **a custom renderer that did not conform to both was
+/// silently ignored, leaving math on screen as `$latex$`**. With inheritance, a missing conformance
+/// is a compile error instead.
 ///
-/// 数式を組版しない実装は ``MarkdownAttachmentRendering/renderedImage(for:theme:)``
-/// で `nil` を返せばよい（``PlainMathRenderer`` がそうしている）。読み取り可能な
-/// フォールバックテキストに落ちる。
+/// A renderer that does not typeset can return `nil` from
+/// `renderedImage(for:theme:)`, as ``PlainMathRenderer`` does, and
+/// the content falls back to readable text.
 public protocol MathRenderer: MarkdownAttachmentRendering, Sendable {
 
-    /// 数式を `Text` セグメントとしてレンダリングする。
+    /// Renders one formula as a text segment.
     ///
-    /// 結果は周囲の段落テキストと連結されるため、`Text` である必要がある
-    ///（画像はベースラインオフセット付きの `Text(Image)` 補間で参加できる）。
+    /// The result is concatenated with the surrounding paragraph, which is why it must be a `Text`
+    /// (an image can join in through `Text(Image)` interpolation with a baseline offset).
     ///
     /// - Parameters:
-    ///   - latex: デリミタなしの LaTeX ソース。
-    ///   - fontSize: 周囲のテキストのポイントサイズ。`nil` ならレンダラー自身の既定を使う。
-    ///   - textColor: 周囲のテキストの色。
+    ///   - latex: The LaTeX source, without delimiters.
+    ///   - fontSize: The point size of the surrounding text, or `nil` to use the renderer's own
+    ///     default.
+    ///   - textColor: The color of the surrounding text.
     @MainActor func inlineMath(_ latex: String, fontSize: CGFloat?, textColor: Color) -> Text
 }
 
 // MARK: - PlainMathRenderer
 
-/// 組版なしで LaTeX ソースを表示する既定の数式レンダラー。
+/// The default math renderer, which shows LaTeX source rather than typesetting it.
 ///
-/// 数式は等幅の `$...$` テキストとして表示する。
-/// コアモジュールを依存なしに保ちつつ、グレースフルなデグレードを実現する。
+/// Formulas appear as monospaced `$...$` text. It degrades gracefully while keeping the core
+/// module free of dependencies.
 public struct PlainMathRenderer: MathRenderer {
 
     public init() {}
@@ -57,7 +57,7 @@ public struct PlainMathRenderer: MathRenderer {
             .foregroundStyle(textColor)
     }
 
-    /// 組版しないので画像は返さない。呼び出し側が `$latex$` のテキストに落とす。
+    /// Always returns `nil`, since nothing is typeset, so the caller falls back to `$latex$` text.
     public func renderedImage(for kind: MarkdownAttachment.Kind, theme: MarkdownTextTheme) -> MarkdownRenderedImage? {
         nil
     }
@@ -71,9 +71,9 @@ private struct MathRendererKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// 数式のレンダリングに使用するレンダラー。
+    /// The renderer used for math.
     ///
-    /// この値を設定するには ``SwiftUICore/View/markdownMathRenderer(_:)`` モディファイアを使用する。
+    /// Set it with the ``SwiftUICore/View/markdownMathRenderer(_:)`` modifier.
     public var mathRenderer: any MathRenderer {
         get { self[MathRendererKey.self] }
         set { self[MathRendererKey.self] = newValue }
@@ -84,7 +84,7 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// このビュー階層にカスタム数式レンダラーを設定する。
+    /// Sets the math renderer for this view hierarchy.
     ///
     /// ## Example
     ///
@@ -93,8 +93,7 @@ extension View {
     ///     .markdownMathRenderer(LaTeXMathRenderer())
     /// ```
     ///
-    /// - Parameter renderer: 使用する数式レンダラー。
-    /// - Returns: 数式レンダラーが適用されたビュー。
+    /// - Parameter renderer: The math renderer to use.
     public func markdownMathRenderer(_ renderer: some MathRenderer) -> some View {
         environment(\.mathRenderer, renderer)
     }

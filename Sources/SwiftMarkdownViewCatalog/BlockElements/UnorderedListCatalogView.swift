@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// 順序なし（箇条書き）リスト要素のカタログ View。
 public struct UnorderedListCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette

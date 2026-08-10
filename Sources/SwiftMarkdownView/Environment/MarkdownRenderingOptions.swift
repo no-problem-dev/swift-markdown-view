@@ -2,30 +2,32 @@ import SwiftUI
 
 // MARK: - MarkdownRenderingOptions
 
-/// Markdown レンダリング動作を制御するオプション。
+/// Rendering switches that a view reads from the environment.
+///
+/// Only ``MathText`` consults these. ``MarkdownView`` typesets math through its attachment
+/// renderer and is unaffected by them.
 ///
 /// ## Example
 ///
 /// ```swift
-/// MathText("答え: $$-6$$")
+/// MathText("The answer: $$-6$$")
 ///     .markdownRenderingOptions(MarkdownRenderingOptions(renderMath: false))
 /// ```
 public struct MarkdownRenderingOptions: Sendable, Equatable {
 
-    /// ``MathRenderer`` を経由して数式をレンダリングするかどうか。
+    /// Whether math is typeset, or left standing as source text.
     ///
-    /// `false` の場合、数式はソーステキストのまま表示される。
-    /// デフォルトは `true`。
+    /// ``MathText`` reads this: when `false`, it shows its source as written, delimiters and all.
+    /// Math inside a ``MarkdownView`` is unaffected — that goes through the attachment renderer,
+    /// which is not given this value either way.
     public var renderMath: Bool
 
-    /// レンダリングオプションを生成する。
-    ///
-    /// - Parameter renderMath: 数式をレンダリングするかどうか。デフォルトは `true`。
+    /// - Parameter renderMath: Whether to typeset math. Defaults to `true`.
     public init(renderMath: Bool = true) {
         self.renderMath = renderMath
     }
 
-    /// すべての機能を有効にしたデフォルトのレンダリングオプション。
+    /// Options with every switch enabled.
     public static let `default` = MarkdownRenderingOptions()
 }
 
@@ -37,9 +39,12 @@ private struct MarkdownRenderingOptionsKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// Markdown コンテンツのレンダリングオプション。
+    /// The rendering options in effect for this view hierarchy.
     ///
-    /// この値を設定するには ``SwiftUICore/View/markdownRenderingOptions(_:)`` モディファイアを使用する。
+    /// ``MathText`` is the only view that reads this. A ``MarkdownView`` in the same hierarchy
+    /// ignores it, so setting it does not change how a rendered document typesets math.
+    ///
+    /// Set it with the ``SwiftUICore/View/markdownRenderingOptions(_:)`` modifier.
     public var markdownRenderingOptions: MarkdownRenderingOptions {
         get { self[MarkdownRenderingOptionsKey.self] }
         set { self[MarkdownRenderingOptionsKey.self] = newValue }
@@ -50,10 +55,12 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// このビュー階層の Markdown コンテンツにレンダリングオプションを設定する。
+    /// Sets the rendering options for this view hierarchy.
     ///
-    /// - Parameter options: 使用するレンダリングオプション。
-    /// - Returns: レンダリングオプションが適用されたビュー。
+    /// What this reaches is ``MathText``. It does not reach a ``MarkdownView`` below it, whose
+    /// math is typeset by the attachment renderer no matter what is set here.
+    ///
+    /// - Parameter options: The options to use.
     public func markdownRenderingOptions(_ options: MarkdownRenderingOptions) -> some View {
         environment(\.markdownRenderingOptions, options)
     }

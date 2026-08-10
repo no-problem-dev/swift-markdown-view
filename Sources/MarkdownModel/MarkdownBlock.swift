@@ -1,58 +1,58 @@
 import Foundation
 
-/// Markdown ドキュメントのブロックレベル要素。
+/// A block-level element of a Markdown document.
 ///
-/// 段落・見出し・コードブロック・リストなど、ドキュメントの最上位構造要素を表す。
+/// Paragraphs, headings, code blocks, lists, and the other pieces that make up the
+/// top-level structure of a document.
 public enum MarkdownBlock: Sendable, Equatable {
 
-    /// インラインコンテンツを含む段落。
     case paragraph([MarkdownInline])
 
-    /// レベル（1–6）とインラインコンテンツを持つ見出し。
+    /// A heading, whose level runs from 1 through 6.
     case heading(level: Int, content: [MarkdownInline])
 
-    /// フェンスまたはインデント形式のコードブロック。
+    /// A code block, written either as a fence or as an indented block.
     case codeBlock(language: String?, code: String)
 
-    /// ネストしたブロックを含む aside（コールアウト/アドモニション）。
+    /// A callout, also known as an admonition, holding nested blocks.
     ///
-    /// ブロッククォートにオプションの種類タグを付けて解釈する:
+    /// A block quote becomes an aside, with an optional kind tag on its first line:
     /// - `> Note: This is a note` → `.aside(kind: .note, content: ...)`
     /// - `> Warning: Be careful` → `.aside(kind: .warning, content: ...)`
-    /// - `> Regular quote` → `.aside(kind: .note, content: ...)` (デフォルト)
+    /// - `> Regular quote` → `.aside(kind: .note, content: ...)` (the default)
     case aside(kind: AsideKind, content: [MarkdownBlock])
 
-    /// 順序なし（箇条書き）リスト。
     case unorderedList([ListItem])
 
-    /// 順序付き（番号付き）リスト。
+    /// A numbered list, whose first item takes the given start number.
     case orderedList(start: Int, items: [ListItem])
 
-    /// テーマティックブレーク（水平線）。
+    /// A thematic break, drawn as a horizontal rule.
     case thematicBreak
 
-    /// テーブル（GFM 拡張）。
+    /// A table, from the GitHub Flavored Markdown extension.
     case table(TableData)
 
-    /// Mermaid ダイアグラムブロック。
+    /// A Mermaid diagram.
     ///
-    /// `mermaid` を言語とするフェンスコードブロックで、Mermaid.js で視覚化する。
+    /// Produced by a fenced code block whose language is `mermaid`, and drawn with Mermaid.js.
     case mermaid(String)
 
-    /// LaTeX ソース（デリミターなし）を含むディスプレイ数式ブロック。
+    /// A display math block holding LaTeX source, with the delimiters stripped.
     ///
-    /// `$$...$$`、`\[...\]`、```` ```math ```` フェンスで生成する。レンダリングは環境の ``MathRenderer`` に委譲する。
+    /// Produced by `$$...$$`, `\[...\]`, or a fenced `math` code block. Rendering is left to the math renderer in the environment.
     case math(String)
 }
 
 // MARK: - Aside Types
 
-/// aside（コールアウト/アドモニション）の種類。
+/// The kind of a callout.
 ///
-/// ブロッククォートの先頭に置いた種類タグから解釈する。
-/// 例: `> Note: This is important` は `.note` の aside になる。
+/// The kind comes from a tag at the start of the block quote. For example,
+/// `> Note: This is important` becomes a `.note` aside.
 ///
-/// swift-markdown の `Aside.Kind` をベースに、一般的なドキュメントコールアウト種類を含む。
+/// The cases follow swift-markdown's `Aside.Kind` and cover the callout kinds
+/// documentation commonly uses.
 public enum AsideKind: Sendable, Equatable, Hashable {
     // Common callouts
     case note
@@ -82,10 +82,14 @@ public enum AsideKind: Sendable, Equatable, Hashable {
     case `throws`
     case seeAlso
 
-    /// ユーザー定義のカスタム aside 種類。
+    /// A tag that matches none of the known kinds.
+    ///
+    /// The associated value is the tag text exactly as it was written in the source.
     case custom(String)
 
-    /// aside 種類の人間が読める表示名。
+    /// A human-readable label for the kind.
+    ///
+    /// A custom kind gives back its tag text unchanged.
     public var displayName: String {
         switch self {
         case .note: return "Note"
@@ -116,11 +120,11 @@ public enum AsideKind: Sendable, Equatable, Hashable {
         }
     }
 
-    /// 文字列から aside の種類を生成する。
+    /// Creates a kind from the tag text of a block quote.
     ///
-    /// 大文字小文字を区別しない。
+    /// Matching ignores case. Text that matches no known kind becomes a custom kind.
     ///
-    /// - Parameter rawValue: ブロッククォートの文字列タグ。
+    /// - Parameter rawValue: The tag text taken from the block quote.
     public init(rawValue: String) {
         switch rawValue.lowercased() {
         case "note": self = .note
@@ -154,16 +158,14 @@ public enum AsideKind: Sendable, Equatable, Hashable {
 
 // MARK: - Table Types
 
-/// テーブル全体の構造。
+/// The header row, body rows, and column alignments that make up a table.
 public struct TableData: Sendable, Equatable {
 
-    /// テーブルのヘッダー行。
     public let headerRow: TableRow
 
-    /// テーブルのボディ行。
     public let bodyRows: [TableRow]
 
-    /// 各列のアライメント。
+    /// The alignment of each column, in column order.
     public let columnAlignments: [TableAlignment]
 
     public init(
@@ -177,10 +179,9 @@ public struct TableData: Sendable, Equatable {
     }
 }
 
-/// テーブルの1行。
 public struct TableRow: Sendable, Equatable {
 
-    /// この行のセル群。
+    /// The cells of the row, each one holding its own inline content.
     public let cells: [[MarkdownInline]]
 
     public init(cells: [[MarkdownInline]]) {
@@ -188,7 +189,6 @@ public struct TableRow: Sendable, Equatable {
     }
 }
 
-/// テーブルの列アライメント。
 public enum TableAlignment: Sendable, Equatable {
     case left
     case center
@@ -196,13 +196,12 @@ public enum TableAlignment: Sendable, Equatable {
     case none
 }
 
-/// ネストしたブロックを含むリスト項目。
+/// A list item, which holds nested blocks rather than plain text.
 public struct ListItem: Sendable, Equatable {
 
-    /// この項目に含まれるブロック群。
     public let blocks: [MarkdownBlock]
 
-    /// タスクリストのチェック状態。`nil` はタスクリスト項目でないことを示す。
+    /// The checkbox state of a task list item, or `nil` when the item has no checkbox.
     public let isChecked: Bool?
 
     public init(blocks: [MarkdownBlock], isChecked: Bool? = nil) {

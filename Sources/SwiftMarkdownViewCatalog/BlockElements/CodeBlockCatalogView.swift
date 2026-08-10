@@ -2,7 +2,6 @@ import SwiftMarkdownView
 import SwiftUI
 import DesignSystem
 
-/// コードブロック要素のカタログ View。
 public struct CodeBlockCatalogView: View {
 
     @Environment(\.colorPalette) private var colorPalette
