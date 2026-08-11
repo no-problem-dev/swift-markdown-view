@@ -92,7 +92,7 @@ struct NoteEditor: View {
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/no-problem-dev/swift-markdown-view.git", from: "6.0.0")
+    .package(url: "https://github.com/no-problem-dev/swift-markdown-view.git", from: "7.0.0")
 ]
 ```
 
