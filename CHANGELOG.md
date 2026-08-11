@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [6.0.0] - 2026-08-11
+
 ### Fixed
 
 - `MarkdownView` now reads `MarkdownRenderingOptions.renderMath`. Until now only `MathText`
