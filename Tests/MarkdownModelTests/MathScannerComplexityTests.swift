@@ -14,12 +14,21 @@ import Testing
 @Suite("数式スキャナが線形時間で走査する")
 struct MathScannerComplexityTests {
 
+    /// このスレッドが実際に CPU を使った秒数。
+    ///
+    /// 壁時計だと、テストが並列に走る場面で他のテストに CPU を奪われた分まで数えてしまい、
+    /// 計算量ではなく同時実行の混み具合を測ることになる。単体で走らせれば通り、フルスイートだと
+    /// 落ちる、という不安定な関門になっていた。走査量そのものを見るならスレッド CPU 時間が正しい。
+    private static func threadSeconds() -> Double {
+        Double(clock_gettime_nsec_np(CLOCK_THREAD_CPUTIME_ID)) / 1_000_000_000
+    }
+
     private static func bestSeconds(trials: Int = 5, _ body: () -> Void) -> Double {
         var best = Double.greatestFiniteMagnitude
         for _ in 0..<trials {
-            let start = DispatchTime.now().uptimeNanoseconds
+            let start = threadSeconds()
             body()
-            best = Swift.min(best, Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000_000)
+            best = Swift.min(best, threadSeconds() - start)
         }
         return best
     }

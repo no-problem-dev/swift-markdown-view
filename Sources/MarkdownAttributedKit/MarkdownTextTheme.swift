@@ -9,7 +9,7 @@ import AppKit
 ///
 /// These are plain values with no dependency on SwiftUI or the design system, which keeps this layer
 /// self-contained and testable headlessly. `SwiftMarkdownView` maps design system tokens onto a theme.
-public struct MarkdownTextTheme: @unchecked Sendable {
+public struct MarkdownTextTheme: @unchecked Sendable, Equatable {
 
     // Fonts
     /// The font for body text, and the size the default heading sizes are scaled from.

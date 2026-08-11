@@ -68,23 +68,35 @@ public struct MarkdownSelectableText {
         MarkdownAttributedBuilder(theme: theme, attachmentRenderer: attachmentRenderer).build(content)
     }
 
+    /// Everything the rendered output is built from.
+    ///
+    /// A layout pass that changes none of it skips restyling, which keeps it from throwing away
+    /// the user's selection. A pass that changes any of it must restyle — the theme decides every
+    /// color, font, and spacing in the attributed string as well as the `CGColor` decoration
+    /// palette, so leaving it out of the comparison drops a theme change on the floor with no
+    /// error anywhere: the caller swaps the theme and the text keeps its old colors.
+    struct AppliedInputs: Equatable {
+        var content: MarkdownContent
+        var theme: MarkdownTextTheme
+        /// Mermaid diagrams bake a background color for the appearance they were drawn in, and
+        /// the appearance does not reach the theme.
+        var mermaidIsDark: Bool?
+    }
+
     public final class Coordinator {
         let provider = MarkdownLayoutFragmentProvider()
-        /// The input last applied. A layout pass that leaves the content and font size alone
-        /// skips restyling, which keeps it from throwing away the user's selection.
-        var appliedContent: MarkdownContent?
-        var appliedFontSize: CGFloat?
+        /// The input last applied.
+        var applied: AppliedInputs?
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         weak var textView: MarkdownTextView?
         #endif
 
-        func isUnchanged(content: MarkdownContent, fontSize: CGFloat) -> Bool {
-            appliedContent == content && appliedFontSize == fontSize
+        func isUnchanged(_ inputs: AppliedInputs) -> Bool {
+            applied == inputs
         }
 
-        func markApplied(content: MarkdownContent, fontSize: CGFloat) {
-            appliedContent = content
-            appliedFontSize = fontSize
+        func markApplied(_ inputs: AppliedInputs) {
+            applied = inputs
         }
 
         var highlightTask: Task<Void, Never>?
@@ -206,12 +218,13 @@ extension MarkdownSelectableText: UIViewRepresentable {
     }
 
     public func updateUIView(_ textView: UITextView, context: Context) {
-        guard !context.coordinator.isUnchanged(content: content, fontSize: theme.baseFontSize) else { return }
+        let inputs = AppliedInputs(content: content, theme: theme, mermaidIsDark: mermaidConfig?.isDark)
+        guard !context.coordinator.isUnchanged(inputs) else { return }
         let palette = MarkdownDecorationPalette(theme: theme)
         context.coordinator.provider.palette = palette
         MarkdownTextViewFactory.setDecorationPalette(palette, on: textView)
         MarkdownTextViewFactory.apply(attributedString(), to: textView)
-        context.coordinator.markApplied(content: content, fontSize: theme.baseFontSize)
+        context.coordinator.markApplied(inputs)
         context.coordinator.startHighlighting(highlighter, in: textView.textStorage)
         context.coordinator.startImageLoading(
             in: textView.textStorage,
@@ -251,10 +264,11 @@ extension MarkdownSelectableText: NSViewRepresentable {
     }
 
     public func updateNSView(_ textView: MarkdownTextView, context: Context) {
-        guard !context.coordinator.isUnchanged(content: content, fontSize: theme.baseFontSize) else { return }
+        let inputs = AppliedInputs(content: content, theme: theme, mermaidIsDark: mermaidConfig?.isDark)
+        guard !context.coordinator.isUnchanged(inputs) else { return }
         context.coordinator.provider.palette = MarkdownDecorationPalette(theme: theme)
         MarkdownTextViewFactory.apply(attributedString(), to: textView)
-        context.coordinator.markApplied(content: content, fontSize: theme.baseFontSize)
+        context.coordinator.markApplied(inputs)
         if let storage = textView.textContentStorage?.textStorage {
             context.coordinator.startHighlighting(highlighter, in: storage)
             context.coordinator.startImageLoading(
