@@ -66,8 +66,8 @@ struct MarkdownSelectableTextStalenessTests {
         #expect(!coordinator.isUnchanged(.init(content: content, theme: theme(text: .systemBlue), mermaidIsDark: nil)))
     }
 
-    /// 色は `MarkdownDecorationPalette` 経由で `CGColor` に焼かれ、罫線・引用バー・コード背景を
-    /// 描く。ここが再適用されないと、テーマを差し替えたのに前のパレットで描き続ける。
+    /// 色は `MarkdownDecorationPalette` に載って罫線・引用バー・コード背景を描く。
+    /// ここが再適用されないと、テーマを差し替えたのに前のパレットで描き続ける。
     @Test("描画パレットに載る色を変えても再適用する", arguments: [
         "codeBlockBackground", "quoteBarColor", "ruleColor",
         "linkColor", "headingColor", "secondaryColor", "inlineCodeBackground", "inlineCodeForeground"

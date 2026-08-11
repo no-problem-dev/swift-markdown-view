@@ -52,7 +52,22 @@ public final class MarkdownTextView: UITextView {
 
         codeBackgroundLayer.actions = ["path": NSNull(), "fillColor": NSNull(), "bounds": NSNull(), "position": NSNull()]
         layer.insertSublayer(codeBackgroundLayer, at: 0)
+
+        // A `CAShapeLayer` fill is a `CGColor`, so the dynamic theme color has to be resolved to
+        // one, and a resolved color does not follow the user into dark mode. `layoutSubviews` is
+        // not called when only the appearance changes, so ask for the fill again whenever a trait
+        // that decides how a color resolves moves.
+        registerForTraitChanges(Self.traitsAffectingColor) { (view: MarkdownTextView, _) in
+            view.updateCodeBackgrounds()
+        }
     }
+
+    private static let traitsAffectingColor: [any UITraitDefinition.Type] = [
+        UITraitUserInterfaceStyle.self,
+        UITraitUserInterfaceLevel.self,
+        UITraitAccessibilityContrast.self,
+        UITraitDisplayGamut.self
+    ]
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
@@ -100,7 +115,10 @@ public final class MarkdownTextView: UITextView {
         flush()
 
         codeBackgroundLayer.frame = bounds
-        codeBackgroundLayer.fillColor = palette.codeBackground
+        // Resolve against this view's traits rather than whatever is ambient: this runs from
+        // `layoutSubviews` and from the trait-change handler, and only the view's own trait
+        // collection is right in both.
+        codeBackgroundLayer.fillColor = palette.codeBackground.resolvedColor(with: traitCollection).cgColor
         codeBackgroundLayer.path = path.isEmpty ? nil : path
     }
 

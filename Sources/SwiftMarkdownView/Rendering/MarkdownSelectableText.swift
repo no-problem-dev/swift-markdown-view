@@ -72,9 +72,15 @@ public struct MarkdownSelectableText {
     ///
     /// A layout pass that changes none of it skips restyling, which keeps it from throwing away
     /// the user's selection. A pass that changes any of it must restyle — the theme decides every
-    /// color, font, and spacing in the attributed string as well as the `CGColor` decoration
-    /// palette, so leaving it out of the comparison drops a theme change on the floor with no
-    /// error anywhere: the caller swaps the theme and the text keeps its old colors.
+    /// color, font, and spacing in the attributed string as well as the decoration palette, so
+    /// leaving it out of the comparison drops a theme change on the floor with no error anywhere:
+    /// the caller swaps the theme and the text keeps its old colors.
+    ///
+    /// Light and dark are deliberately *not* in here. A dynamic color is one value in both
+    /// appearances, so a theme built from system colors compares equal across a switch and this
+    /// skips the pass — which is correct, because every color reaches the draw call still dynamic
+    /// and resolves there. The one thing that cannot stay dynamic is a Mermaid diagram, which is
+    /// drawn into a web view for one appearance, so its appearance is a key of its own.
     struct AppliedInputs: Equatable {
         var content: MarkdownContent
         var theme: MarkdownTextTheme

@@ -10,21 +10,26 @@ import AppKit
 
 /// The colors and metrics a layout fragment needs in order to draw block decorations.
 ///
-/// Colors are resolved from the theme into `CGColor` up front, which keeps the drawing code
-/// platform-neutral.
+/// The colors stay `UIColor` / `NSColor` — dynamic — all the way to the drawing code, which turns
+/// each one into a `CGColor` at the moment it fills. A `CGColor` is a concrete color: asking a
+/// dynamic color for one resolves it against whatever appearance is current on the thread right
+/// then and freezes the answer. This palette is built from a theme in `makeUIView` /
+/// `updateUIView`, where the current appearance is not the text view's, so a palette of `CGColor`
+/// came out light and stayed light — the body text followed the user into dark mode and the code
+/// background, the rules, and the quote bars did not.
 public struct MarkdownDecorationPalette {
-    var codeBackground: CGColor
-    var rule: CGColor
-    var quoteBar: CGColor
+    var codeBackground: PlatformColor
+    var rule: PlatformColor
+    var quoteBar: PlatformColor
     var indentStep: CGFloat
     var quoteBarWidth: CGFloat
     var codeCornerRadius: CGFloat
     var codeVerticalPadding: CGFloat
 
     public init(theme: MarkdownTextTheme) {
-        self.codeBackground = theme.codeBlockBackground.cgColor
-        self.rule = theme.ruleColor.cgColor
-        self.quoteBar = theme.quoteBarColor.cgColor
+        self.codeBackground = theme.codeBlockBackground
+        self.rule = theme.ruleColor
+        self.quoteBar = theme.quoteBarColor
         self.indentStep = theme.indentStep
         self.quoteBarWidth = theme.quoteBarWidth
         self.codeCornerRadius = theme.codeBlockCornerRadius
@@ -38,6 +43,11 @@ public struct MarkdownDecorationPalette {
 /// with a raw `CGContext` so UIKit and AppKit run the same code. Horizontal rules, block quote bars, and
 /// table row separators are drawn on both platforms; the code block background is drawn here on macOS
 /// only — see `draw(at:in:)`.
+///
+/// Every palette color becomes a `CGColor` inside `draw(at:in:)` and nowhere earlier. UIKit and AppKit
+/// push the drawing view's appearance before calling into a fragment, so a dynamic color asked for its
+/// `cgColor` here resolves to the appearance actually on screen. Ask outside a draw and the answer is
+/// whatever appearance happened to be current, kept forever.
 ///
 /// On macOS the code block fill is punched out with the even-odd rule wherever it overlaps the active
 /// selection, so the system's selection highlight shows through: left alone, TextKit 2 draws the fragment
@@ -125,7 +135,7 @@ final class MarkdownLayoutFragment: NSTextLayoutFragment {
 
         context.saveGState()
         defer { context.restoreGState() }
-        context.setFillColor(palette.codeBackground)
+        context.setFillColor(palette.codeBackground.cgColor)
 
         let selection = selectionRects(point: point, fillRect: bgRect)
         if selection.isEmpty {
@@ -170,7 +180,7 @@ final class MarkdownLayoutFragment: NSTextLayoutFragment {
         let fragLocation = range.location
         context.saveGState()
         defer { context.restoreGState() }
-        context.setFillColor(palette.rule)
+        context.setFillColor(palette.rule.cgColor)
 
         for line in textLineFragments {
             let docStart = fragLocation + line.characterRange.location
@@ -196,7 +206,7 @@ final class MarkdownLayoutFragment: NSTextLayoutFragment {
 
         context.saveGState()
         defer { context.restoreGState() }
-        context.setFillColor(palette.rule)
+        context.setFillColor(palette.rule.cgColor)
 
         for line in textLineFragments {
             let docStart = fragLocation + line.characterRange.location
@@ -221,8 +231,8 @@ final class MarkdownLayoutFragment: NSTextLayoutFragment {
             let docStart = fragLocation + line.characterRange.location
             guard docStart < ts.length,
                   case .blockQuote(let level) = decoration(at: docStart)?.kind else { continue }
-            let barColor = (ts.attribute(.markdownDecorationBar, at: docStart, effectiveRange: nil) as? PlatformColor)?.cgColor ?? palette.quoteBar
-            context.setFillColor(barColor)
+            let barColor = (ts.attribute(.markdownDecorationBar, at: docStart, effectiveRange: nil) as? PlatformColor) ?? palette.quoteBar
+            context.setFillColor(barColor.cgColor)
             let tb = line.typographicBounds
             let barY = point.y + tb.origin.y
             for i in 0..<max(1, level) {
