@@ -2,7 +2,6 @@
   "components" : [
     {
       "basePath" : "__Snapshots__\/Aside",
-      "generatedAt" : "2026-07-20T07:57:27Z",
       "name" : "Aside",
       "states" : {
         "allCommonAsides" : {
@@ -416,7 +415,6 @@
     },
     {
       "basePath" : "__Snapshots__\/BlockElements",
-      "generatedAt" : "2026-07-20T07:56:48Z",
       "name" : "BlockElements",
       "states" : {
         "aside" : {
@@ -536,7 +534,6 @@
     },
     {
       "basePath" : "__Snapshots__\/CodeBlock",
-      "generatedAt" : "2026-07-20T07:57:05Z",
       "name" : "CodeBlock",
       "states" : {
         "go" : {
@@ -698,7 +695,6 @@
     },
     {
       "basePath" : "__Snapshots__\/ComplexDocument",
-      "generatedAt" : "2026-07-20T07:56:55Z",
       "name" : "ComplexDocument",
       "states" : {
         "aiResponse" : {
@@ -748,7 +744,6 @@
     },
     {
       "basePath" : "__Snapshots__\/InlineElements",
-      "generatedAt" : "2026-07-20T07:56:44Z",
       "name" : "InlineElements",
       "states" : {
         "emphasisAndStrong" : {
@@ -826,7 +821,6 @@
     },
     {
       "basePath" : "__Snapshots__\/MarkdownMath",
-      "generatedAt" : "2026-07-20T07:56:50Z",
       "name" : "MarkdownMath",
       "states" : {
         "latex-display" : {
@@ -904,7 +898,6 @@
     },
     {
       "basePath" : "__Snapshots__\/Media",
-      "generatedAt" : "2026-07-20T07:56:51Z",
       "name" : "Media",
       "states" : {
         "imageAltOnly" : {
@@ -965,7 +958,7 @@
       "light"
     ]
   },
-  "generatedAt" : "2026-07-20T07:59:15Z",
+  "generatedAt" : "2026-08-11T13:19:16Z",
   "summary" : {
     "byDevice" : {
 

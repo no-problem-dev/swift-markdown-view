@@ -65,6 +65,7 @@ struct ComplexDocumentSnapshotTests {
             componentName: "ComplexDocument",
             stateName: "aiResponse",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -121,6 +122,7 @@ struct ComplexDocumentSnapshotTests {
             componentName: "ComplexDocument",
             stateName: "readmeStyle",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -158,6 +160,7 @@ struct ComplexDocumentSnapshotTests {
             componentName: "ComplexDocument",
             stateName: "technicalDoc",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }

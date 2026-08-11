@@ -73,6 +73,9 @@ private struct MarkdownTextKitBackend: View {
             // `MathRenderer` refines `MarkdownAttachmentRendering`, so no runtime cast is needed.
             // With `renderMath` off the options refuse math, and the builder falls back to source.
             .attachmentRenderer(renderingOptions.attachmentRenderer(wrapping: mathRenderer))
+            // Math is rasterized with the text color baked in, so the renderer has to be told
+            // which appearance it is drawing for; a bitmap cannot follow a later change.
+            .appearance(isDark: colorScheme == .dark)
         if let script = MermaidScript.resolve(from: mermaidScriptProvider.scriptSource) {
             view = view.mermaid(script: script, isDark: colorScheme == .dark)
         }

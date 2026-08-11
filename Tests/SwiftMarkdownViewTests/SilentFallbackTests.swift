@@ -4,6 +4,7 @@ import SwiftUI
 import Foundation
 @testable import SwiftMarkdownView
 @testable import MarkdownAttributedKit
+@testable import MarkdownTextKit
 
 /// 「約束したことを黙って別のことに差し替える」失敗の回帰テスト。
 ///
@@ -69,6 +70,37 @@ struct SilentFallbackTests {
 
         #expect(renderer is any MarkdownAttachmentRendering)
     }
+
+    // MARK: 装飾パレットの投入先
+
+    /// `setDecorationPalette(_:on:)` は `UITextView` を受けて `as?` で落としていた。
+    /// `MarkdownTextView` でないビューを渡すと、例外もログも無いまま何も起きず、
+    /// コードブロックの背景だけが描かれない。呼んだ側にはそれを知る手段が無かった。
+    ///
+    /// 受け口を具体型に絞ったので、取り違えはコンパイルエラーになる。ただし
+    /// representable の `UIViewType` を `UITextView` に広げれば、また foreign なビューが
+    /// パイプラインを通れるようになる — そこを固定する。
+    #if canImport(UIKit)
+    @Test("装飾パレットの投入先は具体型のまま（広げると黙って落ちる口が戻る）")
+    func decorationPaletteTargetStaysConcrete() {
+        #expect(MarkdownSelectableText.UIViewType.self == MarkdownTextView.self)
+    }
+
+    /// 具体型にしただけで届いていなければ意味が無い。実際に載ることまで見る。
+    @MainActor
+    @Test("装飾パレットはビューに実際に届く")
+    func decorationPaletteActuallyLands() {
+        let textView = MarkdownTextViewFactory.make()
+        #expect(textView.decorationPalette == nil)
+
+        MarkdownTextViewFactory.setDecorationPalette(
+            MarkdownDecorationPalette(theme: .default),
+            on: textView
+        )
+
+        #expect(textView.decorationPalette != nil)
+    }
+    #endif
 
     // MARK: シンタックスハイライトの失敗
 

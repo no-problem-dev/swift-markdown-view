@@ -45,6 +45,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "plain",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -75,6 +76,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "swift",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -105,6 +107,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "typescript",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -136,6 +139,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "python",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -167,6 +171,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "go",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -199,6 +204,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "rust",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -234,6 +240,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "ruby",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -265,6 +272,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "sql",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -294,6 +302,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "json",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -325,6 +334,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "yaml",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -358,6 +368,7 @@ struct CodeBlockSnapshotTests {
             componentName: "CodeBlock",
             stateName: "shell",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }

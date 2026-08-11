@@ -2,7 +2,34 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING** — raised the swift-design-system pin to 4.0.0, swift-latex-view to 0.5.0, and
+  swift-visual-testing to 3.0.0. DesignSystem types appear in this package's public API, so its
+  major becomes this one's.
+- **Every dark reference image is re-recorded, because the old ones were the defect.**
+  swift-visual-testing hardcoded a light `UITraitCollection` into every device config, so a dark
+  capture was drawn over a light ground — and for a text view, which paints no background of its
+  own, that ground is the whole image. All 69 committed dark references measured a light mean
+  pixel; none does now. 77 images changed in total: 65 dark, plus 12 light that had drifted and
+  were passing under `perceptualPrecision: 0.98`.
+
 ### Fixed
+
+- **Display math rendered as a correctly sized, completely transparent bitmap.** `ImageRenderer`
+  draws only what SwiftUI draws, and `LaTeXView`'s display body wraps the formula in a horizontal
+  `ScrollView` so wide math can scroll — a platform-backed view, which `ImageRenderer` lays out and
+  then leaves empty. The same `Text` renders with ink on its own and with none inside a
+  `ScrollView`. Every display formula therefore reserved its line height and drew nothing, which is
+  why `latex-display.dark.png` was blank. Both modes now rasterize through the inline body, and
+  display *style* — limits above and below the operator, full-size fractions — is asked of the
+  typesetting engine directly with `\displaystyle`. Source the engine cannot parse is left alone,
+  since `LaTeXView` falls back to drawing the source it was given and prefixing it would put
+  `\displaystyle` in front of the text the reader sees.
+- `MarkdownTextViewFactory.setDecorationPalette(_:on:)` took a `UITextView` and silently did
+  nothing when handed anything that was not a `MarkdownTextView` — no error, no log, just code
+  blocks with no background and no way for the caller to find out. It takes the concrete type now,
+  so the mistake is a compile error.
 
 - Code block backgrounds, thematic breaks, table row separators, and block quote bars now follow
   the appearance the document is drawn in. `MarkdownDecorationPalette` turned the theme's colors

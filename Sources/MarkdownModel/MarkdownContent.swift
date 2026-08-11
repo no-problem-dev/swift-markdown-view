@@ -39,4 +39,47 @@ public struct MarkdownContent: Sendable, Equatable {
     public init(blocks: [MarkdownBlock]) {
         self.blocks = blocks
     }
+
+    /// Whether the document holds any math, display or inline, at any depth.
+    ///
+    /// A math renderer turns each formula into a bitmap with its color already baked in, so a
+    /// document that has math is one whose drawing does not follow a change of appearance on its
+    /// own. Renderers use this to decide whether an appearance change has to be acted on at all.
+    public var containsMath: Bool {
+        blocks.contains(where: Self.containsMath)
+    }
+
+    private static func containsMath(_ block: MarkdownBlock) -> Bool {
+        switch block {
+        case .math:
+            return true
+        case .paragraph(let inlines), .heading(_, let inlines):
+            return inlines.contains(where: containsMath)
+        case .aside(_, let content):
+            return content.contains(where: containsMath)
+        case .unorderedList(let items):
+            return items.contains { $0.blocks.contains(where: containsMath) }
+        case .orderedList(_, let items):
+            return items.contains { $0.blocks.contains(where: containsMath) }
+        case .table(let data):
+            return ([data.headerRow] + data.bodyRows).contains { row in
+                row.cells.contains { $0.contains(where: containsMath) }
+            }
+        case .codeBlock, .thematicBreak, .mermaid:
+            return false
+        }
+    }
+
+    private static func containsMath(_ inline: MarkdownInline) -> Bool {
+        switch inline {
+        case .inlineMath:
+            return true
+        case .emphasis(let children), .strong(let children), .strikethrough(let children):
+            return children.contains(where: containsMath)
+        case .link(_, _, let content):
+            return content.contains(where: containsMath)
+        case .text, .code, .image, .hardBreak, .softBreak:
+            return false
+        }
+    }
 }

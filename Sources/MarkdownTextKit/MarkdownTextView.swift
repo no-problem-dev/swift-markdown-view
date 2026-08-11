@@ -144,7 +144,7 @@ public extension MarkdownTextViewFactory {
     }
 
     @MainActor
-    static func apply(_ attributed: NSAttributedString, to textView: UITextView) {
+    static func apply(_ attributed: NSAttributedString, to textView: MarkdownTextView) {
         textView.textStorage.setAttributedString(attributed)
         textView.invalidateIntrinsicContentSize()
         textView.setNeedsLayout()
@@ -155,16 +155,23 @@ public extension MarkdownTextViewFactory {
     /// Call this before applying content, so that the fragments the first layout pass creates are the
     /// decorated ones. The delegate is held weakly, so the caller has to retain `provider`.
     @MainActor
-    static func setFragmentProvider(_ provider: MarkdownLayoutFragmentProvider, on textView: UITextView) {
+    static func setFragmentProvider(_ provider: MarkdownLayoutFragmentProvider, on textView: MarkdownTextView) {
         textView.textLayoutManager?.delegate = provider
     }
 
     /// Sets the palette used to draw the code block background beneath the text.
     ///
-    /// Does nothing when the view is not a ``MarkdownTextView``.
+    /// The parameter is ``MarkdownTextView`` rather than `UITextView` because the palette has
+    /// nowhere to go on any other view. It used to take `UITextView` and cast, so handing it a
+    /// plain text view returned normally and drew no code block backgrounds at all — a mistake
+    /// with no exception, no log, and no visible difference until someone rendered a code block.
+    /// The narrower type turns that into a compile error, which is the only form of the check that
+    /// cannot be skipped. `apply` and `setFragmentProvider` take the same type for the same reason:
+    /// the fragment provider reaches the layout manager through an optional chain that a TextKit 1
+    /// view would drop just as quietly, and ``MarkdownTextView`` is TextKit 2 by construction.
     @MainActor
-    static func setDecorationPalette(_ palette: MarkdownDecorationPalette, on textView: UITextView) {
-        (textView as? MarkdownTextView)?.decorationPalette = palette
+    static func setDecorationPalette(_ palette: MarkdownDecorationPalette, on textView: MarkdownTextView) {
+        textView.decorationPalette = palette
     }
 }
 #endif

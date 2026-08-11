@@ -30,6 +30,7 @@ struct MathSnapshotTests {
             componentName: "MarkdownMath",
             stateName: "latex-inline",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -49,6 +50,7 @@ struct MathSnapshotTests {
             componentName: "MarkdownMath",
             stateName: "latex-display",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -74,6 +76,7 @@ struct MathSnapshotTests {
             componentName: "MarkdownMath",
             stateName: "latex-mixed",
             size: CGSize(width: 400, height: 420),
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -94,6 +97,7 @@ struct MathSnapshotTests {
             componentName: "MarkdownMath",
             stateName: "plain-fallback",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
@@ -116,6 +120,7 @@ struct MathSnapshotTests {
             componentName: "MarkdownMath",
             stateName: "math-disabled",
             size: snapshotSize,
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }

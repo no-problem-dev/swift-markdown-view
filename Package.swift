@@ -46,12 +46,12 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/no-problem-dev/swift-design-system.git", from: "3.0.0"),
+        .package(url: "https://github.com/no-problem-dev/swift-design-system.git", from: "4.0.0"),
         .package(url: "https://github.com/swiftlang/swift-markdown.git", .upToNextMajor(from: "0.7.3")),
-        .package(url: "https://github.com/no-problem-dev/swift-visual-testing.git", .upToNextMajor(from: "2.0.0")),
+        .package(url: "https://github.com/no-problem-dev/swift-visual-testing.git", .upToNextMajor(from: "3.0.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin.git", .upToNextMajor(from: "1.4.0")),
         .package(url: "https://github.com/appstefan/HighlightSwift.git", .upToNextMajor(from: "1.0.0")),
-        .package(url: "https://github.com/no-problem-dev/swift-latex-view.git", .upToNextMinor(from: "0.4.0"))
+        .package(url: "https://github.com/no-problem-dev/swift-latex-view.git", .upToNextMinor(from: "0.5.0"))
     ],
     targets: [
         // Nothing but the UIKit / AppKit cross-platform aliases. The renderer side

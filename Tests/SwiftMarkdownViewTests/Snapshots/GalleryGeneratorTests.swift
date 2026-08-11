@@ -13,7 +13,7 @@ import VisualTesting
 struct GalleryGeneratorTests {
 
     @Test
-    func generateGallery() {
+    func generateGallery() throws {
         let snapshotsDir = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
 
@@ -27,12 +27,12 @@ struct GalleryGeneratorTests {
             .appendingPathComponent("gallery.html")
             .path
 
-        let catalog = VisualTesting.generateCatalog(
+        let catalog = try VisualTesting.generateCatalog(
             rootDirectory: snapshotsRoot,
             outputPath: catalogPath
         )
 
-        VisualTesting.generateGallery(
+        try VisualTesting.generateGallery(
             catalog: catalog,
             outputPath: galleryPath
         )

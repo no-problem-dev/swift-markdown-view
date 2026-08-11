@@ -26,6 +26,11 @@ public struct MarkdownSelectableText {
     var highlighter: (any MarkdownCodeHighlighting)?
     var attachmentRenderer: (any MarkdownAttachmentRendering)?
     var mermaidConfig: (script: MermaidScript, isDark: Bool)?
+    /// The appearance the document is being drawn in.
+    ///
+    /// Read only by content that is rasterized for one appearance and cannot follow a change of
+    /// its own accord. Everything else reaches the draw call as a dynamic color and resolves there.
+    var appearanceIsDark: Bool = false
 
     @Environment(\.markdownImagePolicy) private var imagePolicy
 
@@ -64,8 +69,27 @@ public struct MarkdownSelectableText {
         return copy
     }
 
+    /// Tells the renderer which appearance the document is being drawn in.
+    func appearance(isDark: Bool) -> MarkdownSelectableText {
+        var copy = self
+        copy.appearanceIsDark = isDark
+        return copy
+    }
+
     private func attributedString() -> NSAttributedString {
         MarkdownAttributedBuilder(theme: theme, attachmentRenderer: attachmentRenderer).build(content)
+    }
+
+    /// Everything the current draw depends on, including the appearance where a bitmap froze it.
+    func appliedInputs() -> AppliedInputs {
+        AppliedInputs(
+            content: content,
+            theme: theme,
+            mermaidIsDark: mermaidConfig?.isDark,
+            // A document with no math, or with no renderer to rasterize it, has nothing frozen —
+            // it keeps the skip, and with it the user's selection, across an appearance change.
+            rasterizedMathIsDark: (attachmentRenderer != nil && content.containsMath) ? appearanceIsDark : nil
+        )
     }
 
     /// Everything the rendered output is built from.
@@ -76,17 +100,28 @@ public struct MarkdownSelectableText {
     /// leaving it out of the comparison drops a theme change on the floor with no error anywhere:
     /// the caller swaps the theme and the text keeps its old colors.
     ///
-    /// Light and dark are deliberately *not* in here. A dynamic color is one value in both
-    /// appearances, so a theme built from system colors compares equal across a switch and this
-    /// skips the pass — which is correct, because every color reaches the draw call still dynamic
-    /// and resolves there. The one thing that cannot stay dynamic is a Mermaid diagram, which is
-    /// drawn into a web view for one appearance, so its appearance is a key of its own.
+    /// Light and dark are deliberately *not* in here as a blanket key. A dynamic color is one value
+    /// in both appearances, so a theme built from system colors compares equal across a switch and
+    /// this skips the pass — which is correct for everything that reaches the draw call still
+    /// dynamic and resolves there, and it is what keeps a selection alive across a switch.
+    ///
+    /// What cannot stay dynamic is anything already rasterized: a bitmap holds the colors it was
+    /// drawn with, and no later appearance change reaches inside it. Each such kind carries the
+    /// appearance as a key **of its own**, non-nil only when the document actually holds that
+    /// content — so a document without it keeps the skip, and a document with it is rebuilt on a
+    /// switch rather than left drawing the old colors.
     struct AppliedInputs: Equatable {
         var content: MarkdownContent
         var theme: MarkdownTextTheme
         /// Mermaid diagrams bake a background color for the appearance they were drawn in, and
         /// the appearance does not reach the theme.
         var mermaidIsDark: Bool?
+        /// Math is rasterized into a bitmap with the text color baked in. The theme hands the
+        /// renderer a dynamic color, but it is resolved the moment the bitmap is drawn, and a
+        /// bitmap does not re-resolve. Without this key a document switched to dark kept its
+        /// black formulas and drew them onto the dark ground, where they are invisible — every
+        /// other run of text on the same line having correctly turned white.
+        var rasterizedMathIsDark: Bool?
     }
 
     public final class Coordinator {
@@ -214,7 +249,10 @@ public struct MarkdownSelectableText {
 
 #if canImport(UIKit)
 extension MarkdownSelectableText: UIViewRepresentable {
-    public func makeUIView(context: Context) -> UITextView {
+    // The view type is the concrete `MarkdownTextView`, not `UITextView`. The decoration palette —
+    // which is what draws code block backgrounds — can only be installed on the concrete view, so
+    // a wider type here would let a view that silently drops it through the whole pipeline.
+    public func makeUIView(context: Context) -> MarkdownTextView {
         let textView = MarkdownTextViewFactory.make()
         let palette = MarkdownDecorationPalette(theme: theme)
         context.coordinator.provider.palette = palette
@@ -223,8 +261,8 @@ extension MarkdownSelectableText: UIViewRepresentable {
         return textView
     }
 
-    public func updateUIView(_ textView: UITextView, context: Context) {
-        let inputs = AppliedInputs(content: content, theme: theme, mermaidIsDark: mermaidConfig?.isDark)
+    public func updateUIView(_ textView: MarkdownTextView, context: Context) {
+        let inputs = appliedInputs()
         guard !context.coordinator.isUnchanged(inputs) else { return }
         let palette = MarkdownDecorationPalette(theme: theme)
         context.coordinator.provider.palette = palette
@@ -253,7 +291,7 @@ extension MarkdownSelectableText: UIViewRepresentable {
     ///
     /// This is what lets a non-scrolling text view size itself correctly inside a SwiftUI
     /// `ScrollView` or stack.
-    public func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
+    public func sizeThatFits(_ proposal: ProposedViewSize, uiView: MarkdownTextView, context: Context) -> CGSize? {
         guard let width = proposal.width, width > 0, width != .infinity else { return nil }
         let fitting = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
         return CGSize(width: width, height: ceil(fitting.height))
@@ -270,7 +308,7 @@ extension MarkdownSelectableText: NSViewRepresentable {
     }
 
     public func updateNSView(_ textView: MarkdownTextView, context: Context) {
-        let inputs = AppliedInputs(content: content, theme: theme, mermaidIsDark: mermaidConfig?.isDark)
+        let inputs = appliedInputs()
         guard !context.coordinator.isUnchanged(inputs) else { return }
         context.coordinator.provider.palette = MarkdownDecorationPalette(theme: theme)
         MarkdownTextViewFactory.apply(attributedString(), to: textView)

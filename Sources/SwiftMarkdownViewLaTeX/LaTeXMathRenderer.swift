@@ -75,6 +75,17 @@ extension LaTeXMathRenderer: MarkdownAttachmentRendering {
     /// Rasterizes a formula at device resolution and embeds it as a TextKit attachment.
     ///
     /// SwiftMath typesets vector glyphs, so the high-DPI raster stays crisp at ordinary sizes.
+    ///
+    /// Both modes are rasterized through `LaTeXView`'s **inline** body. `ImageRenderer` draws only
+    /// what SwiftUI itself draws, and `LaTeXView`'s display body wraps the formula in a horizontal
+    /// `ScrollView` so that math wider than the screen can scroll. A `ScrollView` is backed by a
+    /// platform view, which `ImageRenderer` lays out and then leaves empty — the same `Text` renders
+    /// with ink on its own and with none inside a `ScrollView`. Display math went through that body,
+    /// so every display formula came back as a correctly sized, completely transparent bitmap: the
+    /// line reserved its height and drew nothing. Display *style* is kept by asking the typesetting
+    /// engine for it directly with `\displaystyle` — limits above and below the operator, full-size
+    /// fractions — which is what the display body would have produced. There is no scroll view in
+    /// an attachment anyway: a formula too wide for the column is clipped by the text container.
     public func renderedImage(for kind: MarkdownAttachment.Kind, theme: MarkdownTextTheme) -> MarkdownRenderedImage? {
         let latex: String
         let mode: MathMode
@@ -85,13 +96,16 @@ extension LaTeXMathRenderer: MarkdownAttachmentRendering {
         }
 
         return MainActor.assumeIsolated {
+            let fontSize = mode == .display ? theme.baseFontSize * 1.2 : theme.baseFontSize
             let mathStyle = FixedColorMathStyle(
                 color: Color(theme.textColor),
-                inline: theme.baseFontSize,
-                display: theme.baseFontSize * 1.2
+                inline: fontSize,
+                display: fontSize
             )
             let renderer = ImageRenderer(
-                content: LaTeXView(latex, mode: mode).mathStyle(mathStyle).fixedSize()
+                content: LaTeXView(Self.source(latex, mode: mode), mode: .inline)
+                    .mathStyle(mathStyle)
+                    .fixedSize()
             )
             renderer.scale = Self.displayScale
             #if canImport(UIKit)
@@ -105,6 +119,17 @@ extension LaTeXMathRenderer: MarkdownAttachmentRendering {
             let baselineOffset: CGFloat = mode == .inline ? -(size.height * 0.18) : 0
             return MarkdownRenderedImage(image: image, size: size, baselineOffset: baselineOffset)
         }
+    }
+
+    /// The source handed to the engine: display math asks for display style explicitly.
+    ///
+    /// Source the engine cannot parse is left alone. `LaTeXView` falls back to drawing the source
+    /// it was given, so prefixing first would put `\displaystyle` in front of the text the reader
+    /// sees — an internal detail surfacing as part of their document.
+    static func source(_ latex: String, mode: MathMode) -> String {
+        guard mode == .display,
+              MathExpression(latex, mode: .display).validate() == nil else { return latex }
+        return "\\displaystyle " + latex
     }
 
     @MainActor

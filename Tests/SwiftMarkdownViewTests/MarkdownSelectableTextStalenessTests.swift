@@ -145,5 +145,77 @@ struct MarkdownSelectableTextStalenessTests {
 
         #expect(!coordinator.isUnchanged(.init(content: content, theme: changed, mermaidIsDark: nil)))
     }
+
+    // MARK: ラスタライズ済みの数式と明暗
+
+    /// 数式はビットマップに焼かれる。テーマが渡す文字色は動的でも、ビットマップを描いた
+    /// 瞬間に解決され、以後どんな明暗の変化もその中には届かない。明暗が鍵に入っていないと、
+    /// 暗くしたのに数式だけ黒いまま暗い地に残る — 同じ行の他の文字は白くなっているのに。
+    @MainActor
+    @Test("数式のある文書は明暗が変われば再適用する")
+    func appearanceChangeRestylesDocumentWithMath() {
+        let withMath = MarkdownContent(parsing: "本文 $x^2$ と\n\n$$E = mc^2$$")
+        let view = MarkdownSelectableText(withMath).attachmentRenderer(PlainMathRenderer())
+
+        let light = view.appearance(isDark: false).appliedInputs()
+        let dark = view.appearance(isDark: true).appliedInputs()
+
+        let coordinator = MarkdownSelectableText.Coordinator()
+        coordinator.markApplied(light)
+        #expect(!coordinator.isUnchanged(dark))
+    }
+
+    /// 逆側。数式が無い文書まで明暗で作り直すと、明暗を切り替えるたびに選択が消える。
+    /// 動的な色は描画時に解決されるので、作り直す必要がそもそも無い。
+    @MainActor
+    @Test("数式の無い文書は明暗が変わっても再適用しない（選択が残る）")
+    func appearanceChangeKeepsDocumentWithoutMath() {
+        let view = MarkdownSelectableText(content).attachmentRenderer(PlainMathRenderer())
+
+        let coordinator = MarkdownSelectableText.Coordinator()
+        coordinator.markApplied(view.appearance(isDark: false).appliedInputs())
+
+        #expect(coordinator.isUnchanged(view.appearance(isDark: true).appliedInputs()))
+    }
+
+    /// レンダラーが無ければ数式はビットマップにならず、素のテキストとして落ちる。
+    /// 焼かれたものが無いのだから明暗で作り直す理由も無い。
+    @MainActor
+    @Test("レンダラーが無ければ数式があっても明暗で再適用しない")
+    func appearanceChangeKeepsDocumentWithoutRenderer() {
+        let withMath = MarkdownContent(parsing: "本文 $x^2$ と\n\n$$E = mc^2$$")
+        let view = MarkdownSelectableText(withMath)
+
+        let coordinator = MarkdownSelectableText.Coordinator()
+        coordinator.markApplied(view.appearance(isDark: false).appliedInputs())
+
+        #expect(coordinator.isUnchanged(view.appearance(isDark: true).appliedInputs()))
+    }
+
+    /// 上の3つは `containsMath` の判定に乗っている。入れ子の中の数式を見落とすと
+    /// 「数式があるのに再適用しない」に静かに戻る。
+    @Test("数式の検出は入れ子の中まで届く", arguments: [
+        "$x^2$",
+        "$$E = mc^2$$",
+        "```math\nE = mc^2\n```",
+        "- 箇条書きの中の $x^2$",
+        "> 引用の中の $x^2$",
+        "**強調の中の $x^2$**",
+        "[リンクの中の $x^2$](https://example.com)",
+        "| 見出し |\n|---|\n| 表の中の $x^2$ |"
+    ])
+    func mathIsFoundAtAnyDepth(source: String) {
+        #expect(MarkdownContent(parsing: source).containsMath, "\(source)")
+    }
+
+    @Test("数式の無い文書を数式ありと誤判定しない", arguments: [
+        "ただの本文",
+        "`$x^2$` はコードなので数式ではない",
+        "```swift\nlet cost = 5\n```",
+        "値段は $5 と $10 です"
+    ])
+    func mathIsNotInventedWhereThereIsNone(source: String) {
+        #expect(!MarkdownContent(parsing: source).containsMath, "\(source)")
+    }
 }
 #endif

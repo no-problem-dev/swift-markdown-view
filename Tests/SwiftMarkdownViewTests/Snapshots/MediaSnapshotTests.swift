@@ -57,6 +57,7 @@ struct MediaSnapshotTests {
             componentName: "Media",
             stateName: "localBundleImage",
             size: CGSize(width: 400, height: 600),
+            disableAnimations: false,
             file: #filePath, line: #line
         )
     }
