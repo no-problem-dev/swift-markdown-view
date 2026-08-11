@@ -51,7 +51,7 @@ let package = Package(
         .package(url: "https://github.com/no-problem-dev/swift-visual-testing.git", .upToNextMajor(from: "2.0.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin.git", .upToNextMajor(from: "1.4.0")),
         .package(url: "https://github.com/appstefan/HighlightSwift.git", .upToNextMajor(from: "1.0.0")),
-        .package(url: "https://github.com/no-problem-dev/swift-latex-view.git", from: "0.3.0")
+        .package(url: "https://github.com/no-problem-dev/swift-latex-view.git", .upToNextMinor(from: "0.4.0"))
     ],
     targets: [
         // Nothing but the UIKit / AppKit cross-platform aliases. The renderer side

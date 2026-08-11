@@ -33,15 +33,24 @@ public struct LaTeXMathRenderer: MathRenderer {
     @MainActor
     public func inlineMath(_ latex: String, fontSize: CGFloat?, textColor: Color) -> Text {
         let size = fontSize ?? style.inlineFontSize
-        return LaTeXView.inlineText(
-            latex,
-            fontFamily: style.fontFamily,
-            fontSize: size,
-            color: textColor
-        )
-        ?? Text(latex)
-            .font(.system(size: size, design: .monospaced))
-            .foregroundStyle(textColor)
+        do {
+            return try LaTeXView.inlineText(
+                latex,
+                fontFamily: style.fontFamily,
+                fontSize: size,
+                color: textColor
+            )
+        } catch {
+            // swift-latex-view 0.4.0 replaced a bare `nil` with a reason and the string the
+            // engine was actually handed. Inline math sits inside a paragraph, so there is
+            // nowhere to surface that reason — the fallback stays the source text. But it is
+            // now `failure.source`, the normalized string that was rejected, rather than the
+            // caller's original: for double-escaped model output those differ, and showing the
+            // original meant showing text the engine never saw.
+            return Text(error.source)
+                .font(.system(size: size, design: .monospaced))
+                .foregroundStyle(textColor)
+        }
     }
 }
 
