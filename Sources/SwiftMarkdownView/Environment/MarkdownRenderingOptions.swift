@@ -1,25 +1,26 @@
 import SwiftUI
+import MarkdownAttributedKit
 
 // MARK: - MarkdownRenderingOptions
 
 /// Rendering switches that a view reads from the environment.
 ///
-/// Only ``MathText`` consults these. ``MarkdownView`` typesets math through its attachment
-/// renderer and is unaffected by them.
+/// Both ``MarkdownView`` and ``MathText`` consult these.
 ///
 /// ## Example
 ///
 /// ```swift
-/// MathText("The answer: $$-6$$")
+/// MarkdownView("The answer: $$-6$$")
 ///     .markdownRenderingOptions(MarkdownRenderingOptions(renderMath: false))
 /// ```
 public struct MarkdownRenderingOptions: Sendable, Equatable {
 
     /// Whether math is typeset, or left standing as source text.
     ///
-    /// ``MathText`` reads this: when `false`, it shows its source as written, delimiters and all.
-    /// Math inside a ``MarkdownView`` is unaffected — that goes through the attachment renderer,
-    /// which is not given this value either way.
+    /// When `false`, ``MathText`` shows its source as written, delimiters and all, and a
+    /// ``MarkdownView`` leaves every formula as its LaTeX source instead of handing it to the math
+    /// renderer. Images and Mermaid diagrams are untouched either way — whether math is typeset is
+    /// a separate question from whether the other attachments render.
     public var renderMath: Bool
 
     /// - Parameter renderMath: Whether to typeset math. Defaults to `true`.
@@ -41,8 +42,7 @@ extension EnvironmentValues {
 
     /// The rendering options in effect for this view hierarchy.
     ///
-    /// ``MathText`` is the only view that reads this. A ``MarkdownView`` in the same hierarchy
-    /// ignores it, so setting it does not change how a rendered document typesets math.
+    /// Both ``MarkdownView`` and ``MathText`` read this.
     ///
     /// Set it with the ``SwiftUICore/View/markdownRenderingOptions(_:)`` modifier.
     public var markdownRenderingOptions: MarkdownRenderingOptions {
@@ -57,11 +57,37 @@ extension View {
 
     /// Sets the rendering options for this view hierarchy.
     ///
-    /// What this reaches is ``MathText``. It does not reach a ``MarkdownView`` below it, whose
-    /// math is typeset by the attachment renderer no matter what is set here.
-    ///
     /// - Parameter options: The options to use.
     public func markdownRenderingOptions(_ options: MarkdownRenderingOptions) -> some View {
         environment(\.markdownRenderingOptions, options)
+    }
+}
+
+// MARK: - Applying the options
+
+extension MarkdownRenderingOptions {
+
+    /// The attachment renderer a document should be built with, given the math renderer in effect.
+    ///
+    /// With ``renderMath`` off, math is refused so that `MarkdownAttributedBuilder` writes the
+    /// LaTeX source as text instead of an attachment. Images and Mermaid diagrams still reach
+    /// `base`.
+    func attachmentRenderer(wrapping base: any MarkdownAttachmentRendering) -> any MarkdownAttachmentRendering {
+        renderMath ? base : MathSuppressingAttachmentRenderer(base: base)
+    }
+}
+
+/// An attachment renderer that refuses math and passes every other attachment to the one it wraps.
+struct MathSuppressingAttachmentRenderer: MarkdownAttachmentRendering {
+
+    let base: any MarkdownAttachmentRendering
+
+    func renderedImage(for kind: MarkdownAttachment.Kind, theme: MarkdownTextTheme) -> MarkdownRenderedImage? {
+        switch kind {
+        case .inlineMath, .displayMath:
+            return nil
+        case .image, .mermaid:
+            return base.renderedImage(for: kind, theme: theme)
+        }
     }
 }

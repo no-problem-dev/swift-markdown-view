@@ -61,6 +61,7 @@ private struct MarkdownTextKitBackend: View {
     @Environment(\.syntaxHighlighter) private var highlighter
     @Environment(\.mathRenderer) private var mathRenderer
     @Environment(\.mermaidScriptProvider) private var mermaidScriptProvider
+    @Environment(\.markdownRenderingOptions) private var renderingOptions
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -70,7 +71,8 @@ private struct MarkdownTextKitBackend: View {
         )
             .codeHighlighter(SyntaxHighlighterAdapter(base: highlighter))
             // `MathRenderer` refines `MarkdownAttachmentRendering`, so no runtime cast is needed.
-            .attachmentRenderer(mathRenderer)
+            // With `renderMath` off the options refuse math, and the builder falls back to source.
+            .attachmentRenderer(renderingOptions.attachmentRenderer(wrapping: mathRenderer))
         if let script = MermaidScript.resolve(from: mermaidScriptProvider.scriptSource) {
             view = view.mermaid(script: script, isDark: colorScheme == .dark)
         }

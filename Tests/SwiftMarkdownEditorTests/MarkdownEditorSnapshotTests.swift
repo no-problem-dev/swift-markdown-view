@@ -63,6 +63,29 @@ struct MarkdownEditorSnapshotTests {
             .frame(width: 390, height: 300)
     }
 
+    // MARK: - The theme's own base font size
+
+    /// A theme two thirds larger than the default, so honouring it is unmistakable.
+    private static var largeTheme: MarkdownEditorTheme {
+        var theme = MarkdownEditorTheme.light
+        theme.baseFontSize = 26
+        return theme
+    }
+
+    /// The editor used to overwrite the theme's `baseFontSize` with an initializer parameter of
+    /// its own, so this document rendered at 16 no matter what the theme carried. It now takes
+    /// the theme whole, and the text here is visibly larger than in `highlightingDetail`.
+    @ComponentSnapshot(width: 390, height: 300)
+    func themedFontSize() -> some View {
+        MarkdownEditor(text: .constant("""
+        # Heading
+        Some **bold** and *italic* and `inline code`.
+        - bullet
+        """), initialMode: .edit)
+            .markdownEditorTheme(Self.largeTheme)
+            .frame(width: 390, height: 300)
+    }
+
     // Live-preview rendering is verified without the simulator in
     // LivePreviewRendererTests (attribute-level assertions on NSTextStorage).
 

@@ -13,9 +13,7 @@ public extension MarkdownEditorTheme {
     ///
     /// - Parameters:
     ///   - palette: The palette to read colors from.
-    ///   - baseFontSize: The point size of body text. It applies when the theme drives
-    ///     `MarkdownSourceTextView` directly. `MarkdownEditor` overrides it with the
-    ///     `baseFontSize` of its own initializer, so set the editor's font size there.
+    ///   - baseFontSize: The point size of body text, which heading sizes scale from.
     static func fromDesignSystem(
         palette: any ColorPalette,
         baseFontSize: CGFloat = 16
@@ -37,14 +35,11 @@ extension View {
     ///
     /// ```swift
     /// MarkdownEditor(text: $text)
-    ///     .markdownEditorDesignSystemTheme()
+    ///     .markdownEditorDesignSystemTheme(baseFontSize: 20)
     /// ```
     ///
-    /// - Parameter baseFontSize: The point size of body text. It applies when the
-    ///   derived theme drives `MarkdownSourceTextView` directly. `MarkdownEditor`
-    ///   overrides it with the `baseFontSize` of its own initializer, so
-    ///   `MarkdownEditor(text: $text).markdownEditorDesignSystemTheme(baseFontSize: 20)`
-    ///   still renders at the editor's own size — set the size on the editor instead.
+    /// - Parameter baseFontSize: The point size of body text, which the editor below takes
+    ///   along with the derived colors.
     public func markdownEditorDesignSystemTheme(baseFontSize: CGFloat = 16) -> some View {
         modifier(DesignSystemEditorThemeBridge(baseFontSize: baseFontSize))
     }

@@ -4,7 +4,7 @@ import SwiftMarkdownEditorTextKit
 /// One item in the formatting toolbar.
 ///
 /// Pass an ordered array to
-/// ``MarkdownEditor/init(text:mode:baseFontSize:livePreview:inputRules:toolbar:controller:)``.
+/// ``MarkdownEditor/init(text:mode:livePreview:inputRules:toolbar:controller:)``.
 /// The default is `.standard`:
 ///
 /// ```swift
@@ -86,19 +86,19 @@ public struct MarkdownEditorToolbarItem: Identifiable, Sendable {
 
 // MARK: - Default items
 
-// The labels below are Japanese literals, and VoiceOver speaks them as written.
+// The labels below are English literals, and VoiceOver speaks them as written.
 // Apps shipping in another language should build their items with `item(...)`.
 
 public extension MarkdownEditorToolbarItem {
 
-    static let bold = item(id: "bold", icon: "bold", label: "太字", key: "b") { $0.toggleBold() }
+    static let bold = item(id: "bold", icon: "bold", label: "Bold", key: "b") { $0.toggleBold() }
 
-    static let italic = item(id: "italic", icon: "italic", label: "斜体", key: "i") { $0.toggleItalic() }
+    static let italic = item(id: "italic", icon: "italic", label: "Italic", key: "i") { $0.toggleItalic() }
 
     static let strikethrough = item(
         id: "strikethrough",
         icon: "strikethrough",
-        label: "取り消し線",
+        label: "Strikethrough",
         key: "x",
         modifiers: [.command, .shift]
     ) { $0.toggleStrikethrough() }
@@ -106,21 +106,21 @@ public extension MarkdownEditorToolbarItem {
     static let inlineCode = item(
         id: "inlineCode",
         icon: "curlybraces",
-        label: "インラインコード",
+        label: "Inline Code",
         key: "e"
     ) { $0.toggleInlineCode() }
 
-    static let heading = item(id: "heading", icon: "number", label: "見出し") { $0.toggleHeading() }
+    static let heading = item(id: "heading", icon: "number", label: "Heading") { $0.toggleHeading() }
 
     static let bulletList = item(
         id: "bulletList",
         icon: "list.bullet",
-        label: "箇条書き"
+        label: "Bulleted List"
     ) { $0.toggleBulletList() }
 
-    static let quote = item(id: "quote", icon: "text.quote", label: "引用") { $0.toggleQuote() }
+    static let quote = item(id: "quote", icon: "text.quote", label: "Block Quote") { $0.toggleQuote() }
 
-    static let link = item(id: "link", icon: "link", label: "リンクを挿入", key: "k") { $0.insertLink() }
+    static let link = item(id: "link", icon: "link", label: "Insert Link", key: "k") { $0.insertLink() }
 }
 
 // MARK: - Default arrangement

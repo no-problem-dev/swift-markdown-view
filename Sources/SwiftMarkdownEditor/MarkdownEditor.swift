@@ -17,13 +17,21 @@ import SwiftMarkdownEditorTextKit
 /// in a TextKit 2 text view, and the preview reuses `MarkdownView`, so what you see
 /// while editing matches what the rest of the package renders.
 ///
-/// Coloring comes from the `MarkdownEditorTheme` in the environment. The default is
-/// built from system semantic colors and follows light and dark appearance on its own,
-/// so no external design system is required.
+/// Coloring and body text size come from the `MarkdownEditorTheme` in the environment.
+/// The default is built from system semantic colors and follows light and dark
+/// appearance on its own, so no external design system is required. To edit at another
+/// size, put a theme carrying that size in the environment:
+///
+/// ```swift
+/// var theme = MarkdownEditorTheme.light
+/// theme.baseFontSize = 20
+///
+/// MarkdownEditor(text: $text)
+///     .markdownEditorTheme(theme)
+/// ```
 public struct MarkdownEditor: View {
 
     @Binding private var text: String
-    private let baseFontSize: CGFloat
     private let inputRules: InputRuleProcessor
     private let livePreview: Bool
     private let toolbarItems: [MarkdownEditorToolbarItem]
@@ -44,14 +52,11 @@ public struct MarkdownEditor: View {
     /// Creates a Markdown editor bound to `text`.
     ///
     /// The editor keeps the mode to itself. To observe or drive it from outside, use
-    /// ``init(text:mode:baseFontSize:livePreview:inputRules:toolbar:controller:)``.
+    /// ``init(text:mode:livePreview:inputRules:toolbar:controller:)``.
     ///
     /// - Parameters:
     ///   - text: The Markdown source to edit.
     ///   - initialMode: The mode shown when the editor first appears.
-    ///   - baseFontSize: The point size of body text, and the only place to set it. It
-    ///     overrides the font size carried by the theme in the environment, whichever
-    ///     way that theme was built.
     ///   - livePreview: When `true`, the editing surface conceals inline markers and
     ///     renders the source in place, Notion style. Markers reappear on the line
     ///     holding the caret while the editor is focused, and the plain `.md` text stays
@@ -65,7 +70,6 @@ public struct MarkdownEditor: View {
     public init(
         text: Binding<String>,
         initialMode: MarkdownEditorMode = .edit,
-        baseFontSize: CGFloat = 16,
         livePreview: Bool = false,
         inputRules: InputRuleProcessor = .standard,
         toolbar: [MarkdownEditorToolbarItem] = .standard,
@@ -74,7 +78,6 @@ public struct MarkdownEditor: View {
         self._text = text
         self._ownedMode = State(initialValue: initialMode)
         self.injectedMode = nil
-        self.baseFontSize = baseFontSize
         self.livePreview = livePreview
         self.inputRules = inputRules
         self.toolbarItems = toolbar
@@ -90,12 +93,9 @@ public struct MarkdownEditor: View {
     ///   - mode: The display mode, kept in sync both ways with the editor's own picker.
     ///     That picker offers ``MarkdownEditorMode/split`` on macOS only, but selecting
     ///     it through this binding lays out the split on iOS too.
-    ///   - baseFontSize: The point size of body text, and the only place to set it. It
-    ///     overrides the font size carried by the theme in the environment, whichever
-    ///     way that theme was built.
     ///   - livePreview: When `true`, the editing surface conceals inline markers and
     ///     renders the source in place. See
-    ///     ``init(text:initialMode:baseFontSize:livePreview:inputRules:toolbar:controller:)``.
+    ///     ``init(text:initialMode:livePreview:inputRules:toolbar:controller:)``.
     ///   - inputRules: The autoformatting rules applied while typing, such as list
     ///     continuation.
     ///   - toolbar: The formatting toolbar items. Pass an empty array to hide the
@@ -105,7 +105,6 @@ public struct MarkdownEditor: View {
     public init(
         text: Binding<String>,
         mode: Binding<MarkdownEditorMode>,
-        baseFontSize: CGFloat = 16,
         livePreview: Bool = false,
         inputRules: InputRuleProcessor = .standard,
         toolbar: [MarkdownEditorToolbarItem] = .standard,
@@ -114,18 +113,17 @@ public struct MarkdownEditor: View {
         self._text = text
         self._ownedMode = State(initialValue: mode.wrappedValue)
         self.injectedMode = mode
-        self.baseFontSize = baseFontSize
         self.livePreview = livePreview
         self.inputRules = inputRules
         self.toolbarItems = toolbar
         self.injectedController = controller
     }
 
-    private var theme: MarkdownEditorTheme {
-        var resolved = environmentTheme
-        resolved.baseFontSize = baseFontSize
-        return resolved
-    }
+    /// The theme in effect, taken from the environment exactly as it stands.
+    ///
+    /// Nothing is rewritten on the way through — the theme's `baseFontSize` included, which the
+    /// editor used to overwrite with an initializer parameter of its own.
+    private var theme: MarkdownEditorTheme { environmentTheme }
 
     private var availableModes: [MarkdownEditorMode] {
         #if os(macOS)

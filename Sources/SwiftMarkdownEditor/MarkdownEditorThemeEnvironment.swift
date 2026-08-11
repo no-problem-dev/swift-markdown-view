@@ -9,11 +9,11 @@ private struct MarkdownEditorThemeKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// The theme that colors the source editor.
+    /// The theme that colors and sizes the source editor.
     ///
     /// The default, `MarkdownEditorTheme.light`, is built from system semantic
-    /// colors and follows light and dark appearance on its own. Replace it only to
-    /// match an app-specific palette.
+    /// colors and follows light and dark appearance on its own. Replace it to match
+    /// an app-specific palette, or to edit at another body text size.
     public var markdownEditorTheme: MarkdownEditorTheme {
         get { self[MarkdownEditorThemeKey.self] }
         set { self[MarkdownEditorThemeKey.self] = newValue }
@@ -22,11 +22,10 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Sets the coloring theme for source editors in this view hierarchy.
+    /// Sets the theme for source editors in this view hierarchy.
     ///
-    /// - Parameter theme: The theme to apply. ``MarkdownEditor`` uses its colors but
-    ///   not its `baseFontSize`, which it always overwrites with the size passed to
-    ///   its own initializer.
+    /// - Parameter theme: The theme to apply. ``MarkdownEditor`` takes it whole — its
+    ///   colors and its `baseFontSize` alike.
     public func markdownEditorTheme(_ theme: MarkdownEditorTheme) -> some View {
         environment(\.markdownEditorTheme, theme)
     }

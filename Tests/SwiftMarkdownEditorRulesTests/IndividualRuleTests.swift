@@ -76,17 +76,6 @@ struct IndividualRuleTests {
         #expect(pressEnter("plain text", at: 10) == nil)
     }
 
-    @Test("リスト編集は undo をまとめない")
-    func listEditIsItsOwnUndoStep() {
-        let source = "- item"
-        let transform = list.transform(
-            state: state(source),
-            inserting: "\n",
-            replacing: TextSpan(caret: source.utf16Length)
-        )
-        #expect(transform?.allowCoalescing == false)
-    }
-
     // MARK: - WrapSelectionRule
 
     private let wrapRule = WrapSelectionRule()

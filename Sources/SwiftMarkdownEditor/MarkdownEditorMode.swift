@@ -15,13 +15,13 @@ public enum MarkdownEditorMode: String, CaseIterable, Hashable, Sendable {
 
     /// A short label for the built-in mode picker.
     ///
-    /// The labels are Japanese literals and are not localized. Drive the editor
+    /// The labels are English literals and are not localized. Drive the editor
     /// with a `mode` binding and build your own switcher to show other languages.
     public var displayName: String {
         switch self {
-        case .edit: return "編集"
-        case .preview: return "プレビュー"
-        case .split: return "分割"
+        case .edit: return "Edit"
+        case .preview: return "Preview"
+        case .split: return "Split"
         }
     }
 }

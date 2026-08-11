@@ -7,18 +7,10 @@ public struct RuleTransform: Equatable, Sendable {
     public var change: TextChange
     /// Where the selection lands once the change has been applied.
     public var selection: Selection
-    /// A rule's hint that its edit would be safe to merge into an adjacent undo entry.
-    ///
-    /// The bundled editor does not read this. It applies every rule edit through the text view's
-    /// own editing API, so the edit lands in whichever undo group the system builds for it. A rule
-    /// sets the flag to state its own intent, and a host that drives ``RuleTransform`` itself can
-    /// consult it.
-    public var allowCoalescing: Bool
 
-    public init(change: TextChange, selection: Selection, allowCoalescing: Bool = false) {
+    public init(change: TextChange, selection: Selection) {
         self.change = change
         self.selection = selection
-        self.allowCoalescing = allowCoalescing
     }
 }
 

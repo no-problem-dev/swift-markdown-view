@@ -40,7 +40,7 @@ enum MermaidScript: Equatable {
             // `loadHTMLString(baseURL:)` establishes. Read the contents and embed them.
             guard let javaScript = try? String(contentsOf: url, encoding: .utf8) else {
                 logger.warning(
-                    "Mermaid スクリプトを読み込めませんでした [\(url.path, privacy: .public)]。ダイアグラムは描画されません"
+                    "Could not read the Mermaid script [\(url.path, privacy: .public)]. The diagram will not be drawn"
                 )
                 return nil
             }

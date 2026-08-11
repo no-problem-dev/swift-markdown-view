@@ -197,8 +197,6 @@ struct MarkdownAttachmentTests {
         let attachment = result.attribute(.markdownAttachment, at: i, effectiveRange: nil) as? MarkdownAttachment
         #expect(attachment?.kind == .image(source: "https://x/c.png", alt: "a cat"))
         #expect(result.attribute(.attachment, at: i, effectiveRange: nil) is NSTextAttachment)
-        let source = result.attribute(.markdownSource, at: i, effectiveRange: nil) as? String
-        #expect(source == "![a cat](https://x/c.png)")
         // The image requests helper finds it for async loading.
         let requests = MarkdownImageAttachments.requests(in: result)
         #expect(requests.first?.source == "https://x/c.png")
@@ -215,8 +213,8 @@ struct MarkdownAttachmentTests {
         let result = build("value $e=mc^2$ here")
         #expect(result.string.contains("$e=mc^2$"))
         let i = try #require(result.index(of: "e=mc^2"))
-        let source = result.attribute(.markdownSource, at: i, effectiveRange: nil) as? String
-        #expect(source == "$e=mc^2$")
+        let attachment = result.attribute(.markdownAttachment, at: i, effectiveRange: nil) as? MarkdownAttachment
+        #expect(attachment?.kind == .inlineMath(latex: "e=mc^2"))
     }
 
     @Test("With a renderer, an image becomes a single attachment character")
@@ -229,15 +227,13 @@ struct MarkdownAttachmentTests {
         #expect(result.attribute(.attachment, at: i, effectiveRange: nil) is NSTextAttachment)
     }
 
-    @Test("With a renderer, inline math becomes an attachment carrying its source")
+    @Test("With a renderer, inline math becomes a single attachment character")
     func mathAttachment() throws {
         let builder = MarkdownAttributedBuilder(theme: .default, attachmentRenderer: StubAttachmentRenderer())
         let result = builder.build(MarkdownContent(parsing: "$x^2$"))
         let i = try #require(result.index(of: "\u{FFFC}"))
         let attachment = result.attribute(.markdownAttachment, at: i, effectiveRange: nil) as? MarkdownAttachment
         #expect(attachment?.kind == .inlineMath(latex: "x^2"))
-        let source = result.attribute(.markdownSource, at: i, effectiveRange: nil) as? String
-        #expect(source == "$x^2$")
     }
 }
 
@@ -305,16 +301,6 @@ struct MarkdownTableTests {
         #expect(decoration?.kind == .table(columns: 2))
     }
 
-    @Test("Copy-as-Markdown source reconstructs the pipe table with alignment")
-    func pipeSource() throws {
-        let result = build(Self.source)
-        let i = try #require(result.index(of: "Alice"))
-        let source = result.attribute(.markdownSource, at: i, effectiveRange: nil) as? String
-        let md = try #require(source)
-        #expect(md.contains("| Name | Age |"))
-        #expect(md.contains("| Alice | 30 |"))
-        #expect(md.contains("---:")) // right alignment preserved
-    }
 }
 
 @Suite("MarkdownSyntaxHighlighting")

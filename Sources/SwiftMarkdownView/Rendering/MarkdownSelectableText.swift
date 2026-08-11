@@ -175,9 +175,9 @@ public struct MarkdownSelectableText {
                         // and rendering carries on. It is not dropped silently, though: swallow
                         // it and a bug in a client's highlighter shows up only as code that
                         // never gets colored. Same treatment as a failed image load — a Logger.
-                        let language = region.language ?? "(なし)"
+                        let language = region.language ?? "(none)"
                         Self.logger.warning(
-                            "コードブロックをハイライトできませんでした [language=\(language, privacy: .public)]: \(error, privacy: .public)"
+                            "Could not highlight a code block [language=\(language, privacy: .public)]: \(error, privacy: .public)"
                         )
                         continue
                     }

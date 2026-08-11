@@ -75,17 +75,17 @@ enum MarkdownImageLoader {
         switch failure {
         case .disallowedSource:
             reason = """
-                画像ソースが MarkdownImagePolicy で許可されていません。\
-                ローカルファイルを読み込む場合は .markdownImagePolicy(.trustedDocument) を指定してください。
+                the image source is not allowed by MarkdownImagePolicy. \
+                To load local files, apply .markdownImagePolicy(.trustedDocument).
                 """
         case .transport(let error):
-            reason = "取得に失敗しました: \(error)"
+            reason = "the fetch failed: \(error)"
         case .tooLarge(let byteCount, let limit):
-            reason = "サイズ上限を超えています（\(byteCount) > \(limit) バイト）"
+            reason = "over the size limit (\(byteCount) > \(limit) bytes)"
         case .undecodable:
-            reason = "画像としてデコードできませんでした"
+            reason = "the data could not be decoded as an image"
         }
-        logger.warning("Markdown 画像を読み込めませんでした [\(source, privacy: .public)]: \(reason, privacy: .public)")
+        logger.warning("Could not load a Markdown image [\(source, privacy: .public)]: \(reason, privacy: .public)")
     }
 
     private static let logger = Logger(

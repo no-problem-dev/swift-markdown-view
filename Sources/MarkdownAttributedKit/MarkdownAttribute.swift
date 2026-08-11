@@ -12,12 +12,6 @@ package extension NSAttributedString.Key {
     /// recolor it after the initial layout.
     static let markdownCodeLanguage = NSAttributedString.Key("markdownCodeLanguage")
 
-    /// The Markdown source of a run that is drawn as something other than its literal text.
-    ///
-    /// Attachments, the readable text they fall back to, and table rows carry it, so a consumer can
-    /// recover the source text behind a range of the rendered string.
-    static let markdownSource = NSAttributedString.Key("markdownSource")
-
     /// Identifies an attachment run, either an image or a formula.
     ///
     /// An asynchronous resolver uses it to fill in or update the image after layout. The value is a
@@ -33,8 +27,8 @@ package extension NSAttributedString.Key {
 
 /// An inline object — an image or a formula — occupying one attachment character (U+FFFC) in the text.
 ///
-/// Selection passes over it as a single character, and its `.markdownSource` tag holds the Markdown it
-/// was rendered from.
+/// Selection passes over it as a single character, and its ``Kind`` carries what it was rendered
+/// from: an image source, a LaTeX formula, or Mermaid source.
 public final class MarkdownAttachment: NSObject {
 
     public enum Kind: Equatable, Sendable {

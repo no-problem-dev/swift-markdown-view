@@ -34,10 +34,9 @@ public struct MarkdownEditorTheme {
 
     /// The point size of unstyled body text.
     ///
-    /// Heading sizes are scaled from it. It takes effect when the theme drives
-    /// ``MarkdownSourceTextView`` directly: `MarkdownEditor` overwrites it with the `baseFontSize`
-    /// of its own initializer, so a theme placed in the environment is not where the editor's font
-    /// size is set. Pass the size to the editor instead.
+    /// Heading sizes are scaled from it. This is the one place the editor's body text size is
+    /// set, whether the theme drives ``MarkdownSourceTextView`` directly or arrives at
+    /// `MarkdownEditor` through the environment.
     public var baseFontSize: CGFloat
 
     /// The foreground color of the whole document, showing through wherever a token style defines no
@@ -82,9 +81,7 @@ public extension MarkdownEditorTheme {
     /// Builds a theme by deriving a style for every token kind from four color roles.
     ///
     /// - Parameters:
-    ///   - baseFontSize: The point size of unstyled body text. It takes effect when the theme
-    ///     drives ``MarkdownSourceTextView`` directly; `MarkdownEditor` overwrites it with the
-    ///     `baseFontSize` of its own initializer.
+    ///   - baseFontSize: The point size of unstyled body text, which heading sizes scale from.
     ///   - textColor: The color of body text, and of heading text.
     ///   - backgroundColor: The background color of the text view.
     ///   - muted: The color of markers and delimiters: heading hashes, emphasis and strong runs,

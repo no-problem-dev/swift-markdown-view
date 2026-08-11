@@ -298,7 +298,6 @@ package struct MarkdownAttributedBuilder {
         let style = paragraphStyle(indent: indent, spacingAfter: theme.paragraphSpacing)
         let body = attachmentOrFallback(
             kind: .displayMath(latex: latex),
-            source: "$$\(latex)$$",
             fallback: latex,
             context: codeContext()
         )
@@ -307,15 +306,10 @@ package struct MarkdownAttributedBuilder {
 
     private func mermaid(_ source: String, indent: Int) -> NSAttributedString {
         // A zero-bounds placeholder attachment the view layer swaps for a WebView
-        // attachment that renders the diagram; the fenced source is kept in
-        // `.markdownSource`.
+        // attachment that renders the diagram; the fenced source travels in the
+        // attachment's own `.mermaid` kind.
         let style = paragraphStyle(indent: indent, spacingAfter: theme.paragraphSpacing)
-        let body = makeAttachment(
-            image: nil,
-            bounds: .zero,
-            kind: .mermaid(source: source),
-            source: "```mermaid\n\(source)\n```"
-        )
+        let body = makeAttachment(image: nil, bounds: .zero, kind: .mermaid(source: source))
         return terminatedParagraph(body, style: style)
     }
 
@@ -336,8 +330,7 @@ package struct MarkdownAttributedBuilder {
     /// Lays a table out as tab-separated rows at computed column tab stops.
     ///
     /// The cells are real text, so selection works cell by cell and the default copy yields tab-separated
-    /// rows that paste straight into a spreadsheet. The fragment draws the grid, and `.markdownSource`
-    /// carries the equivalent pipe table over the whole range.
+    /// rows that paste straight into a spreadsheet. The fragment draws the grid.
     private func table(_ data: TableData, indent: Int) -> NSAttributedString {
         let rows = [data.headerRow] + data.bodyRows
         let columnCount = rows.map(\.cells.count).max() ?? 0
@@ -389,10 +382,11 @@ package struct MarkdownAttributedBuilder {
         }
 
         let fullRange = NSRange(location: 0, length: out.length)
-        out.addAttributes([
-            .markdownBlockDecoration: MarkdownBlockDecoration(.table(columns: columnCount)),
-            .markdownSource: pipeTableSource(data, columnCount: columnCount),
-        ], range: fullRange)
+        out.addAttribute(
+            .markdownBlockDecoration,
+            value: MarkdownBlockDecoration(.table(columns: columnCount)),
+            range: fullRange
+        )
         // Inter-block spacing after the table.
         if out.length > 0 {
             let lastParagraph = NSMutableParagraphStyle()
@@ -408,29 +402,6 @@ package struct MarkdownAttributedBuilder {
     private func cellPlainText(_ row: TableRow, column: Int) -> String {
         guard column < row.cells.count else { return "" }
         return plainText(inlineText(row.cells[column], context: .body(theme)))
-    }
-
-    /// Rebuilds a GFM pipe table from the model, to be stored as the table's Markdown source.
-    private func pipeTableSource(_ data: TableData, columnCount: Int) -> String {
-        func cells(_ row: TableRow) -> String {
-            let values = (0..<columnCount).map { cellPlainText(row, column: $0) }
-            return "| " + values.joined(separator: " | ") + " |"
-        }
-        func alignmentRow() -> String {
-            let marks = (0..<columnCount).map { column -> String in
-                let alignment = column < data.columnAlignments.count ? data.columnAlignments[column] : .none
-                switch alignment {
-                case .left: return ":---"
-                case .center: return ":---:"
-                case .right: return "---:"
-                case .none: return "---"
-                }
-            }
-            return "| " + marks.joined(separator: " | ") + " |"
-        }
-        var lines = [cells(data.headerRow), alignmentRow()]
-        lines.append(contentsOf: data.bodyRows.map(cells))
-        return lines.joined(separator: "\n")
     }
 
     private func stripNewlines(_ string: NSMutableAttributedString) {
@@ -487,7 +458,6 @@ package struct MarkdownAttributedBuilder {
                 mathContext.color = theme.inlineCodeForeground
                 out.append(attachmentOrFallback(
                     kind: .inlineMath(latex: latex),
-                    source: "$\(latex)$",
                     fallback: "$\(latex)$",
                     context: mathContext
                 ))
@@ -513,10 +483,9 @@ package struct MarkdownAttributedBuilder {
 
     /// Returns a one-character attachment (U+FFFC) when the renderer produced an image, readable text otherwise.
     ///
-    /// Either way the run carries a `.markdownSource` tag holding the Markdown it came from.
+    /// Either way the run carries a `.markdownAttachment` tag naming what it stands for.
     private func attachmentOrFallback(
         kind: MarkdownAttachment.Kind,
-        source: String,
         fallback: String,
         context: InlineContext
     ) -> NSAttributedString {
@@ -524,12 +493,10 @@ package struct MarkdownAttributedBuilder {
             return makeAttachment(
                 image: rendered.image,
                 bounds: CGRect(x: 0, y: rendered.baselineOffset, width: rendered.size.width, height: rendered.size.height),
-                kind: kind,
-                source: source
+                kind: kind
             )
         }
         var attrs = context.attributes
-        attrs[.markdownSource] = source
         attrs[.markdownAttachment] = MarkdownAttachment(kind)
         return NSAttributedString(string: fallback, attributes: attrs)
     }
@@ -539,32 +506,29 @@ package struct MarkdownAttributedBuilder {
     /// A synchronous renderer takes precedence, and an empty source degrades to the alt text in brackets.
     private func imageInline(source: String, alt: String, context: InlineContext) -> NSAttributedString {
         let kind = MarkdownAttachment.Kind.image(source: source, alt: alt)
-        let markdownSource = "![\(alt)](\(source))"
         if let rendered = attachmentRenderer?.renderedImage(for: kind, theme: theme) {
             return makeAttachment(
                 image: rendered.image,
                 bounds: CGRect(origin: .zero, size: rendered.size),
-                kind: kind,
-                source: markdownSource
+                kind: kind
             )
         }
         guard !source.isEmpty else {
-            var attrs = context.attributes
-            attrs[.markdownSource] = markdownSource
-            return NSAttributedString(string: "[\(alt)]", attributes: attrs)
+            return NSAttributedString(string: "[\(alt)]", attributes: context.attributes)
         }
-        return makeAttachment(image: nil, bounds: .zero, kind: kind, source: markdownSource)
+        return makeAttachment(image: nil, bounds: .zero, kind: kind)
     }
 
-    private func makeAttachment(image: PlatformImage?, bounds: CGRect, kind: MarkdownAttachment.Kind, source: String) -> NSAttributedString {
+    private func makeAttachment(image: PlatformImage?, bounds: CGRect, kind: MarkdownAttachment.Kind) -> NSAttributedString {
         let attachment = NSTextAttachment()
         attachment.image = image
         attachment.bounds = bounds
         let result = NSMutableAttributedString(attributedString: NSAttributedString(attachment: attachment))
-        result.addAttributes([
-            .markdownAttachment: MarkdownAttachment(kind),
-            .markdownSource: source,
-        ], range: NSRange(location: 0, length: result.length))
+        result.addAttribute(
+            .markdownAttachment,
+            value: MarkdownAttachment(kind),
+            range: NSRange(location: 0, length: result.length)
+        )
         return result
     }
 
