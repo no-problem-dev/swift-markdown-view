@@ -2,27 +2,27 @@
 
 ## [Unreleased]
 
-### 修正
+### Fixed
 
-- `MarkdownRenderingOptions.renderMath` を `MarkdownView` が読むようにした。これまで読んでいたのは
-  `MathText` だけで、`renderMath: false` を渡してもドキュメント内の数式は組版されていた。
-  画像と Mermaid は従来どおり描画される。
-- `MarkdownEditor` がテーマの `baseFontSize` を書き換えるのをやめた。環境に置いたテーマの
-  フォントサイズがそのまま効く。
+- `MarkdownView` now reads `MarkdownRenderingOptions.renderMath`. Until now only `MathText`
+  read it, so passing `renderMath: false` still typeset the math in the document.
+  Images and Mermaid render as before.
+- `MarkdownEditor` no longer overwrites the theme's `baseFontSize`. The font size of the theme
+  placed in the environment now takes effect as it is.
 
-### 削除
+### Removed
 
-- `MarkdownEditor` のイニシャライザから `baseFontSize` を外した。本文サイズを決める場所は
-  `MarkdownEditorTheme` 一箇所になった。
-- `RuleTransform.allowCoalescing` を削除した。どのルールも立てず、どこからも読まれていなかった。
-- 属性キー `.markdownSource` を削除した。4 箇所で書かれ、読み手がいなかった。
+- Removed `baseFontSize` from the `MarkdownEditor` initializer. `MarkdownEditorTheme` is now
+  the one place that decides the body text size.
+- Removed `RuleTransform.allowCoalescing`. No rule set it and nothing read it.
+- Removed the `.markdownSource` attribute key. It was written in 4 places and had no reader.
 
-### 変更
+### Changed
 
-- ツールバーのラベル、モードピッカーの表示名、画像・Mermaid・ハイライト失敗時のログを英語にした。
+- Put the toolbar labels, the mode picker display names, and the logs for image, Mermaid, and highlighting failures into English.
 
 ## [5.0.0] - 2026-08-10
 
-### 変更
+### Changed
 
-- swift-design-system を 3.0.0、swift-latex-view を 0.3.0 へ繰り上げた。
+- Bumped the swift-design-system pin to 3.0.0 and the swift-latex-view pin to 0.3.0.
