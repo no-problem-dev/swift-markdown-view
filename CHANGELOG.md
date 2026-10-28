@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING** — raised the swift-design-system pin to 5.0.0 and swift-latex-view to 0.6.0. 7.0.0
+  accepted only DesignSystem 4.x, so an app on DesignSystem 5.x could not add this package at all.
+  DesignSystem types appear in this package's public API, so its major becomes this one's. No
+  source changes were needed: nothing here uses the API that 5.0.0 renamed (`GlassButtonStyle`,
+  `.glass`) or the requirement it added (`RadiusScale.card`), and the math, block, and complex
+  document reference images still match.
+
 ## [7.0.0] - 2026-08-11
 
 ### Changed
