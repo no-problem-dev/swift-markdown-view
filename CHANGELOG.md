@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [8.0.0] - 2026-10-28
+
 ### Changed
 
 - **BREAKING** — raised the swift-design-system pin to 5.0.0 and swift-latex-view to 0.6.0. 7.0.0
