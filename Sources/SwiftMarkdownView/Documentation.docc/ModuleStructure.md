@@ -57,7 +57,6 @@ a major version bump on the library.
 | [swift-latex-view](https://github.com/no-problem-dev/swift-latex-view) | LaTeX typesetting, which pulls in [SwiftMath](https://github.com/mgriebling/SwiftMath) | `SwiftMarkdownViewLaTeX` only |
 | [swift-design-system](https://github.com/no-problem-dev/swift-design-system) | Design tokens | The two bridge products, the LaTeX product, and the catalog |
 | [swift-visual-testing](https://github.com/no-problem-dev/swift-visual-testing) | Snapshot testing | Tests only |
-| [swift-docc-plugin](https://github.com/apple/swift-docc-plugin) | Documentation generation | Build tooling only |
 
 `SwiftMarkdownView` and `SwiftMarkdownEditor` do not link `swift-design-system`. SwiftPM still
 resolves it, because the optional products in the same package need it, but its types never reach
