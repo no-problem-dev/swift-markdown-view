@@ -11,38 +11,32 @@ clearest possible report.
 ## Working on a change
 
 ```bash
-swift build
+swift build --build-tests
 swift test
 ```
 
-**CI runs `swift build` and `swift test` on every push and pull request**
-(`.github/workflows/tests.yml`), resolving dependencies fresh rather than from a
-cache. That run is the authority: a local `.build` left over from an earlier
-resolve can report green where a fresh checkout does not. Run both commands
-locally first anyway — it is faster than waiting for a runner.
+**There is no CI.** Run both commands locally and make sure they pass before
+opening a pull request.
 
-Snapshot tests are the exception and do not run in CI: the recorded pixels follow
-the host simulator's scale, so they are compared locally with
-`xcodebuild test -destination 'platform=iOS Simulator,...'`. Wrap image-test files
-in `#if canImport(UIKit)` so the macOS run leaves them out.
+Snapshot tests are compared locally with
+`xcodebuild test -destination 'platform=iOS Simulator,...'`: the recorded pixels
+follow the host simulator's scale. Wrap image-test files in `#if canImport(UIKit)`
+so the macOS `swift test` run leaves them out.
 
 Documentation lives in the DocC catalog under `Sources/*/*.docc/`. Public
 declarations are documented with `///` comments, in English.
 
 ## Releasing
 
-Maintainers only. Release from a commit whose Tests run is green — `release-on-tag.yml`
-turns a tag into a GitHub Release and nothing else, so nothing is compiled on the
-way out. The version is **computed, never chosen**:
+Maintainers only.
 
-```bash
-scripts/release.sh --dry-run   # see what version the API diff implies
-scripts/release.sh             # stamp CHANGELOG, tag, push
-```
+1. In `CHANGELOG.md`, turn `## [Unreleased]` into `## [x.y.z] - YYYY-MM-DD` and
+   merge that to `main`.
+2. Tag the merge and push the tag:
 
-Write what changed under `## [Unreleased]` in `CHANGELOG.md` — prose only, no
-version number. `scripts/release.sh` compares the public API against the last
-release and derives the version from the actual difference: a removed or changed
-public symbol means a major, additions mean a minor, and a change in the
-generation of a dependency whose types appear in this package's public API also
-means a major.
+   ```bash
+   git tag x.y.z && git push origin x.y.z
+   ```
+
+Versions follow [SemVer](https://semver.org) with bare tags (`1.2.3`, no `v`).
+While the major version is 0, a breaking change bumps the minor version.

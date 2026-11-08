@@ -79,7 +79,7 @@ struct NoteEditor: View {
 
 ## ドキュメント
 
-[API リファレンスとガイド](https://no-problem-dev.github.io/swift-markdown-view/documentation/swiftmarkdownview/) —
+[API リファレンスとガイド](Sources/SwiftMarkdownView/Documentation.docc) —
 対応要素・テーマ・シンタックスハイライト・Aside・Mermaid ダイアグラム・エディタガイド。
 
 動かせるサンプルアプリが [`Examples/`](./Examples) に 2 つある。`MarkdownPlayground`

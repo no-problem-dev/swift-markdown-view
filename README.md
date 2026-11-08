@@ -78,7 +78,7 @@ struct NoteEditor: View {
 
 ## Documentation
 
-[API reference and guides](https://no-problem-dev.github.io/swift-markdown-view/documentation/swiftmarkdownview/) —
+[API reference and guides](Sources/SwiftMarkdownView/Documentation.docc) —
 supported elements, theming, syntax highlighting, asides, Mermaid diagrams, and the editor guide.
 
 Two runnable sample apps live in [`Examples/`](./Examples): `MarkdownPlayground` (editor, element
