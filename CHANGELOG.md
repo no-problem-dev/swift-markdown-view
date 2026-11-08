@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [8.0.1] - 2026-11-08
+
+### Changed
+
+- swift-docc-plugin への依存を外した（DocC は Xcode で開く）
+
 ## [8.0.0] - 2026-10-28
 
 ### Changed
